@@ -1,0 +1,57 @@
+# Save this file as: .github/workflows/add-fish.yml
+#
+# Fires when the Cloudflare Worker tells GitHub a new PSD/Krita fish
+# has been submitted. Downloads the file, extracts the artwork, adds
+# it to the site, and commits — no human needed unless something
+# about the submission looks wrong (see add_fish.py).
+
+name: Add submitted fish
+
+on:
+  repository_dispatch:
+    types: [new-fish]
+  # Lets you trigger this manually from the Actions tab with test
+  # values, without needing a real monday.com submission —
+  # useful for testing before the Worker is wired up.
+  workflow_dispatch:
+    inputs:
+      file_url:
+        description: "Direct URL to a test .psd file"
+        required: true
+      creator:
+        description: "Creator name"
+        required: true
+
+jobs:
+  add-fish:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: pip install psd-tools Pillow requests
+
+      - name: Run the extraction + site update
+        env:
+          FISH_FILE_URL: ${{ github.event.client_payload.file_url || inputs.file_url }}
+          FISH_CREATOR: ${{ github.event.client_payload.creator || inputs.creator }}
+          FISH_NAME: ${{ github.event.client_payload.name }}
+          FISH_BIO: ${{ github.event.client_payload.bio }}
+          MONDAY_API_TOKEN: ${{ secrets.MONDAY_API_TOKEN }}
+        run: python deploy/automation/add_fish.py
+
+      - name: Commit and push
+        run: |
+          git config user.name "feeling-fishy-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add deploy/feeling-fishy/index.html deploy/feeling-fishy/images/fish/
+          git commit -m "Auto-add fish from ${{ github.event.client_payload.creator || inputs.creator }}"
+          git push
