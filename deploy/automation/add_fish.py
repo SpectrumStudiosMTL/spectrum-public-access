@@ -57,10 +57,14 @@ def fail(message, code=1):
 
 
 def download_submission(url, token, dest):
-    headers = {"Authorization": token} if token else {}
-    resp = requests.get(url, headers=headers, timeout=60)
+    # monday's asset public_url is a pre-signed link — it's already
+    # authenticated via the URL itself. Adding an Authorization header
+    # on top of that can break the signature and cause an HTTP 400,
+    # so this deliberately does NOT send one.
+    resp = requests.get(url, timeout=60)
     if resp.status_code != 200:
-        fail(f"Couldn't download the submitted file (HTTP {resp.status_code}).")
+        fail(f"Couldn't download the submitted file (HTTP {resp.status_code}). "
+             f"Response body: {resp.text[:500]}")
     dest.write_bytes(resp.content)
 
 
