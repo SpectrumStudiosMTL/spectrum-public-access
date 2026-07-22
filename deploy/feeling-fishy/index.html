@@ -1,0 +1,2088 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Feeling Fishy — The Spectrum Aquarium</title>
+
+<!-- Fonts: Sixtyfour is a segmented digital-display font matching
+     the SPA logo style; Baloo 2 stays for the fish name cards
+     (falls back to system fonts wherever Google Fonts can't load) -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700&family=Sixtyfour&display=swap" rel="stylesheet">
+
+<script>
+/* ==============================================================
+   EMBEDDED DEMO IMAGES
+   These five submissions are baked into the file as text so the
+   preview works anywhere. On your real site you'll use normal
+   files instead, e.g.  image: "images/my-fish.png"
+   ============================================================== */
+const EMBEDDED_IMAGES = {
+  inlayPng: "images/inlay-print.webp",
+  inlayKrita: "images/inlay-krita.webp",
+  logo: "images/logo.webp",
+  fish0: "images/fish/fish0.webp",
+  fish1: "images/fish/fish1.webp",
+  fish2: "images/fish/fish2.webp",
+  fish3: "images/fish/fish3.webp",
+  fish4: "images/fish/fish4.webp",
+  fish5: "images/fish/fish5.webp",
+  fish6: "images/fish/fish6.webp",
+  fish7: "images/fish/fish7.webp",
+  fish8: "images/fish/fish8.webp",
+  fish9: "images/fish/fish9.webp",
+  fish10: "images/fish/fish10.webp",
+  fish11: "images/fish/fish11.webp",
+  fish12: "images/fish/fish12.webp",
+  fish13: "images/fish/fish13.webp",
+  fish14: "images/fish/fish14.webp",
+  fish15: "images/fish/fish15.webp",
+  fish16: "images/fish/fish16.webp",
+  fish17: "images/fish/fish17.webp",
+  fish18: "images/fish/fish18.webp",
+  fish19: "images/fish/fish19.webp",
+  fish20: "images/fish/fish20.webp",
+  fish21: "images/fish/fish21.webp",
+  fish22: "images/fish/fish22.webp",
+  fish23: "images/fish/fish23.webp",
+  fish24: "images/fish/fish24.webp",
+  fish25: "images/fish/fish25.webp",
+  fish26: "images/fish/fish26.webp",
+  fish27: "images/fish/fish27.webp",
+  fish28: "images/fish/fish28.webp",
+  fish29: "images/fish/fish29.webp",
+  fish30: "images/fish/fish30.webp",
+  fish31: "images/fish/fish31.webp",
+  fish32: "images/fish/fish32.webp",
+  fish33: "images/fish/fish33.webp",
+  fish34: "images/fish/fish34.webp",
+  fish35: "images/fish/fish35.webp",
+  fish36: "images/fish/fish36.webp",
+  fish37: "images/fish/fish37.webp",
+  fish38: "images/fish/fish38.webp",
+  fish39: "images/fish/fish39.webp",
+  fish40: "images/fish/fish40.webp",
+  fish41: "images/fish/fish41.webp",
+  fish42: "images/fish/fish42.webp",
+  fish43: "images/fish/fish43.webp",
+  fish44: "images/fish/fish44.webp",
+  fish45: "images/fish/fish45.webp",
+  fish46: "images/fish/fish46.webp",
+  fish47: "images/fish/fish47.webp",
+  fish48: "images/fish/fish48.webp",
+  fish49: "images/fish/fish49.webp",
+  fish50: "images/fish/fish50.webp",
+  fish51: "images/fish/fish51.webp",
+  fish52: "images/fish/fish52.webp",
+  fish53: "images/fish/fish53.webp",
+  fish54: "images/fish/fish54.webp",
+  fish55: "images/fish/fish55.webp",
+  fish56: "images/fish/fish56.webp",
+  fish57: "images/fish/fish57.webp",
+  fish58: "images/fish/fish58.webp",
+  fish59: "images/fish/fish59.webp",
+  fish60: "images/fish/fish60.webp",
+  fish61: "images/fish/fish61.webp",
+  fish62: "images/fish/fish62.webp",
+  fish63: "images/fish/fish63.webp",
+  fish64: "images/fish/fish64.webp",
+  fish65: "images/fish/fish65.webp",
+  fish66: "images/fish/fish66.webp",
+  fish67: "images/fish/fish67.webp",
+  fish68: "images/fish/fish68.webp",
+  fish69: "images/fish/fish69.webp",
+  fish70: "images/fish/fish70.webp",
+  fish71: "images/fish/fish71.webp",
+};
+
+/* Embedded demo audio — on the real site use files instead,
+   e.g.  music: "audio/ambience.mp3"  */
+const EMBEDDED_AUDIO = {
+  music: "audio/music.mp3",
+  chime: "audio/chime.mp3",
+  pluck: "audio/pluck.mp3",
+  drag: "audio/drag.mp3",
+};
+
+/* Embedded demo video (720p). On the real site, use the full-quality
+   file instead:  backgroundVideo: "video/scene.mp4"  */
+const EMBEDDED_VIDEO = "video/background.mp4";
+
+/* The printable fish template, embedded at full print quality.
+   On the real site, use a file: templateUrl: "files/template.png" */
+const EMBEDDED_TEMPLATE = "files/fish-template.png";
+</script>
+
+<script>
+/* ██████████████████████████████████████████████████████████████
+   ██  YOUR DATA — the only section you edit                   ██
+   ██  Everything below the big line is the engine.            ██
+   ██████████████████████████████████████████████████████████████ */
+
+const SETTINGS = {
+  // Starting language: "en" or "fr"
+  language: "en",
+
+  // Logo shown top-right. Uses your embedded SPA logo — on the real
+  // site you can point it at a file instead: logo: "images/logo.png"
+  logo: EMBEDDED_IMAGES.logo,
+
+  // The "Create your fish" button opens a pop-up with two options:
+  // 1) Download the fish template (the embedded printable PNG)
+  templateUrl: EMBEDDED_TEMPLATE,
+
+  // Layered versions of the template for digital artists. Export
+  // these from your own Photoshop / Krita source files and put
+  // them next to the site. Set either to null to hide its button.
+  templatePsd: "files/Feeling-Fishy-Template.psd",
+  templateKrita: "files/Feeling-Fishy-Template.kra",
+
+  // Vending-button inlay artwork (all optional). Point any of
+  // these at an image (roughly 5:4, like an old machine's paper
+  // inlay) and it fills that button's window — your own designs,
+  // or logo art you have the rights to use.
+  // Example: buttonInlays: { png: "images/inlay-print.png" },
+  buttonInlays: {
+    download: null,   // "Download the fish template" button
+    submit: null,     // "Submit your fish" button
+    png: EMBEDDED_IMAGES.inlayPng,      // "Ready to print" format button
+    psd: null,                          // Photoshop format button
+    krita: EMBEDDED_IMAGES.inlayKrita,  // Krita format button
+  },
+
+  // Sound played when the "Create your fish" button is clicked:
+  createSound: EMBEDDED_AUDIO.pluck,
+
+  // Sound that plays while dragging the tank (stops on release,
+  // and its pitch bends with your drag speed — underwater scratch):
+  dragSound: EMBEDDED_AUDIO.drag,
+  // 2) Submit your fish — your monday.com form's EMBED link (in
+  //    monday: create a WorkForm, click Share → Embed, copy the
+  //    src="..." URL from the iframe code). This opens inline in a
+  //    pop-up over the tank rather than leaving the site.
+  submitEmbedUrl: "https://forms.monday.com/forms/embed/712a0b5d93bb6187748b14aade412e28?r=use1",
+
+  // "Feed the Fish" is just a fun button — no donation link behind it.
+  // Clicking it always drops food in and sets the school into a happy
+  // frenzy. (This used to link out to a Zeffy donation page; that's
+  // been removed — this is purely for delight now.)
+
+  // Your ambience track. Set to null for no music.
+  // On the real site, use a file: music: "audio/ambience.mp3"
+  music: EMBEDDED_AUDIO.music,
+
+  // Your own painted backdrop, or null for the color gradient:
+  background: null,
+
+  // A looping video backdrop (e.g. rendered from Unreal Engine).
+  // Overrides `background`. Use .mp4 or .webm, e.g. "video/scene.mp4"
+  backgroundVideo: EMBEDDED_VIDEO,
+
+  // Darkens the video slightly so the fish stand out.
+  // 0 = off, 0.15 = subtle, 0.4 = moody. Only affects video backdrops.
+  videoDimmer: 0.15,
+};
+
+/* LANGUAGES — every visitor-facing phrase, in both languages.
+   Edit the wording freely; the FR/EN button switches between them. */
+const TEXT = {
+  en: {
+    tagline: "Drag to spin the tank. Hover a fish to meet its creator.",
+    create: "Create your fish",
+    donate: "Feed the Fish",
+    nextSchool: "Next school of fish",
+    prevSchool: "Previous school of fish",
+    createTitle: "Add your fish to the tank!",
+    download: "Download the fish template",
+    submit: "Submit your fish",
+    downloadTitle: "Choose your template",
+    asIs: "Ready to print (PNG)",
+    psd: "Photoshop (PSD)",
+    krita: "Krita (KRA)",
+    downloadNote: "💻 Submit a PSD or Krita file and your fish joins the tank right away. 🖨️ Submit a printed or scanned drawing and our team will add it by hand — that can take a few days.",
+    goBack: "Back",
+    close: "Close",
+    by: "by",
+    designedBy: "Designed by",
+    back: "Back to the tank",
+    submitTitle: "Submit your fish",
+    submitFrameTitle: "Feeling Fishy submission form",
+    info: "About this project",
+    infoTitle: "Feeling Fishy",
+    // ✏️ Replace with your own project description.
+    infoIntro: "Feeling Fishy is an interactive art project from Spectrum Public Access. Every fish swimming in this tank was drawn by a real participant — hover or tap one to see who made it, and add your own any time.",
+    howToTitle: "How to use this page",
+    howTo: [
+      "Drag anywhere in the tank to spin it and look around.",
+      "Hover or tap a fish to see its creator's name.",
+      "Press \"Create your fish\" to download a blank template and submit your own drawing.",
+      "Press \"Feed the Fish\" for a fun surprise — no strings attached.",
+      "The 🔊 button toggles sound, and EN/FR switches language.",
+    ],
+  },
+  fr: {
+    tagline: "Faites glisser pour faire tourner l'aquarium. Survolez un poisson pour rencontrer son créateur.",
+    create: "Crée ton poisson",
+    donate: "Nourrir les poissons",
+    nextSchool: "Banc de poissons suivant",
+    prevSchool: "Banc de poissons précédent",
+    createTitle: "Ajoute ton poisson à l'aquarium !",
+    download: "Télécharger le modèle de poisson",
+    submit: "Soumettre ton poisson",
+    downloadTitle: "Choisis ton modèle",
+    asIs: "Prêt à imprimer (PNG)",
+    psd: "Photoshop (PSD)",
+    krita: "Krita (KRA)",
+    downloadNote: "💻 Soumets un fichier PSD ou Krita et ton poisson rejoint l'aquarium tout de suite. 🖨️ Soumets un dessin imprimé ou numérisé et notre équipe l'ajoutera à la main — ça peut prendre quelques jours.",
+    goBack: "Retour",
+    close: "Fermer",
+    by: "par",
+    designedBy: "Créé par",
+    back: "Retour à l'aquarium",
+    submitTitle: "Soumets ton poisson",
+    submitFrameTitle: "Formulaire de soumission Feeling Fishy",
+    info: "À propos de ce projet",
+    infoTitle: "Feeling Fishy",
+    // ✏️ Remplace par la description de ton projet.
+    infoIntro: "Feeling Fishy est un projet artistique interactif de Spectrum Public Access. Chaque poisson qui nage dans cet aquarium a été dessiné par un vrai participant — survole ou touche un poisson pour voir qui l'a créé, et ajoute le tien à tout moment.",
+    howToTitle: "Comment utiliser cette page",
+    howTo: [
+      "Fais glisser n'importe où dans l'aquarium pour le faire tourner et regarder autour.",
+      "Survole ou touche un poisson pour voir le nom de son créateur.",
+      "Appuie sur « Crée ton poisson » pour télécharger un modèle vierge et soumettre ton dessin.",
+      "Appuie sur « Nourrir les poissons » pour une petite surprise amusante — sans aucune obligation.",
+      "Le bouton 🔊 active ou coupe le son, et EN/FR change la langue.",
+    ],
+  },
+};
+
+/* THE FISH ← add one line for each new submission!
+   Required: name, creator, image
+   Optional: size   – width in pixels (default 120)
+             height – vertical spot, 0 = surface, 100 = floor
+             sound  – the note sample played on hover. Every fish
+                      is auto-pitched to its own step of a musical
+                      scale, so overlapping hovers make chords
+             bio    – a sentence or two from the creator, shown
+                      on the pop-up card if they chose to share,
+                      e.g. bio: "Jamie loves sharks and glitter." */
+const FISH = [
+  // Matched from the handwritten "Feeling Fishy List" against the
+  // original Spectrum_Fish_Template#### filenames. Fish name and bio
+  // left blank — add those per fish when ready.
+  { name: "", creator: "Felipe", bio: "", image: EMBEDDED_IMAGES.fish0, sound: EMBEDDED_AUDIO.chime, height: 28, size: 150 },
+  { name: "", creator: "Aedan", bio: "", image: EMBEDDED_IMAGES.fish1, sound: EMBEDDED_AUDIO.chime, height: 48, size: 140 },
+  { name: "", creator: "Daelan", bio: "", image: EMBEDDED_IMAGES.fish2, sound: EMBEDDED_AUDIO.chime, height: 20, size: 150 },
+  { name: "", creator: "Zaharia", bio: "", image: EMBEDDED_IMAGES.fish3, sound: EMBEDDED_AUDIO.chime, height: 58, size: 145 },
+  { name: "", creator: "Simon", bio: "", image: EMBEDDED_IMAGES.fish4, sound: EMBEDDED_AUDIO.chime, height: 38, size: 130 },
+  { name: "", creator: "Aedan", bio: "", image: EMBEDDED_IMAGES.fish5, sound: EMBEDDED_AUDIO.chime, height: 18, size: 130 },
+  { name: "", creator: "Aedan", bio: "", image: EMBEDDED_IMAGES.fish6, sound: EMBEDDED_AUDIO.chime, height: 32, size: 140 },
+  { name: "", creator: "Aedan", bio: "", image: EMBEDDED_IMAGES.fish7, sound: EMBEDDED_AUDIO.chime, height: 46, size: 115 },
+  { name: "", creator: "Aedan", bio: "", image: EMBEDDED_IMAGES.fish8, sound: EMBEDDED_AUDIO.chime, height: 60, size: 135 },
+  { name: "", creator: "Aedan", bio: "", image: EMBEDDED_IMAGES.fish9, sound: EMBEDDED_AUDIO.chime, height: 25, size: 125 },
+  { name: "", creator: "Aedan", bio: "", image: EMBEDDED_IMAGES.fish10, sound: EMBEDDED_AUDIO.chime, height: 40, size: 130 },
+  { name: "", creator: "Aedan", bio: "", image: EMBEDDED_IMAGES.fish11, sound: EMBEDDED_AUDIO.chime, height: 54, size: 120 },
+  { name: "", creator: "Aedan", bio: "", image: EMBEDDED_IMAGES.fish12, sound: EMBEDDED_AUDIO.chime, height: 22, size: 140 },
+  { name: "", creator: "Aedan", bio: "", image: EMBEDDED_IMAGES.fish13, sound: EMBEDDED_AUDIO.chime, height: 36, size: 125 },
+  { name: "", creator: "Aedan", bio: "", image: EMBEDDED_IMAGES.fish14, sound: EMBEDDED_AUDIO.chime, height: 50, size: 130 },
+  { name: "", creator: "Aedan", bio: "", image: EMBEDDED_IMAGES.fish15, sound: EMBEDDED_AUDIO.chime, height: 64, size: 115 },
+  { name: "", creator: "Aedan", bio: "", image: EMBEDDED_IMAGES.fish16, sound: EMBEDDED_AUDIO.chime, height: 28, size: 150 },
+  { name: "", creator: "Alexandre", bio: "", image: EMBEDDED_IMAGES.fish17, sound: EMBEDDED_AUDIO.chime, height: 48, size: 140 },
+  { name: "", creator: "Armin", bio: "", image: EMBEDDED_IMAGES.fish18, sound: EMBEDDED_AUDIO.chime, height: 20, size: 150 },
+  { name: "", creator: "Dillan", bio: "", image: EMBEDDED_IMAGES.fish19, sound: EMBEDDED_AUDIO.chime, height: 58, size: 145 },
+  { name: "", creator: "Julian", bio: "", image: EMBEDDED_IMAGES.fish20, sound: EMBEDDED_AUDIO.chime, height: 38, size: 130 },
+  { name: "", creator: "Levi", bio: "", image: EMBEDDED_IMAGES.fish21, sound: EMBEDDED_AUDIO.chime, height: 18, size: 130 },
+  { name: "", creator: "Annik", bio: "", image: EMBEDDED_IMAGES.fish22, sound: EMBEDDED_AUDIO.chime, height: 32, size: 140 },
+  { name: "", creator: "Marcus", bio: "", image: EMBEDDED_IMAGES.fish23, sound: EMBEDDED_AUDIO.chime, height: 46, size: 115 },
+  { name: "", creator: "Josh", bio: "", image: EMBEDDED_IMAGES.fish24, sound: EMBEDDED_AUDIO.chime, height: 60, size: 135 },
+  { name: "", creator: "Matthew", bio: "", image: EMBEDDED_IMAGES.fish25, sound: EMBEDDED_AUDIO.chime, height: 25, size: 125 },
+  { name: "", creator: "Adrien", bio: "", image: EMBEDDED_IMAGES.fish26, sound: EMBEDDED_AUDIO.chime, height: 40, size: 130 },
+  { name: "", creator: "David", bio: "", image: EMBEDDED_IMAGES.fish27, sound: EMBEDDED_AUDIO.chime, height: 54, size: 120 },
+  { name: "", creator: "Marc-Arthur", bio: "", image: EMBEDDED_IMAGES.fish28, sound: EMBEDDED_AUDIO.chime, height: 22, size: 140 },
+  { name: "", creator: "Alexandre", bio: "", image: EMBEDDED_IMAGES.fish29, sound: EMBEDDED_AUDIO.chime, height: 36, size: 125 },
+  { name: "", creator: "Annie", bio: "", image: EMBEDDED_IMAGES.fish30, sound: EMBEDDED_AUDIO.chime, height: 50, size: 130 },
+  { name: "", creator: "Arc", bio: "", image: EMBEDDED_IMAGES.fish31, sound: EMBEDDED_AUDIO.chime, height: 64, size: 115 },
+  { name: "", creator: "Tita", bio: "", image: EMBEDDED_IMAGES.fish32, sound: EMBEDDED_AUDIO.chime, height: 28, size: 150 },
+  { name: "", creator: "Luca", bio: "", image: EMBEDDED_IMAGES.fish33, sound: EMBEDDED_AUDIO.chime, height: 48, size: 140 },
+  { name: "", creator: "Lynn", bio: "", image: EMBEDDED_IMAGES.fish34, sound: EMBEDDED_AUDIO.chime, height: 20, size: 150 },
+  { name: "", creator: "Lynn", bio: "", image: EMBEDDED_IMAGES.fish35, sound: EMBEDDED_AUDIO.chime, height: 58, size: 145 },
+  { name: "", creator: "Omar", bio: "", image: EMBEDDED_IMAGES.fish36, sound: EMBEDDED_AUDIO.chime, height: 38, size: 130 },
+  { name: "", creator: "Ugo", bio: "", image: EMBEDDED_IMAGES.fish37, sound: EMBEDDED_AUDIO.chime, height: 18, size: 130 },
+  { name: "", creator: "Felix", bio: "", image: EMBEDDED_IMAGES.fish38, sound: EMBEDDED_AUDIO.chime, height: 32, size: 140 },
+  { name: "", creator: "Felix", bio: "", image: EMBEDDED_IMAGES.fish39, sound: EMBEDDED_AUDIO.chime, height: 46, size: 115 },
+  { name: "", creator: "Felix", bio: "", image: EMBEDDED_IMAGES.fish40, sound: EMBEDDED_AUDIO.chime, height: 60, size: 135 },
+  { name: "", creator: "William", bio: "", image: EMBEDDED_IMAGES.fish41, sound: EMBEDDED_AUDIO.chime, height: 25, size: 125 },
+  { name: "", creator: "Anonymous", bio: "", image: EMBEDDED_IMAGES.fish42, sound: EMBEDDED_AUDIO.chime, height: 40, size: 130 },
+  { name: "", creator: "Zakaria", bio: "", image: EMBEDDED_IMAGES.fish43, sound: EMBEDDED_AUDIO.chime, height: 54, size: 120 },
+  { name: "", creator: "Leeza", bio: "", image: EMBEDDED_IMAGES.fish44, sound: EMBEDDED_AUDIO.chime, height: 22, size: 140 },
+  { name: "", creator: "Anthony", bio: "", image: EMBEDDED_IMAGES.fish45, sound: EMBEDDED_AUDIO.chime, height: 36, size: 125 },
+  { name: "", creator: "Daniel", bio: "", image: EMBEDDED_IMAGES.fish46, sound: EMBEDDED_AUDIO.chime, height: 50, size: 130 },
+  { name: "", creator: "Owen", bio: "", image: EMBEDDED_IMAGES.fish47, sound: EMBEDDED_AUDIO.chime, height: 64, size: 115 },
+  { name: "", creator: "Owen", bio: "", image: EMBEDDED_IMAGES.fish48, sound: EMBEDDED_AUDIO.chime, height: 28, size: 150 },
+  { name: "", creator: "Emily", bio: "", image: EMBEDDED_IMAGES.fish49, sound: EMBEDDED_AUDIO.chime, height: 48, size: 140 },
+  { name: "", creator: "Emily", bio: "", image: EMBEDDED_IMAGES.fish50, sound: EMBEDDED_AUDIO.chime, height: 20, size: 150 },
+  { name: "", creator: "Robin", bio: "", image: EMBEDDED_IMAGES.fish51, sound: EMBEDDED_AUDIO.chime, height: 58, size: 145 },
+  { name: "", creator: "Daniel", bio: "", image: EMBEDDED_IMAGES.fish52, sound: EMBEDDED_AUDIO.chime, height: 38, size: 130 },
+  { name: "", creator: "Saskia", bio: "", image: EMBEDDED_IMAGES.fish53, sound: EMBEDDED_AUDIO.chime, height: 18, size: 130 },
+  { name: "", creator: "Emily", bio: "", image: EMBEDDED_IMAGES.fish54, sound: EMBEDDED_AUDIO.chime, height: 32, size: 140 },
+  { name: "", creator: "Emily", bio: "", image: EMBEDDED_IMAGES.fish55, sound: EMBEDDED_AUDIO.chime, height: 46, size: 115 },
+  { name: "", creator: "Emily", bio: "", image: EMBEDDED_IMAGES.fish56, sound: EMBEDDED_AUDIO.chime, height: 60, size: 135 },
+  { name: "", creator: "Emily", bio: "", image: EMBEDDED_IMAGES.fish57, sound: EMBEDDED_AUDIO.chime, height: 25, size: 125 },
+  { name: "", creator: "Emily", bio: "", image: EMBEDDED_IMAGES.fish58, sound: EMBEDDED_AUDIO.chime, height: 40, size: 130 },
+  { name: "", creator: "Emily", bio: "", image: EMBEDDED_IMAGES.fish59, sound: EMBEDDED_AUDIO.chime, height: 54, size: 120 },
+  { name: "", creator: "Emily", bio: "", image: EMBEDDED_IMAGES.fish60, sound: EMBEDDED_AUDIO.chime, height: 22, size: 140 },
+  { name: "", creator: "Emily", bio: "", image: EMBEDDED_IMAGES.fish61, sound: EMBEDDED_AUDIO.chime, height: 36, size: 125 },
+  { name: "", creator: "Emily", bio: "", image: EMBEDDED_IMAGES.fish62, sound: EMBEDDED_AUDIO.chime, height: 50, size: 130 },
+  { name: "", creator: "Emily", bio: "", image: EMBEDDED_IMAGES.fish63, sound: EMBEDDED_AUDIO.chime, height: 64, size: 115 },
+  { name: "", creator: "Emily", bio: "", image: EMBEDDED_IMAGES.fish64, sound: EMBEDDED_AUDIO.chime, height: 28, size: 150 },
+  { name: "", creator: "Emily", bio: "", image: EMBEDDED_IMAGES.fish65, sound: EMBEDDED_AUDIO.chime, height: 48, size: 140 },
+  { name: "", creator: "Emily", bio: "", image: EMBEDDED_IMAGES.fish66, sound: EMBEDDED_AUDIO.chime, height: 20, size: 150 },
+  { name: "", creator: "Emily", bio: "", image: EMBEDDED_IMAGES.fish67, sound: EMBEDDED_AUDIO.chime, height: 58, size: 145 },
+  { name: "", creator: "Emily", bio: "", image: EMBEDDED_IMAGES.fish68, sound: EMBEDDED_AUDIO.chime, height: 38, size: 130 },
+  { name: "", creator: "Emily", bio: "", image: EMBEDDED_IMAGES.fish69, sound: EMBEDDED_AUDIO.chime, height: 18, size: 130 },
+  { name: "", creator: "Emily", bio: "", image: EMBEDDED_IMAGES.fish70, sound: EMBEDDED_AUDIO.chime, height: 32, size: 140 },
+  { name: "", creator: "Ben", bio: "", image: EMBEDDED_IMAGES.fish71, sound: EMBEDDED_AUDIO.chime, height: 46, size: 115 },
+];
+
+/* SEA FLOOR DECORATIONS
+   Required: image, x (0–100, % across the floor), height (pixels)
+   Optional: sway: true → moves like seaweed */
+const DECORATIONS = [
+  // Disabled while the Unreal scene provides the sea floor — remove
+  // the // at the start of a line to layer your drawings on top.
+  // { image: "images/seaweed-01.png", x: 8,  height: 140, sway: true },
+  // { image: "images/coral-01.png",   x: 25, height: 90 },
+  // { image: "images/seaweed-02.png", x: 60, height: 160, sway: true },
+  // { image: "images/coral-02.png",   x: 85, height: 100 },
+];
+
+/* MOTION SETTINGS — tune how the tank feels */
+const ORBIT = {
+  speed: 0.06,        // auto-rotation speed (higher = faster)
+  radiusX: 0.38,      // orbit width (fraction of screen width)
+  nearScale: 1.15,    // fish size at the very front
+  farScale: 0.45,     // fish size at the very back
+  farOpacity: 0.45,   // how faded the farthest fish get
+  farBlur: 2.5,       // blur (px) on the farthest fish
+  bobAmount: 10,      // gentle up/down float, in pixels
+};
+
+/* WATER EFFECTS — turn each one on (true) or off (false) */
+const WATER = {
+  bubbles: 10,          // how many bubbles rise (0 = none)
+  rays: false,          // shimmering light shafts from the surface
+  ripple: false,        // subtle distortion — heavy on older devices
+  rippleStrength: 9,    // distortion strength if ripple is on
+};
+
+/* SCHOOLS — the tank shows one school of fish at a time, with
+   arrows to swim between them. This caps how many fish share the
+   screen so the tank never gets overcrowded as submissions grow.
+   25 matches the density the tank was designed around. */
+const SCHOOL_SIZE = 25;
+
+/* ██████████████████████████████████████████████████████████████
+   ██  END OF YOUR DATA — engine below, no need to edit        ██
+   ██████████████████████████████████████████████████████████████ */
+</script>
+
+<style>
+:root {
+  --water-top:    #6ecfe0;
+  --water-mid:    #1d7ea8;
+  --water-bottom: #0b3556;
+  --text:         #f4fbfd;
+  --card-bg:      #ffffff;
+  --card-text:    #123a52;
+  --logo-glow:    255, 238, 60;   /* neon yellow (R, G, B) — match your logo */
+  --title-glow:   61, 217, 255;   /* neon blue (R, G, B) — the title's neon color */
+  --title-font:   'Baloo 2', 'Comic Sans MS', system-ui, sans-serif;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  font-family: system-ui, sans-serif;
+  color: var(--text);
+  overflow: hidden;
+  cursor: grab;
+}
+body.dragging { cursor: grabbing; }
+
+#tank {
+  position: fixed;
+  inset: 0;
+  background: linear-gradient(to bottom,
+    var(--water-top) 0%, var(--water-mid) 45%, var(--water-bottom) 100%);
+  background-size: cover;
+  background-position: center;
+}
+
+/* WATER EFFECTS — bubbles and light rays (created by JS) */
+.bubble {
+  position: absolute;
+  bottom: -30px;
+  background: radial-gradient(circle at 32% 30%,
+    rgba(255,255,255,0.55), rgba(255,255,255,0.08) 60%);
+  border: 1px solid rgba(255,255,255,0.35);
+  border-radius: 50%;
+  animation: rise linear infinite;
+  pointer-events: none;
+}
+/* Bubbles rise while wobbling sideways; --sway is set per bubble */
+@keyframes rise {
+  0%   { transform: translate(0, 0); }
+  25%  { transform: translate(var(--sway), -28vh); }
+  50%  { transform: translate(calc(var(--sway) * -1), -56vh); }
+  75%  { transform: translate(var(--sway), -84vh); }
+  100% { transform: translate(0, -112vh); }
+}
+
+.ray {
+  position: absolute;
+  top: -10%;
+  width: 12vw;
+  height: 85vh;
+  background: linear-gradient(to bottom,
+    rgba(255,255,255,0.22), rgba(255,255,255,0));
+  transform: skewX(-12deg);
+  animation: shimmer 7s ease-in-out infinite alternate;
+  pointer-events: none;
+  z-index: 400;
+}
+@keyframes shimmer {
+  from { opacity: 0.35; }
+  to   { opacity: 0.9; }
+}
+
+/* FISH — position/scale/blur handled live by the orbit engine */
+.fish {
+  position: absolute;
+  left: 0; top: 0;
+  will-change: transform;
+  user-select: none;
+}
+.fish img {
+  display: block;
+  width: 100%;
+  pointer-events: none;
+  -webkit-user-drag: none;
+}
+/* Hover animations — each fish is randomly assigned one of three
+   personalities at load: a swimmer, a darter, or a flutterer. */
+.fish.anim0:hover .wiggle { animation: swim 0.6s ease-in-out infinite alternate; }
+.fish.anim1:hover .wiggle { animation: dart 0.32s ease-in-out infinite alternate; }
+.fish.anim2:hover .wiggle { animation: flutter 0.85s ease-in-out infinite alternate; }
+@keyframes swim {
+  from { transform: rotate(-4deg) translateY(-3px); }
+  to   { transform: rotate(4deg)  translateY(3px); }
+}
+@keyframes dart {
+  from { transform: translateX(-5px) rotate(-2deg); }
+  to   { transform: translateX(5px)  rotate(2deg); }
+}
+@keyframes flutter {
+  from { transform: rotate(-7deg) scale(1); }
+  to   { transform: rotate(5deg)  scale(1.05); }
+}
+/* Feeding time: the whole school gets excited */
+body.feeding .fish .wiggle { animation: frenzy 0.22s ease-in-out infinite alternate; }
+@keyframes frenzy {
+  from { transform: rotate(-8deg) translateY(-4px); }
+  to   { transform: rotate(8deg)  translateY(2px); }
+}
+.name-tag {
+  position: absolute;
+  left: 50%;
+  bottom: -32px;
+  transform: translateX(-50%);
+  background: rgba(255,255,255,0.95);
+  color: var(--card-text);
+  font-weight: 700;
+  font-size: 0.85rem;
+  padding: 5px 14px;
+  border-radius: 999px;
+  white-space: nowrap;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  pointer-events: none;
+}
+.fish:hover .name-tag { opacity: 1; }
+
+/* Thought bubble — pops from the fish's mouth on hover, showing
+   the creator's bio. Flips sides when the fish faces the other way. */
+.thought {
+  position: absolute;
+  bottom: calc(100% + 20px);
+  left: -8%;
+  min-width: 120px;
+  max-width: 190px;
+  background: rgba(255,255,255,0.94);
+  color: var(--card-text);
+  font-size: 0.8rem;
+  line-height: 1.35;
+  padding: 10px 14px;
+  border-radius: 18px;
+  opacity: 0;
+  transform: scale(0.3);
+  transform-origin: bottom left;
+  transition: opacity 0.22s ease,
+              transform 0.3s cubic-bezier(0.34, 1.5, 0.64, 1);
+  pointer-events: none;
+}
+/* The little trailing thought-dots down toward the mouth */
+.thought::after, .thought::before {
+  content: "";
+  position: absolute;
+  background: rgba(255,255,255,0.94);
+  border-radius: 50%;
+}
+.thought::after  { width: 10px; height: 10px; left: 14px; bottom: -13px; }
+.thought::before { width: 6px;  height: 6px;  left: 7px;  bottom: -23px; }
+.fish:hover .thought {
+  opacity: 1;
+  transform: scale(1);
+  /* The bubble waits for 3 seconds of continuous hover before it
+     pops — leave early and it never appears. (The name tag still
+     shows instantly.) Hiding is immediate: the 0s delay below. */
+  transition-delay: 3s;
+}
+.fish .thought { transition-delay: 0s; }
+/* When the fish is mirrored, the mouth (and bubble) swap sides */
+.fish.flipped .thought { left: auto; right: -8%; transform-origin: bottom right; }
+.fish.flipped .thought::after  { left: auto; right: 14px; }
+.fish.flipped .thought::before { left: auto; right: 7px; }
+
+/* Fish food — pellets that sink through the tank after a donation */
+.pellet {
+  position: absolute;
+  top: -20px;
+  background: radial-gradient(circle at 35% 30%, #d9a869, #9c6b35);
+  border-radius: 45% 55% 50% 50%;
+  animation: sink linear forwards;
+  pointer-events: none;
+}
+@keyframes sink {
+  0%   { transform: translate(0, 0) rotate(0deg); opacity: 1; }
+  25%  { transform: translate(8px, 22vh) rotate(90deg); }
+  50%  { transform: translate(-6px, 44vh) rotate(180deg); }
+  75%  { transform: translate(8px, 66vh) rotate(260deg); opacity: 1; }
+  100% { transform: translate(0, 82vh) rotate(340deg); opacity: 0; }
+}
+
+/* Info / Feed the Fish / Sound / Language — one flex row, so they
+   always line up correctly no matter how wide "Feed the Fish"
+   renders in a given language. */
+.top-controls {
+  position: fixed;
+  top: 22px;
+  right: 22px;
+  z-index: 600;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+/* Donate button — part of the top-controls row */
+.donate-btn {
+  order: 2;
+  font-family: var(--title-font);
+  font-weight: 700;
+  font-size: 1rem;
+  text-decoration: none;
+  padding: 10px 22px;
+  border: none;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: opacity 0.25s ease, translate 0.25s ease, transform 0.2s ease;
+}
+.donate-btn:hover { transform: translateY(-3px); }
+
+/* SEA FLOOR DECORATIONS */
+.decoration { position: absolute; bottom: 0; pointer-events: none; z-index: 2; }
+.decoration img { display: block; height: 100%; width: auto; }
+.decoration.sways {
+  transform-origin: bottom center;
+  animation: sway 4s ease-in-out infinite alternate;
+}
+@keyframes sway {
+  from { transform: rotate(-5deg); }
+  to   { transform: rotate(5deg); }
+}
+
+/* HEADER + CORNER BUTTONS */
+header {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  padding: 22px 28px;
+  z-index: 500;
+  text-shadow: 0 2px 10px rgba(6,40,66,0.5);
+  pointer-events: none;
+}
+header h1 {
+  /* Segmented digital font like the SPA logo, in neon blue.
+     The glow is three text-shadows: bright core, halo, wide spill.
+     The skew mimics the logo's italic slant. */
+  font-family: 'Sixtyfour', 'Courier New', monospace;
+  font-weight: 400;
+  font-size: clamp(1.2rem, 3.4vw, 2.3rem);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: rgb(var(--title-glow));
+  text-shadow:
+    0 0 4px  rgba(var(--title-glow), 0.9),
+    0 0 14px rgba(var(--title-glow), 0.55),
+    0 0 34px rgba(var(--title-glow), 0.3);
+  transform: skewX(-8deg);
+  transform-origin: left bottom;
+}
+header p  { font-size: clamp(0.85rem, 2vw, 1rem); opacity: 0.9; }
+
+/* "Create your fish" — bottom-left, like the reference site */
+.create-btn {
+  position: fixed;
+  left: 22px;
+  bottom: 22px;
+  z-index: 600;
+  border: none;
+  cursor: pointer;
+  font-family: var(--title-font);
+  font-weight: 700;
+  font-size: 1rem;
+  padding: 12px 22px;
+  border-radius: 999px;
+  transition: transform 0.2s ease;
+}
+.create-btn:hover { transform: translateY(-3px); }
+
+/* Vending-machine buttons: a dark plastic BEZEL with a recessed
+   label WINDOW inside — like the button inlays on an 80s soda
+   machine. The window shows text by default, or your own inlay
+   artwork if you set one in SETTINGS.buttonInlays. */
+.option-row {
+  display: flex;
+  flex-wrap: wrap;            /* stack on very narrow screens */
+  justify-content: center;
+  gap: 18px;
+  margin: 20px 0 10px;
+}
+.card .option-btn {
+  position: relative;
+  flex: 1;
+  min-width: 140px;
+  max-width: 210px;
+  aspect-ratio: 5 / 4;
+  padding: 8px;                    /* = bezel thickness */
+  border-radius: 7px;
+  background: #17191d;             /* black machine plastic */
+  cursor: pointer;
+  text-decoration: none;
+  box-shadow:
+    inset 2px 2px 0 rgba(255,255,255,0.12),  /* lit bezel edge     */
+    inset -2px -2px 0 rgba(0,0,0,0.6),       /* shadowed bezel edge */
+    0 5px 0 rgba(0,0,0,0.4),                 /* sits off the panel */
+    0 0 14px rgba(var(--logo-glow), 0.3);    /* neon glow          */
+  transition: transform 0.08s ease, box-shadow 0.08s ease;
+}
+/* The recessed label window. Image-on-top, text-below — clear and
+   accessible even before anyone reads the label. The image is an
+   <img> (not a CSS background) so it always has real alt text. */
+.card .option-btn .inlay {
+  position: absolute;
+  inset: 8px;
+  border-radius: 4px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  text-align: center;
+  padding: 10px 8px 8px;
+  font-family: var(--title-font);
+  font-weight: 700;
+  font-size: 0.92rem;
+  line-height: 1.2;
+  color: #123a52;
+  background: rgb(var(--logo-glow));
+  box-shadow: inset 0 0 7px rgba(0,0,0,0.35);   /* recessed depth */
+}
+.card .option-btn .inlay img {
+  width: 52%;
+  max-height: 55%;
+  object-fit: contain;
+  flex-shrink: 0;
+}
+/* The clear plastic cover's sheen */
+.card .option-btn::after {
+  content: "";
+  position: absolute;
+  inset: 8px;
+  border-radius: 4px;
+  background: linear-gradient(160deg,
+    rgba(255,255,255,0.35), rgba(255,255,255,0.05) 40%,
+    rgba(255,255,255,0) 60%);
+  pointer-events: none;
+}
+.card .option-btn:hover { transform: translateY(-2px); }
+/* The press: button sinks, bezel bevel inverts, glow tightens */
+.card .option-btn:active {
+  transform: translateY(3px);
+  box-shadow:
+    inset 2px 2px 0 rgba(0,0,0,0.5),
+    inset -2px -2px 0 rgba(255,255,255,0.08),
+    0 1px 0 rgba(0,0,0,0.4),
+    0 0 8px rgba(var(--logo-glow), 0.2);
+}
+.card button { font-family: var(--title-font); font-size: 1rem; }
+.download-note {
+  font-size: 0.85rem;
+  line-height: 1.5;
+  opacity: 0.85;
+  margin: 4px 0 20px;
+}
+
+/* "Submit your fish" card — wider, to give the monday.com form
+   room to breathe. The iframe scales with the card instead of
+   staying a fixed 650×500, so it still fits on a phone screen. */
+.card.submit-card { max-width: 700px; }
+.iframe-wrap {
+  width: 100%;
+  max-width: 650px;
+  aspect-ratio: 650 / 500;
+  margin: 0 auto 18px;
+  border-radius: 14px;
+  overflow: hidden;
+  box-shadow: 5px 5px 40px rgba(0,0,0,0.35);
+  background: #fff; /* shows while the form loads */
+}
+.iframe-wrap iframe { width: 100%; height: 100%; border: 0; display: block; }
+
+/* "About this project" card — left-aligned, readable paragraphs
+   and a plain numbered list instead of the centered layout used
+   for the fish/create cards. */
+.card.info-card { max-width: 560px; text-align: left; }
+.info-card h2 { text-align: center; }
+.info-card h3 {
+  font-family: var(--title-font);
+  font-size: 1.05rem;
+  margin: 4px 0 10px;
+}
+.info-card p { opacity: 0.9; line-height: 1.6; margin-bottom: 18px; }
+.info-card ol {
+  margin: 0 0 22px;
+  padding-left: 1.3em;
+  line-height: 1.6;
+  opacity: 0.9;
+}
+.info-card li { margin-bottom: 8px; }
+.info-card button { display: block; margin: 0 auto; }
+
+/* Sound toggle — part of the top-controls row */
+.sound-btn {
+  order: 3;
+  width: 44px;
+  height: 44px;
+  border: none;
+  border-radius: 50%;
+  font-size: 1.15rem;
+  cursor: pointer;
+  box-shadow: 0 6px 20px rgba(4,26,44,0.35);
+}
+
+/* Logo — bottom right, with a neon-sign glow.
+   Three stacked shadows: a tight bright core, a soft halo, and a
+   wide faint spill — the classic neon look. Color comes from the
+   --logo-glow token at the top of the styles. */
+.logo {
+  position: fixed;
+  bottom: 18px;
+  right: 22px;
+  width: clamp(110px, 16vw, 190px);
+  z-index: 600;
+  filter:
+    drop-shadow(0 0 3px  rgba(var(--logo-glow), 0.9))
+    drop-shadow(0 0 10px rgba(var(--logo-glow), 0.55))
+    drop-shadow(0 0 26px rgba(var(--logo-glow), 0.3));
+}
+.logo-link { cursor: pointer; }
+.logo-link:focus-visible .logo { outline: 3px solid var(--cg-white, #fff); outline-offset: 4px; }
+
+/* Language toggle — part of the top-controls row (rightmost) */
+.lang-btn {
+  order: 4;
+  width: 44px;
+  height: 44px;
+  border: none;
+  border-radius: 50%;
+  font-weight: 700;
+  font-size: 0.9rem;
+  cursor: pointer;
+  box-shadow: 0 6px 20px rgba(4,26,44,0.35);
+}
+
+/* Info button — part of the top-controls row (leftmost of the four) */
+.info-btn {
+  order: 1;
+  width: 44px;
+  height: 44px;
+  border: none;
+  border-radius: 50%;
+  font-family: Georgia, "Times New Roman", serif;
+  font-style: italic;
+  font-weight: 800;
+  font-size: 1.15rem;
+  cursor: pointer;
+  box-shadow: 0 6px 20px rgba(4,26,44,0.35);
+}
+
+/* Keyboard-focus rings — visible outline for every interactive
+   control so tabbing through the page is never a guessing game. */
+.info-btn:focus-visible,
+.sound-btn:focus-visible,
+.lang-btn:focus-visible,
+.donate-btn:focus-visible,
+.create-btn:focus-visible,
+.card button:focus-visible,
+.option-btn:focus-visible {
+  outline: 3px solid #fff;
+  outline-offset: 3px;
+}
+
+/* DETAIL CARD */
+.card-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(5,25,43,0.55);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 900;
+}
+.card-overlay.open { display: flex; }
+.card {
+  /* Translucent black card — the tank glows through it.
+     The backdrop blur keeps text readable over the busy video;
+     remove the backdrop-filter lines if you want pure 25% black. */
+  background: rgba(0, 0, 0, 0.25);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  color: var(--text);
+  border: 1px solid rgba(255,255,255,0.15);
+  border-radius: 24px;
+  padding: 34px 38px;
+  max-width: 560px;
+  width: calc(100% - 40px);
+  max-height: calc(100% - 60px);
+  overflow-y: auto;          /* long bios scroll inside the card */
+  text-align: center;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.35);
+}
+.card img {
+  width: 100%;
+  max-width: 430px;
+  margin-bottom: 16px;
+  filter: drop-shadow(0 8px 18px rgba(4,26,44,0.25));
+}
+.card h2 { font-family: var(--title-font); font-size: 1.7rem; margin-bottom: 4px; }
+.card p  { opacity: 0.75; margin-bottom: 18px; }
+/* The creator's optional bio / artist statement */
+.card .bio {
+  font-size: 0.98rem;
+  line-height: 1.55;
+  opacity: 0.85;
+  margin: -6px 0 20px;
+}
+.card button {
+  font: inherit;
+  font-weight: 700;
+  color: white;
+  background: var(--card-text);
+  border: none;
+  border-radius: 999px;
+  padding: 10px 28px;
+  cursor: pointer;
+}
+
+/* All buttons match the SPA logo: same neon yellow, same glow.
+   The color comes from --logo-glow, so changing that one token
+   re-themes the logo AND every button together. */
+.create-btn, .donate-btn, .sound-btn, .lang-btn, .info-btn, .school-arrow, .card button {
+  background: rgb(var(--logo-glow));
+  color: #123a52;
+  box-shadow:
+    0 0 4px  rgba(var(--logo-glow), 0.9),
+    0 0 14px rgba(var(--logo-glow), 0.55),
+    0 0 32px rgba(var(--logo-glow), 0.28);
+}
+
+/* The "flight": when a fish is clicked, a copy of it swims out of
+   the school toward the viewer — wiggling excitedly — and grows
+   until it lands in place on the pop-up card. */
+.flight {
+  position: fixed;
+  z-index: 950;                  /* above the overlay while flying */
+  pointer-events: none;
+  transition: left  0.55s cubic-bezier(0.3, 0.7, 0.2, 1),
+              top   0.55s cubic-bezier(0.3, 0.7, 0.2, 1),
+              width 0.55s cubic-bezier(0.3, 0.7, 0.2, 1),
+              height 0.55s cubic-bezier(0.3, 0.7, 0.2, 1);
+}
+.flight-wiggle {
+  width: 100%;
+  height: 100%;
+  /* the excited wiggle — faster than the hover swim */
+  animation: excited 0.28s ease-in-out infinite alternate;
+}
+.flight img { width: 100%; height: 100%; object-fit: contain; }
+@keyframes excited {
+  from { transform: rotate(-6deg); }
+  to   { transform: rotate(6deg); }
+}
+
+/* While the fish arrives, the card's text fades up underneath it */
+.card.reveal h2, .card.reveal p, .card.reveal button {
+  animation: fade-up 0.45s ease 0.32s both;
+}
+@keyframes fade-up {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* CALM MODE — after a few seconds without input, everything that
+   isn't water or fish fades away and drifts slightly off toward
+   its own edge of the screen. Two transition speeds: the fade-OUT
+   is slow and gentle (the .calm rules), while the fade back IN is
+   quick (the base rules), so the interface returns the instant
+   the visitor moves. */
+header, .logo, .create-btn, .donate-btn, .sound-btn, .lang-btn, .info-btn {
+  transition: opacity 0.25s ease, translate 0.25s ease, transform 0.2s ease;
+}
+body.calm header      { opacity: 0; translate: 0 -16px; pointer-events: none; }
+body.calm .logo       { opacity: 0; translate: 0  16px; }
+body.calm .create-btn { opacity: 0; translate: 0  16px; pointer-events: none; }
+body.calm .donate-btn,
+body.calm .sound-btn,
+body.calm .lang-btn,
+body.calm .info-btn   { opacity: 0; translate: 0 -16px; pointer-events: none; }
+body.calm header, body.calm .logo, body.calm .create-btn,
+body.calm .donate-btn, body.calm .sound-btn, body.calm .lang-btn, body.calm .info-btn {
+  transition: opacity 1.6s ease, translate 1.6s ease;
+}
+
+/* School arrows — swim to the previous / next school of fish */
+.school-arrow {
+  position: fixed;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 600;
+  width: 48px;
+  height: 48px;
+  border: none;
+  border-radius: 50%;
+  font-family: var(--title-font);
+  font-size: 1.3rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: opacity 0.25s ease, translate 0.25s ease, transform 0.2s ease;
+}
+.school-arrow.prev { left: 18px; }
+.school-arrow.next { right: 18px; }
+.school-arrow:hover { transform: translateY(-50%) scale(1.1); }
+
+/* One dot per school, bottom center — the lit dot is the current one */
+.school-dots {
+  position: fixed;
+  bottom: 26px;
+  left: 50%;
+  translate: -50% 0;
+  display: flex;
+  gap: 10px;
+  z-index: 600;
+  transition: opacity 0.25s ease, translate 0.25s ease;
+}
+.school-dots button {
+  width: 12px;
+  height: 12px;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+  background: rgba(255,255,255,0.45);
+}
+.school-dots button.active {
+  background: rgb(var(--logo-glow));
+  box-shadow: 0 0 8px rgba(var(--logo-glow), 0.8);
+}
+
+/* Calm mode: arrows slide toward their edges, dots sink */
+body.calm .school-arrow.prev { opacity: 0; translate: -16px 0; pointer-events: none; }
+body.calm .school-arrow.next { opacity: 0; translate: 16px 0; pointer-events: none; }
+body.calm .school-dots { opacity: 0; translate: -50% 16px; pointer-events: none; }
+body.calm .school-arrow, body.calm .school-dots {
+  transition: opacity 1.6s ease, translate 1.6s ease;
+}
+
+/* Plain stand-in shown until your real image loads */
+.placeholder {
+  background: rgba(255,255,255,0.25);
+  border: 2px dashed rgba(255,255,255,0.6);
+  border-radius: 12px;
+  aspect-ratio: 3 / 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+  text-align: center;
+  padding: 6px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .decoration.sways, .fish:hover .wiggle,
+  .bubble, .ray,
+  .flight-wiggle,
+  body.feeding .fish .wiggle,
+  .card.reveal h2, .card.reveal p, .card.reveal button { animation: none; }
+  .bubble, .pellet { display: none; }
+  .flight { transition: none; }
+  .thought { transition: opacity 0.2s ease; transform: none; }
+  .fish:hover .thought { transition-delay: 3s; }
+}
+</style>
+</head>
+<body>
+
+<div id="tank"></div>
+
+<header>
+  <h1>Feeling Fishy</h1>
+  <p id="tagline">Drag to spin the tank. Hover a fish to meet its creator.</p>
+</header>
+
+<!-- Info / Feed / Sound / Language buttons all live here so they lay
+     out automatically as a row — no manual pixel math needed even
+     though "Feed the Fish" changes width between languages. Visual
+     order is controlled by the `order` CSS property on each button,
+     not by the order they're added in JS. -->
+<div class="top-controls" id="topControls"></div>
+
+<div class="card-overlay" id="cardOverlay">
+  <div class="card">
+    <div id="cardArt"></div>
+    <h2 id="cardName"></h2>
+    <p id="cardCreator"></p>
+    <p class="bio" id="cardBio"></p>
+    <button id="cardBack" onclick="closeCard()">Back to the tank</button>
+  </div>
+</div>
+
+<!-- The "Create your fish" pop-up: download the template, or
+     submit a finished fish through the monday.com form -->
+<div class="card-overlay" id="createOverlay">
+  <div class="card">
+    <h2 id="createTitle"></h2>
+    <div class="option-row">
+      <a class="option-btn" id="optDownload"><span class="inlay" id="optDownloadLabel"></span></a>
+      <a class="option-btn" id="optSubmit"><span class="inlay" id="optSubmitLabel"></span></a>
+    </div>
+    <button id="createClose" onclick="closeCreate()">Close</button>
+  </div>
+</div>
+
+<!-- Second level of the create menu: choose a template format -->
+<div class="card-overlay" id="downloadOverlay">
+  <div class="card">
+    <h2 id="downloadTitle"></h2>
+    <div class="option-row">
+      <a class="option-btn" id="dlPng"><span class="inlay" id="dlPngLabel"></span></a>
+      <a class="option-btn" id="dlPsd" target="_blank" rel="noopener"><span class="inlay" id="dlPsdLabel"></span></a>
+      <a class="option-btn" id="dlKrita" target="_blank" rel="noopener"><span class="inlay" id="dlKritaLabel"></span></a>
+    </div>
+    <p class="download-note" id="downloadNote"></p>
+    <button id="downloadBack">Back</button>
+  </div>
+</div>
+
+<!-- "Submit your fish" pop-up: the monday.com form loads inline in
+     an iframe here instead of leaving the site. The iframe's src is
+     only set the first time this opens, so the form isn't fetched
+     until someone actually asks for it. -->
+<div class="card-overlay" id="submitOverlay" role="dialog" aria-modal="true" aria-labelledby="submitTitle">
+  <div class="card submit-card">
+    <h2 id="submitTitle"></h2>
+    <div class="iframe-wrap">
+      <iframe id="submitFrame"></iframe>
+    </div>
+    <button id="submitBack">Back</button>
+  </div>
+</div>
+
+<!-- "About this project" info pop-up: a short project blurb plus a
+     plain-language walkthrough of what everything on the page does. -->
+<div class="card-overlay" id="infoOverlay" role="dialog" aria-modal="true" aria-labelledby="infoTitle">
+  <div class="card info-card">
+    <h2 id="infoTitle"></h2>
+    <p id="infoIntro"></p>
+    <h3 id="howToTitle"></h3>
+    <ol id="howToList"></ol>
+    <button id="infoClose"></button>
+  </div>
+</div>
+
+<script>
+/* ==============================================================
+   THE AQUARIUM ENGINE — runs everything using your data above.
+   ============================================================== */
+const tank = document.getElementById("tank");
+if (SETTINGS.background) tank.style.backgroundImage = `url(${SETTINGS.background})`;
+
+// Looping video backdrop (e.g. rendered from your Unreal scene).
+// muted + playsinline are required for browsers to autoplay it.
+if (SETTINGS.backgroundVideo) {
+  const vid = document.createElement("video");
+  vid.src = SETTINGS.backgroundVideo;
+  vid.autoplay = true;
+  vid.loop = true;
+  vid.muted = true;
+  vid.playsInline = true;
+  vid.setAttribute("style",
+    "position:absolute; inset:0; width:100%; height:100%; " +
+    "object-fit:cover; z-index:0; pointer-events:none;");
+  tank.prepend(vid);
+
+  // Optional dark veil over the video so the fish stand out
+  if (SETTINGS.videoDimmer > 0) {
+    const veil = document.createElement("div");
+    veil.setAttribute("style",
+      "position:absolute; inset:0; background:black; z-index:1; " +
+      "pointer-events:none; opacity:" + SETTINGS.videoDimmer + ";");
+    tank.appendChild(veil);
+  }
+}
+
+// Helper: re-map a number from one range to another.
+function mapRange(value, inMin, inMax, outMin, outMax) {
+  return outMin + (value - inMin) / (inMax - inMin) * (outMax - outMin);
+}
+
+// Plain placeholder for images that haven't been added yet
+function placeholderFor(path) {
+  const ph = document.createElement("div");
+  ph.className = "placeholder";
+  ph.textContent = path;
+  return ph;
+}
+
+/* --- Water effects: bubbles, rays, ripple ----------------------
+   The ripple works with an SVG "displacement map": an invisible
+   layer of animated noise pushes every pixel of the tank around
+   slightly, like light bending through moving water. ----------- */
+const stillMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+if (WATER.bubbles > 0) {
+  for (let i = 0; i < WATER.bubbles; i++) {
+    const b = document.createElement("div");
+    b.className = "bubble";
+    const size = 5 + Math.random() * 16;              // 5–21 px wide
+    b.style.width = b.style.height = size + "px";
+    b.style.left = Math.random() * 100 + "%";
+    b.style.setProperty("--sway", (4 + Math.random() * 14) + "px");
+    b.style.animationDuration = (7 + Math.random() * 9) + "s";
+    b.style.animationDelay = (Math.random() * -16) + "s"; // already mid-rise
+    // Some bubbles drift behind the fish, some in front — adds depth
+    b.style.zIndex = Math.random() < 0.6 ? 5 : 320;
+    tank.appendChild(b);
+  }
+}
+
+if (WATER.rays) {
+  [{ left: "12%", delay: "0s" }, { left: "38%", delay: "2s" },
+   { left: "67%", delay: "4s" }].forEach((r) => {
+    const ray = document.createElement("div");
+    ray.className = "ray";
+    ray.style.left = r.left;
+    ray.style.animationDelay = r.delay;
+    tank.appendChild(ray);
+  });
+}
+
+if (WATER.ripple && !stillMotion) {
+  const svg = document.createElement("div");
+  svg.innerHTML = `
+    <svg width="0" height="0" style="position:absolute">
+      <filter id="ripple" x="-5%" y="-5%" width="110%" height="110%">
+        <feTurbulence type="fractalNoise" baseFrequency="0.008 0.016"
+                      numOctaves="1" seed="3" result="noise">
+          <animate attributeName="baseFrequency" dur="16s"
+                   values="0.008 0.016; 0.011 0.021; 0.008 0.016"
+                   repeatCount="indefinite"/>
+        </feTurbulence>
+        <feDisplacementMap in="SourceGraphic" in2="noise"
+                           scale="${WATER.rippleStrength}"/>
+      </filter>
+    </svg>`;
+  document.body.appendChild(svg);
+  // The distortion pushes pixels past the screen edge, so the tank
+  // is stretched slightly beyond the viewport to hide the seams.
+  tank.style.inset = "-16px";
+  tank.style.filter = "url(#ripple)";
+}
+
+/* --- The chime engine (Web Audio) -------------------------------
+   Every fish plays the SAME xylophone sample, but pitched to its
+   own step of a major pentatonic scale — a scale where every note
+   is consonant with every other. Hover several fish quickly and
+   the overlapping notes stack into chords instead of clashing.
+
+   The reverb is a convolver fed a generated "impulse response"
+   (2.8 seconds of decaying noise = a big virtual room), and the
+   reverb path runs through a lowpass filter first, which darkens
+   the echoes — big, but deep underwater. ------------------------ */
+
+// Two octaves of major pentatonic (in semitones above the sample)
+const CHIME_SCALE = [0, 2, 4, 7, 9, 12, 14, 16, 19, 21];
+
+let audioCtx = null, chimeBuffer = null, chimeLoading = false;
+let chimeDry = null, chimeWetIn = null;
+
+function initChimeEngine() {
+  if (audioCtx) return;
+  audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+  // Dry path: the note, straight to the speakers
+  chimeDry = audioCtx.createGain();
+  chimeDry.gain.value = 0.7;
+  chimeDry.connect(audioCtx.destination);
+
+  // Wet path: lowpass (darkens it) -> reverb -> speakers
+  const lowpass = audioCtx.createBiquadFilter();
+  lowpass.type = "lowpass";
+  lowpass.frequency.value = 1600;   // lower = murkier water
+
+  const reverb = audioCtx.createConvolver();
+  const rate = audioCtx.sampleRate;
+  const seconds = 2.8;              // reverb tail length
+  const impulse = audioCtx.createBuffer(2, rate * seconds, rate);
+  for (let ch = 0; ch < 2; ch++) {
+    const d = impulse.getChannelData(ch);
+    for (let i = 0; i < d.length; i++) {
+      d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / d.length, 2.5);
+    }
+  }
+  reverb.buffer = impulse;
+
+  const wet = audioCtx.createGain();
+  wet.gain.value = 0.55;            // how much reverb in the mix
+
+  lowpass.connect(reverb);
+  reverb.connect(wet);
+  wet.connect(audioCtx.destination);
+  chimeWetIn = lowpass;
+}
+
+async function loadChime(src) {
+  if (chimeBuffer || chimeLoading) return;
+  chimeLoading = true;
+  try {
+    const res = await fetch(src);
+    chimeBuffer = await audioCtx.decodeAudioData(await res.arrayBuffer());
+  } catch (e) { chimeLoading = false; }
+}
+
+function playChime(src, semitones) {
+  if (!soundOn) return;
+  initChimeEngine();
+  if (audioCtx.state === "suspended") audioCtx.resume();
+  if (!chimeBuffer) {
+    // First hover: decode the sample, then ring the note
+    loadChime(src).then(() => {
+      if (chimeBuffer && soundOn) playChime(src, semitones);
+    });
+    return;
+  }
+  const note = audioCtx.createBufferSource();
+  note.buffer = chimeBuffer;
+  // Each semitone up multiplies the speed by 2^(1/12)
+  note.playbackRate.value = Math.pow(2, semitones / 12);
+  const g = audioCtx.createGain();
+  g.gain.value = 0.25;
+  note.connect(g);
+  g.connect(chimeDry);     // direct sound
+  g.connect(chimeWetIn);   // and into the underwater reverb
+  note.start();
+}
+
+/* --- Build the fish ------------------------------------------- */
+const swimmers = FISH.map((fish, i) => {
+  const el = document.createElement("div");
+  el.className = "fish";
+
+  const img = document.createElement("img");
+  img.src = fish.image;
+  img.alt = `${fish.name} by ${fish.creator}`;
+  img.onerror = () => img.replaceWith(placeholderFor(fish.image));
+
+  const wiggle = document.createElement("div");
+  wiggle.className = "wiggle";
+  wiggle.appendChild(img);
+
+  // The flip wrapper mirrors only the artwork when the fish swims
+  // the other way — the name tag and thought bubble stay readable
+  const flip = document.createElement("div");
+  flip.appendChild(wiggle);
+
+  const tag = document.createElement("span");
+  tag.className = "name-tag";
+  tag.textContent = "by " + fish.creator;
+
+  el.append(flip, tag);
+
+  // Each fish gets one of three hover personalities at random
+  el.classList.add("anim" + Math.floor(Math.random() * 3));
+
+  // Thought bubble with the creator's bio, if they shared one
+  if (fish.bio) {
+    const thought = document.createElement("div");
+    thought.className = "thought";
+    thought.textContent = fish.bio;
+    el.appendChild(thought);
+  }
+
+  el.addEventListener("click", () => { if (!wasDragged) openCard(i); });
+
+  // Per-fish chime: same sample, but pitched to this fish's own
+  // step of the pentatonic scale (see the chime engine above), so
+  // sweeping across the school plays a melody, and overlaps chord.
+  if (fish.sound) {
+    const semitones = CHIME_SCALE[i % CHIME_SCALE.length];
+    el.addEventListener("pointerenter", () => playChime(fish.sound, semitones));
+  }
+
+  // Hovered fish come forward: the orbit loop enlarges them and
+  // lifts them above their neighbours (see the animate function)
+  const state = {
+    el,
+    flipEl: flip,
+    hovered: false,
+    flipped: false,
+    size: fish.size || 120,
+    // Spread around the carousel WITHIN this fish's school
+    angle: ((i % SCHOOL_SIZE) /
+      Math.min(SCHOOL_SIZE, FISH.length - Math.floor(i / SCHOOL_SIZE) * SCHOOL_SIZE))
+      * Math.PI * 2,
+    active: true,
+    // Each fish orbits at a slightly different distance (85%–115%
+    // of the base radius) so a big school doesn't look like a ring
+    radiusJitter: 0.85 + Math.random() * 0.3,
+    height: fish.height ?? mapRange(i % 3, 0, 2, 25, 60),
+    bobOffset: Math.random() * Math.PI * 2,
+  };
+  el.addEventListener("pointerenter", () => { state.hovered = true; });
+  el.addEventListener("pointerleave", () => { state.hovered = false; });
+
+  tank.appendChild(el);
+  return state;
+});
+
+/* --- Build the decorations ------------------------------------ */
+DECORATIONS.forEach((deco) => {
+  const el = document.createElement("div");
+  el.className = "decoration" + (deco.sway ? " sways" : "");
+  el.style.left = deco.x + "%";
+  el.style.height = deco.height + "px";
+  el.style.animationDelay = (Math.random() * -4) + "s";
+
+  const img = document.createElement("img");
+  img.src = deco.image;
+  img.alt = "";
+  img.onerror = () => {
+    const ph = placeholderFor(deco.image);
+    ph.style.height = "100%";
+    img.replaceWith(ph);
+  };
+  el.appendChild(img);
+  tank.appendChild(el);
+});
+
+/* --- Schools ------------------------------------------------------
+   The FISH list is split into schools of SCHOOL_SIZE. Only one
+   school swims at a time; the arrows (or dots) change schools with
+   a swim-through: the current school darts off in the direction of
+   travel, and the next glides in from the other side. ------------- */
+const schoolCount = Math.ceil(FISH.length / SCHOOL_SIZE);
+let schoolIndex = 0;
+let schoolOffset = 0;     // px added to every fish's x during transit
+let schoolAnim = null;    // { phase: "out"|"in", dir, next, start }
+let schoolDots = null;
+
+function setSchoolVisibility() {
+  swimmers.forEach((f, i) => {
+    f.active = Math.floor(i / SCHOOL_SIZE) === schoolIndex;
+    f.el.style.display = f.active ? "" : "none";
+  });
+}
+
+function updateDots() {
+  if (!schoolDots) return;
+  [...schoolDots.children].forEach((dot, i) =>
+    dot.classList.toggle("active", i === schoolIndex));
+}
+
+function changeSchool(dir) {
+  if (schoolAnim || schoolCount < 2) return;
+  const next = (schoolIndex + dir + schoolCount) % schoolCount;
+  if (stillMotion) {              // reduced motion: instant swap
+    schoolIndex = next;
+    setSchoolVisibility();
+    updateDots();
+    return;
+  }
+  schoolAnim = { phase: "out", dir, next, start: performance.now() };
+  // A little chime marks the change: a fifth up going forward,
+  // back to the root coming back
+  const withSound = FISH.find((f) => f.sound);
+  if (withSound) playChime(withSound.sound, dir > 0 ? 7 : 0);
+}
+
+if (schoolCount > 1) {
+  const prev = document.createElement("button");
+  prev.className = "school-arrow prev";
+  prev.textContent = "❮";
+  prev.addEventListener("click", () => changeSchool(-1));
+  const nextBtn = document.createElement("button");
+  nextBtn.className = "school-arrow next";
+  nextBtn.textContent = "❯";
+  nextBtn.addEventListener("click", () => changeSchool(1));
+  document.body.append(prev, nextBtn);
+
+  schoolDots = document.createElement("div");
+  schoolDots.className = "school-dots";
+  for (let s = 0; s < schoolCount; s++) {
+    const dot = document.createElement("button");
+    dot.addEventListener("click", () => {
+      if (s !== schoolIndex) changeSchool(s > schoolIndex ? 1 : -1);
+    });
+    schoolDots.appendChild(dot);
+  }
+  document.body.appendChild(schoolDots);
+  updateDots();
+}
+setSchoolVisibility();
+
+/* --- Sound: ambience + fish SFX, one master switch --------------
+   Browsers block sound until the visitor interacts with the page,
+   so the tank starts silent and the first click/drag (or the
+   speaker button) turns everything on. The same button mutes both
+   the music bed and the per-fish hover sounds. ------------------ */
+let audio = null;
+let soundOn = false;   // master switch — fish SFX check this too
+const hasAnySfx = FISH.some((fish) => fish.sound);
+
+if (SETTINGS.music || hasAnySfx) {
+  if (SETTINGS.music) {
+    audio = new Audio(SETTINGS.music);
+    audio.loop = true;
+    audio.volume = 0.5;
+  }
+
+  const soundBtn = document.createElement("button");
+  soundBtn.className = "sound-btn";
+  soundBtn.textContent = "🔇";
+  soundBtn.title = "Turn sound on";
+  soundBtn.setAttribute("aria-label", "Toggle sound");
+  document.getElementById("topControls").appendChild(soundBtn);
+
+  function setSound(on) {
+    soundOn = on;
+    if (audio) {
+      if (on) audio.play().catch(() => {});
+      else audio.pause();
+    }
+    soundBtn.textContent = on ? "🔊" : "🔇";
+    soundBtn.title = on ? "Turn sound off" : "Turn sound on";
+  }
+
+  soundBtn.addEventListener("click", (e) => {
+    e.stopPropagation();              // don't start a tank-drag
+    setSound(!soundOn);
+  });
+
+  // Start the sound on the visitor's first interaction anywhere,
+  // and warm up the chime engine so the first hover rings instantly
+  window.addEventListener("pointerdown", function firstTap() {
+    if (!soundOn) setSound(true);
+    if (hasAnySfx) {
+      initChimeEngine();
+      const firstWithSound = FISH.find((f) => f.sound);
+      if (firstWithSound) loadChime(firstWithSound.sound);
+    }
+    window.removeEventListener("pointerdown", firstTap);
+  });
+}
+
+/* --- "Create your fish" button + pop-up ------------------------ */
+let createBtn = null;
+const createOverlay = document.getElementById("createOverlay");
+
+if (SETTINGS.templateUrl || SETTINGS.submitUrl) {
+  createBtn = document.createElement("button");
+  createBtn.className = "create-btn";
+
+  // The click sound, shared by the create button and everything
+  // inside its menu — same volume as the fish SFX
+  let pluck = null;
+  function playPluck() {
+    if (!SETTINGS.createSound || !soundOn) return;
+    if (!pluck) { pluck = new Audio(SETTINGS.createSound); pluck.volume = 0.25; }
+    pluck.currentTime = 0;
+    pluck.play().catch(() => {});
+  }
+
+  createBtn.addEventListener("click", (e) => {
+    e.stopPropagation();
+    playPluck();
+    lastFocused = createBtn;
+    createOverlay.classList.add("open");
+  });
+  document.body.appendChild(createBtn);
+
+  // Wire the options; hide any whose URL isn't set
+  const optDownload = document.getElementById("optDownload");
+  const optSubmit = document.getElementById("optSubmit");
+  const downloadOverlay = document.getElementById("downloadOverlay");
+
+  // "Download the fish template" opens the format submenu
+  if (SETTINGS.templateUrl || SETTINGS.templatePsd || SETTINGS.templateKrita) {
+    optDownload.addEventListener("click", () => {
+      lastFocused = optDownload;
+      createOverlay.classList.remove("open");
+      downloadOverlay.classList.add("open");
+    });
+  } else optDownload.style.display = "none";
+
+  const submitOverlay = document.getElementById("submitOverlay");
+  const submitFrame = document.getElementById("submitFrame");
+  let submitFrameLoaded = false; // iframe.src reads back as a real URL even
+                                  // when src="", so a plain boolean flag is
+                                  // used here instead of checking .src itself
+  if (SETTINGS.submitEmbedUrl) {
+    optSubmit.addEventListener("click", () => {
+      // Only point the iframe at the real form the first time it's
+      // opened — no network request to monday.com until someone
+      // actually asks to submit a fish.
+      if (!submitFrameLoaded) {
+        submitFrame.src = SETTINGS.submitEmbedUrl;
+        submitFrameLoaded = true;
+      }
+      lastFocused = optSubmit;
+      createOverlay.classList.remove("open");
+      submitOverlay.classList.add("open");
+    });
+  } else optSubmit.style.display = "none";
+
+  // Back returns to the create menu; backdrop click closes fully
+  document.getElementById("submitBack").addEventListener("click", () => {
+    submitOverlay.classList.remove("open");
+    createOverlay.classList.add("open");
+  });
+  submitOverlay.addEventListener("click", (e) => {
+    if (e.target === submitOverlay) submitOverlay.classList.remove("open");
+  });
+
+  // The three format buttons
+  const dlPng = document.getElementById("dlPng");
+  const dlPsd = document.getElementById("dlPsd");
+  const dlKrita = document.getElementById("dlKrita");
+  if (SETTINGS.templateUrl) {
+    dlPng.href = SETTINGS.templateUrl;
+    dlPng.download = "Feeling-Fishy-Template.png";
+  } else dlPng.style.display = "none";
+  if (SETTINGS.templatePsd) dlPsd.href = SETTINGS.templatePsd;
+  else dlPsd.style.display = "none";
+  if (SETTINGS.templateKrita) dlKrita.href = SETTINGS.templateKrita;
+  else dlKrita.style.display = "none";
+
+  // Back returns to the create menu
+  document.getElementById("downloadBack").addEventListener("click", () => {
+    downloadOverlay.classList.remove("open");
+    createOverlay.classList.add("open");
+  });
+  // Clicking the dark backdrop closes the submenu
+  downloadOverlay.addEventListener("click", (e) => {
+    if (e.target === downloadOverlay) downloadOverlay.classList.remove("open");
+  });
+
+  // Your inlay artwork: an <img> placed above the text label
+  // inside each button's window (real alt text, not a CSS
+  // background — keeps this accessible to screen readers).
+  const inlayTargets = {
+    download: "optDownload", submit: "optSubmit",
+    png: "dlPng", psd: "dlPsd", krita: "dlKrita",
+  };
+  for (const [key, id] of Object.entries(inlayTargets)) {
+    const src = (SETTINGS.buttonInlays || {})[key];
+    if (!src) continue;
+    const inlay = document.querySelector("#" + id + " .inlay");
+    const img = document.createElement("img");
+    img.src = src;
+    img.alt = "";                 // decorative; the text label beside it already says it
+    inlay.prepend(img);
+  }
+
+  // Every button in the menus plays the same click sound
+  [optDownload, optSubmit, dlPng, dlPsd, dlKrita,
+   document.getElementById("createClose"),
+   document.getElementById("downloadBack"),
+   document.getElementById("submitBack")]
+    .forEach((btn) => btn.addEventListener("click", playPluck));
+}
+
+function closeCreate() { createOverlay.classList.remove("open"); }
+createOverlay.addEventListener("click", (e) => {
+  if (e.target === createOverlay) closeCreate();
+});
+
+/* --- Feed the Fish button ------------------------------------------
+   A plain fun button — no link, no donation page. Clicking it just
+   drops food in and sends the school into a happy feeding frenzy. --- */
+let feedUntil = 0;      // performance.now() timestamp the frenzy ends
+let feedLift = 0;       // how far the school has risen toward the food
+let feedSpin = 1;       // carousel speed multiplier, eases up to 10x
+let feedingState = false;
+
+const donateBtn = document.createElement("button");
+donateBtn.type = "button";
+donateBtn.className = "donate-btn";
+donateBtn.addEventListener("click", feedTheFish);
+document.getElementById("topControls").appendChild(donateBtn);
+
+function feedTheFish() {
+  feedUntil = performance.now() + 5000;   // 5 seconds of frenzy
+  for (let i = 0; i < 22; i++) {
+    setTimeout(() => {
+      const p = document.createElement("div");
+      p.className = "pellet";
+      const size = 5 + Math.random() * 5;
+      p.style.width = p.style.height = size + "px";
+      p.style.left = (8 + Math.random() * 84) + "%";
+      p.style.animationDuration = (3 + Math.random() * 2.5) + "s";
+      // Some pellets sink behind the fish, some in front
+      p.style.zIndex = Math.random() < 0.6 ? 6 : 320;
+      tank.appendChild(p);
+      p.addEventListener("animationend", () => p.remove());
+    }, i * 130);
+  }
+}
+
+/* --- Logo (top right), linked back to the Spectrum Public Access homepage */
+if (SETTINGS.logo) {
+  const logoLink = document.createElement("a");
+  logoLink.className = "logo-link";
+  logoLink.href = "/";
+  logoLink.setAttribute("aria-label", "Back to Spectrum Public Access home");
+  const logo = document.createElement("img");
+  logo.className = "logo";
+  logo.src = SETTINGS.logo;
+  logo.alt = "Spectrum Public Access";
+  logoLink.appendChild(logo);
+  document.body.appendChild(logoLink);
+}
+
+/* --- Info button + "About this project" pop-up -----------------
+   A short project blurb plus a plain-language walkthrough of what
+   every button on the page does. Always shown — this isn't tied to
+   any optional URL setting the way Create/Donate are. ------------ */
+const infoBtn = document.createElement("button");
+infoBtn.className = "info-btn";
+infoBtn.textContent = "i";
+document.getElementById("topControls").appendChild(infoBtn);
+
+const infoOverlay = document.getElementById("infoOverlay");
+let lastFocused = null; // remembers what to return focus to on close
+
+function openOverlay(overlay, trigger) {
+  lastFocused = trigger || document.activeElement;
+  overlay.classList.add("open");
+  // Move focus into the dialog for keyboard/screen-reader users
+  const heading = overlay.querySelector("h2");
+  if (heading) { heading.setAttribute("tabindex", "-1"); heading.focus(); }
+}
+function closeOverlay(overlay) {
+  overlay.classList.remove("open");
+  if (lastFocused && lastFocused.focus) lastFocused.focus();
+}
+
+infoBtn.addEventListener("click", (e) => {
+  e.stopPropagation();
+  openOverlay(infoOverlay, infoBtn);
+});
+document.getElementById("infoClose").addEventListener("click", () => closeOverlay(infoOverlay));
+infoOverlay.addEventListener("click", (e) => { if (e.target === infoOverlay) closeOverlay(infoOverlay); });
+
+// Escape closes whichever pop-up is currently open, from anywhere
+window.addEventListener("keydown", (e) => {
+  if (e.key !== "Escape") return;
+  const open = document.querySelector(".card-overlay.open");
+  if (open) closeOverlay(open);
+});
+
+/* --- Language system --------------------------------------------
+   All wording lives in the TEXT table at the top of the file.
+   applyLanguage() rewrites every phrase on screen at once. ------- */
+let lang = SETTINGS.language || "en";
+const langBtn = document.createElement("button");
+langBtn.className = "lang-btn";
+document.getElementById("topControls").appendChild(langBtn);
+
+function applyLanguage() {
+  const t = TEXT[lang];
+  document.documentElement.lang = lang;
+  document.getElementById("tagline").textContent = t.tagline;
+  document.getElementById("cardBack").textContent = t.back;
+  document.getElementById("createTitle").textContent = t.createTitle;
+  document.getElementById("optDownloadLabel").textContent = t.download;
+  document.getElementById("optSubmitLabel").textContent = t.submit;
+  document.getElementById("downloadTitle").textContent = t.downloadTitle;
+  document.getElementById("dlPngLabel").textContent = t.asIs;
+  document.getElementById("dlPsdLabel").textContent = t.psd;
+  document.getElementById("dlKritaLabel").textContent = t.krita;
+  document.getElementById("downloadNote").textContent = t.downloadNote;
+  document.getElementById("downloadBack").textContent = t.goBack;
+  document.getElementById("createClose").textContent = t.close;
+  document.getElementById("submitTitle").textContent = t.submitTitle;
+  document.getElementById("submitFrame").title = t.submitFrameTitle;
+  document.getElementById("submitBack").textContent = t.goBack;
+  if (createBtn) createBtn.textContent = t.create;
+  if (donateBtn) donateBtn.textContent = t.donate;
+  // Info button + "About this project" pop-up
+  infoBtn.title = t.info;
+  infoBtn.setAttribute("aria-label", t.info);
+  document.getElementById("infoTitle").textContent = t.infoTitle;
+  document.getElementById("infoIntro").textContent = t.infoIntro;
+  document.getElementById("howToTitle").textContent = t.howToTitle;
+  document.getElementById("infoClose").textContent = t.close;
+  const howToList = document.getElementById("howToList");
+  howToList.innerHTML = "";
+  t.howTo.forEach((step) => {
+    const li = document.createElement("li");
+    li.textContent = step;
+    howToList.appendChild(li);
+  });
+  document.querySelectorAll(".school-arrow.prev").forEach((b) => {
+    b.title = t.prevSchool; b.setAttribute("aria-label", t.prevSchool);
+  });
+  document.querySelectorAll(".school-arrow.next").forEach((b) => {
+    b.title = t.nextSchool; b.setAttribute("aria-label", t.nextSchool);
+  });
+  // Update every fish's name tag ("by" / "par")
+  document.querySelectorAll(".fish .name-tag").forEach((tag, i) => {
+    tag.textContent = t.by + " " + FISH[i].creator;
+  });
+  // The button shows the language you'd switch TO
+  langBtn.textContent = lang === "en" ? "FR" : "EN";
+}
+
+langBtn.addEventListener("click", (e) => {
+  e.stopPropagation();
+  lang = lang === "en" ? "fr" : "en";
+  applyLanguage();
+});
+applyLanguage();
+
+/* --- Drag to rotate -------------------------------------------- */
+let rotation = 0;
+let dragVelocity = 0;
+let isDragging = false;
+let wasDragged = false;
+let lastPointerX = 0;
+
+/* Drag sound: the water "grabs" while you hold, and lets go when
+   you do. preservesPitch is turned off so changing playbackRate
+   bends the pitch — dragging fast scrubs the sound higher, like a
+   record scratch, but underwater. Quick fades avoid pops. */
+let dragAudio = null;
+let dragFade = null;
+
+function startDragSound() {
+  if (!SETTINGS.dragSound || !soundOn) return;
+  if (!dragAudio) {
+    dragAudio = new Audio(SETTINGS.dragSound);
+    dragAudio.loop = true;
+    dragAudio.preservesPitch = false;
+    dragAudio.webkitPreservesPitch = false;
+  }
+  clearInterval(dragFade);
+  dragAudio.volume = 0;
+  dragAudio.playbackRate = 1;
+  dragAudio.currentTime = 0;
+  dragAudio.play().catch(() => {});
+  dragFade = setInterval(() => {          // fade in (~100ms)
+    dragAudio.volume = Math.min(0.25, dragAudio.volume + 0.05);
+    if (dragAudio.volume >= 0.25) clearInterval(dragFade);
+  }, 20);
+}
+
+function stopDragSound() {
+  if (!dragAudio) return;
+  clearInterval(dragFade);
+  dragFade = setInterval(() => {          // fade out (~150ms)
+    dragAudio.volume = Math.max(0, dragAudio.volume - 0.04);
+    if (dragAudio.volume <= 0) { dragAudio.pause(); clearInterval(dragFade); }
+  }, 20);
+}
+
+window.addEventListener("pointerdown", (e) => {
+  if (e.target.closest(".create-btn, .donate-btn, .sound-btn, .lang-btn, .info-btn, .school-arrow, .school-dots, .card")) return;
+  isDragging = true;
+  wasDragged = false;
+  lastPointerX = e.clientX;
+  document.body.classList.add("dragging");
+  startDragSound();
+});
+window.addEventListener("pointermove", (e) => {
+  if (!isDragging) return;
+  const dx = e.clientX - lastPointerX;
+  lastPointerX = e.clientX;
+  if (Math.abs(dx) > 2) wasDragged = true;
+  rotation += dx * 0.004;
+  dragVelocity = dx * 0.004;
+
+  // The scratch: drag speed bends the sound's pitch (0.8x–1.6x).
+  // Delete these three lines for a steady, un-bent drag sound.
+  if (dragAudio && !dragAudio.paused) {
+    dragAudio.playbackRate = 0.8 + Math.min(Math.abs(dx) / 12, 1) * 0.8;
+  }
+});
+window.addEventListener("pointerup", () => {
+  if (isDragging) stopDragSound();
+  isDragging = false;
+  document.body.classList.remove("dragging");
+});
+
+/* --- Calm mode ---------------------------------------------------
+   After 3 seconds without any input, the interface fades away and
+   the visitor is left with just the fish and the water. The first
+   twitch of the mouse (or any key/touch) brings everything back.
+   The UI never hides mid-drag or while a pop-up is open. --------- */
+let calmTimer = null;
+
+function scheduleCalm() {
+  clearTimeout(calmTimer);
+  calmTimer = setTimeout(() => {
+    if (isDragging || document.querySelector(".card-overlay.open")) {
+      scheduleCalm();          // busy — check again in a few seconds
+      return;
+    }
+    document.body.classList.add("calm");
+  }, 3000);
+}
+
+function wakeUI() {
+  document.body.classList.remove("calm");
+  scheduleCalm();
+}
+
+["pointermove", "pointerdown", "keydown", "wheel", "touchstart"]
+  .forEach((ev) => window.addEventListener(ev, wakeUI, { passive: true }));
+scheduleCalm();
+
+/* --- The orbit engine: runs ~60 frames per second --------------
+   Each fish sits at an angle on an invisible carousel:
+     x = cos(angle) → left/right position
+     z = sin(angle) → depth: -1 back … +1 front
+   Depth drives scale, opacity, blur, and stacking order — that's
+   what creates the 3D feeling on a flat screen. ----------------- */
+const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+let lastTime = performance.now();
+
+function animate(now) {
+  const dt = (now - lastTime) / 1000;
+  lastTime = now;
+
+  // Feeding time? The carousel whips into a feeding frenzy: the
+  // spin eases up to 20x speed and back down when the food is gone
+  const feeding = now < feedUntil;
+  if (feeding !== feedingState) {
+    feedingState = feeding;
+    document.body.classList.toggle("feeding", feeding);
+  }
+  feedLift += ((feeding ? 45 : 0) - feedLift) * Math.min(1, dt * 2.5);
+  feedSpin += ((feeding ? 20 : 1) - feedSpin) * Math.min(1, dt * 2);
+
+  // School transition: ease the leaving school off one side, then
+  // ease the arriving school in from the other (500ms each phase)
+  if (schoolAnim) {
+    const p = Math.min(1, (now - schoolAnim.start) / 500);
+    if (schoolAnim.phase === "out") {
+      schoolOffset = -schoolAnim.dir * window.innerWidth * 1.2 * (p * p);
+      if (p >= 1) {
+        schoolIndex = schoolAnim.next;
+        setSchoolVisibility();
+        updateDots();
+        schoolAnim.phase = "in";
+        schoolAnim.start = now;
+      }
+    } else {
+      const q = 1 - Math.pow(1 - p, 3);   // decelerate into place
+      schoolOffset = schoolAnim.dir * window.innerWidth * 1.2 * (1 - q);
+      if (p >= 1) { schoolAnim = null; schoolOffset = 0; }
+    }
+  }
+
+  if (!isDragging && !reduceMotion) {
+    rotation += ORBIT.speed * dt * feedSpin;
+  }
+  if (!isDragging) {
+    rotation += dragVelocity;
+    dragVelocity *= 0.95;   // drag momentum fades out
+  }
+
+  const cx = window.innerWidth / 2;
+  const orbitRadius = window.innerWidth * ORBIT.radiusX;
+
+  for (const fish of swimmers) {
+    if (!fish.active) continue;   // fish in other schools sit this out
+
+    const a = fish.angle + rotation;
+    const x = Math.cos(a);
+    const z = Math.sin(a);
+
+    const scale   = mapRange(z, -1, 1, ORBIT.farScale, ORBIT.nearScale);
+    const opacity = mapRange(z, -1, 1, ORBIT.farOpacity, 1);
+    const blur    = mapRange(z, -1, 1, ORBIT.farBlur, 0);
+    const bob = reduceMotion ? 0
+      : Math.sin(now / 1000 + fish.bobOffset)
+        * ORBIT.bobAmount * (feeding ? 2 : 1);
+
+    // Motion blur: a fish's sideways speed on the carousel is
+    // highest at the sides (|z| near 1) and zero at front/back
+    // dead-center. Blur scales with spin speed × that velocity.
+    const motionBlur = reduceMotion ? 0
+      : (feedSpin - 1) * Math.abs(z) * 0.45;
+
+    const screenX = cx + x * orbitRadius * fish.radiusJitter + schoolOffset;
+    const screenY = window.innerHeight * (fish.height / 100) + bob - feedLift;
+
+    // Fish face where they're going; art is drawn facing left, so
+    // the flip wrapper mirrors it on the back half of the carousel
+    // (only the artwork — tags and thought bubbles stay readable).
+    const facing = z < 0 ? -1 : 1;
+    if ((facing < 0) !== fish.flipped) {
+      fish.flipped = facing < 0;
+      fish.flipEl.style.transform = `scaleX(${facing})`;
+      fish.el.classList.toggle("flipped", fish.flipped);
+    }
+
+    fish.el.style.width = fish.size + "px";
+    fish.el.style.transform =
+      `translate(${screenX - fish.size / 2}px, ${screenY}px) scale(${scale})`;
+    fish.el.style.opacity = fish.hovered ? 1 : opacity;
+    // Hovered fish un-blur so the name tag and bubble stay crisp
+    const totalBlur = (fish.hovered ? 0 : blur) + motionBlur;
+    fish.el.style.filter =
+      totalBlur > 0.15 ? `blur(${totalBlur}px)` : "none";
+    fish.el.style.zIndex = fish.hovered
+      ? 500
+      : Math.round(mapRange(z, -1, 1, 10, 300));
+  }
+
+  requestAnimationFrame(animate);
+}
+requestAnimationFrame(animate);
+
+/* --- Detail card + the flight transition ------------------------
+   Clicking a fish doesn't just open the card — the fish visibly
+   leaves the school and swims up to it:
+   1. Measure where the fish is on screen right now
+   2. Open the card with its image slot invisible, measure where
+      the image WILL be
+   3. Hide the real fish, place a flying copy at position 1, and
+      let CSS transition it to position 2 (wiggling all the way)
+   4. When it lands: show the card image, remove the flying copy
+   The card's text fades up underneath meanwhile (.reveal class). */
+const overlay = document.getElementById("cardOverlay");
+const cardEl = overlay.querySelector(".card");
+let openFishIndex = null;
+
+function openCard(index) {
+  const fish = FISH[index];
+
+  // Fill in the card's content
+  const cardArt = document.getElementById("cardArt");
+  cardArt.innerHTML = "";
+  const cardImg = document.createElement("img");
+  cardImg.src = fish.image;
+  cardImg.alt = fish.name;
+  cardImg.onerror = () => { cardImg.style.display = "none"; };
+  cardArt.appendChild(cardImg);
+  document.getElementById("cardName").textContent = fish.name;
+  document.getElementById("cardCreator").textContent =
+    TEXT[lang].designedBy + " " + fish.creator;
+  const bioEl = document.getElementById("cardBio");
+  bioEl.textContent = fish.bio || "";
+  bioEl.style.display = fish.bio ? "block" : "none";
+
+  // Reduced motion (or a missing image): open the card plainly
+  if (stillMotion || !fish.image) {
+    overlay.classList.add("open");
+    return;
+  }
+
+  // 1. Where is the fish right now?
+  const sourceEl = swimmers[index].el;
+  const start = sourceEl.getBoundingClientRect();
+
+  // 2. Open the card, but keep its image invisible for now
+  cardImg.style.opacity = "0";
+  cardEl.classList.add("reveal");
+  overlay.classList.add("open");
+
+  requestAnimationFrame(() => {
+    const target = cardImg.getBoundingClientRect();
+
+    // 3. The flying copy, starting exactly where the fish was
+    const clone = document.createElement("div");
+    clone.className = "flight";
+    clone.style.left = start.left + "px";
+    clone.style.top = start.top + "px";
+    clone.style.width = start.width + "px";
+    clone.style.height = start.height + "px";
+    clone.innerHTML =
+      `<div class="flight-wiggle"><img src="${fish.image}" alt=""></div>`;
+    document.body.appendChild(clone);
+
+    sourceEl.style.visibility = "hidden";   // its spot in the school empties
+    openFishIndex = index;
+
+    // Next frame, give it its destination — CSS animates the trip
+    requestAnimationFrame(() => {
+      clone.style.left = target.left + "px";
+      clone.style.top = target.top + "px";
+      clone.style.width = target.width + "px";
+      clone.style.height = target.height + "px";
+    });
+
+    // 4. Touchdown: swap the flying copy for the card's own image
+    const land = () => {
+      cardImg.style.opacity = "";
+      clone.remove();
+    };
+    clone.addEventListener("transitionend", land, { once: true });
+    setTimeout(land, 700);   // safety net if transitionend never fires
+  });
+}
+
+function closeCard() {
+  overlay.classList.remove("open");
+  cardEl.classList.remove("reveal");
+  // The fish rejoins the school
+  if (openFishIndex !== null) {
+    swimmers[openFishIndex].el.style.visibility = "";
+    openFishIndex = null;
+  }
+  document.querySelectorAll(".flight").forEach((f) => f.remove());
+}
+overlay.addEventListener("click", (e) => { if (e.target === overlay) closeCard(); });
+</script>
+</body>
+</html>
