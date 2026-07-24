@@ -1,0 +1,216 @@
+/* ==================================================================
+   CREATE YOUR FISH — draw-in-browser tool
+   Loaded only the first time someone opens the "Draw it yourself"
+   option in the Create Your Fish pop-up (see create-your-fish-draw.js
+   and the lazy-load wiring in index.html). Every selector below is
+   scoped under .dyf-root so nothing here can collide with the rest
+   of the Feeling Fishy page now that they share one document.
+
+   DESIGN — Tank Glass (root background + title) + Control Booth
+   (the three interactive panels: Template, Layers, Color/Tools),
+   both pulled from Feeling Fishy's own tokens.
+   ================================================================== */
+.dyf-root {
+  --dyf-ink: #eaf6ff;
+  --dyf-dim: #bcd6e6;
+  --dyf-gold: #ffe14d;      /* SPA logo yellow / neon glow */
+  --dyf-teal: #3fd8c4;
+  --dyf-pink: #ef6fa8;
+  --dyf-bezel: #17191d;     /* dark machine plastic */
+
+  position: relative;
+  margin: 0;
+  background: linear-gradient(to bottom, #6ecfe0 0%, #1d7ea8 45%, #0b3556 100%);
+  color: var(--dyf-ink); font-family: system-ui, sans-serif;
+  display: flex; flex-direction: column; align-items: center;
+  padding: 16px 16px 18px;
+  border-radius: 16px;
+  overflow: hidden; /* desktop: everything should fit without scrolling */
+}
+.dyf-root * { box-sizing: border-box; }
+
+.dyf-root h1 {
+  font-family: 'Sixtyfour', 'Courier New', monospace; font-weight: 400;
+  text-transform: uppercase; letter-spacing: 1px;
+  font-size: 1.1rem; margin: 0 0 12px; color: var(--dyf-gold);
+  /* Gold instead of the tank's own cyan glow — cyan-on-cyan against
+     the top of this gradient had almost no contrast. Gold is the one
+     color the water background never produces on its own, so it
+     always pops, and it echoes the SPA logo itself. */
+  text-shadow: 0 0 4px rgba(255,238,60,.9), 0 0 14px rgba(255,238,60,.5), 0 0 30px rgba(255,238,60,.25);
+}
+
+.dyf-root .workspace { display: flex; gap: 14px; align-items: flex-start; justify-content: center; }
+
+.dyf-root .side-panel {
+  display: flex; flex-direction: column; gap: 8px;
+  background: var(--dyf-bezel); border-radius: 10px; padding: 12px;
+  box-shadow:
+    inset 2px 2px 0 rgba(255,255,255,0.08),
+    inset -2px -2px 0 rgba(0,0,0,0.6),
+    0 6px 20px rgba(0,0,0,0.4);
+  width: min(11.5vw, 180px); flex-shrink: 0;
+}
+.dyf-root .side-panel .row-label { margin: 0 0 2px; }
+.dyf-root .pick-btn {
+  font-family: 'Baloo 2', system-ui, sans-serif; font-weight: 700;
+  background: rgba(255,238,60,0.15); color: var(--dyf-ink);
+  border: 1px solid rgba(255,255,255,0.15); border-radius: 8px;
+  padding: 7px; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 5px;
+  width: 100%;
+}
+.dyf-root .pick-btn.active { background: var(--dyf-teal); color: #04231c; border-color: var(--dyf-teal); }
+.dyf-root .pick-btn.locked { opacity: 0.55; cursor: not-allowed; }
+.dyf-root .pick-thumb {
+  /* Height-driven with a locked aspect-ratio, instead of width and
+     height being set independently — that mismatch stretched every
+     thumbnail to fit whatever box resulted, the same underlying
+     issue as the stage below. The buffer itself is 180x126, so
+     that's the ratio locked here; width is derived and centered. */
+  width: auto; height: min(9vh, 84px); aspect-ratio: 180 / 126;
+  border-radius: 6px; background: #fff; border: 1px solid rgba(255,255,255,0.3);
+}
+.dyf-root .pick-name { font-size: 0.74rem; color: var(--dyf-dim); display:flex; align-items:center; gap:5px; }
+.dyf-root .lock-tag { font-size: 0.62rem; border: 1px solid rgba(255,255,255,0.3); border-radius: 5px; padding: 1px 4px; }
+
+.dyf-root .stage {
+  /* Width is capped three ways — by an internal width limit, a hard
+     max, and height converted through the fixed aspect ratio — then
+     aspect-ratio derives height from that width. Two independently
+     computed dimensions almost never land on the actual 900:620
+     canvas ratio, so the browser would stretch the bitmap to fill a
+     box of the wrong shape. Locking to one ratio means the on-screen
+     box always matches the canvas pixel buffer 1:1 — no stretching,
+     on any window or modal shape. */
+  position: relative;
+  width: min(64vw, 940px, calc(66vh * 900 / 620));
+  aspect-ratio: 900 / 620;
+  max-width: 100%;
+  border-radius: 16px; overflow: hidden;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+  background: #fff; touch-action: none; flex-shrink: 0;
+}
+.dyf-root .draw-surface { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: block; touch-action: none; }
+
+.dyf-root .center-column { display: flex; flex-direction: column; align-items: center; }
+
+.dyf-root .panel {
+  width: 100%; max-width: 900px; margin-top: 10px;
+  background: var(--dyf-bezel); border-radius: 10px; padding: 10px 16px;
+  display: flex; flex-wrap: wrap; gap: 10px 22px; align-items: center;
+  box-shadow:
+    inset 2px 2px 0 rgba(255,255,255,0.08),
+    inset -2px -2px 0 rgba(0,0,0,0.6),
+    0 6px 20px rgba(0,0,0,0.4);
+}
+.dyf-root .row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.dyf-root .row-label { font-size: 0.68rem; color: var(--dyf-dim); text-transform: uppercase; letter-spacing: 0.06em; margin-right: 2px; }
+.dyf-root .swatches { display: flex; gap: 6px; align-items: center; }
+.dyf-root .swatch { width: 24px; height: 24px; border-radius: 50%; border: 2px solid rgba(255,255,255,0.25); cursor: pointer; padding: 0; }
+.dyf-root .swatch.active { border-color: #fff; transform: scale(1.15); }
+.dyf-root input[type="color"] {
+  width: 28px; height: 28px; border: 2px solid rgba(255,255,255,0.25); border-radius: 50%;
+  padding: 0; cursor: pointer; background: none;
+}
+.dyf-root button.tool {
+  font-family: 'Baloo 2', system-ui, sans-serif; font-weight: 700;
+  background: rgba(255,238,60,0.15); color: var(--dyf-ink);
+  border: 1px solid rgba(255,255,255,0.15); border-radius: 8px; padding: 6px 12px; font-size: 0.8rem; cursor: pointer;
+}
+.dyf-root button.tool.active { background: var(--dyf-teal); color: #04231c; border-color: var(--dyf-teal); }
+.dyf-root button.tool:hover { border-color: #fff; }
+.dyf-root button.primary {
+  font-family: 'Sixtyfour', monospace; text-transform: uppercase; letter-spacing: .06em; font-size: 0.78rem;
+  background: var(--dyf-gold); color: #3a2e00; border: none; border-radius: 6px; padding: 8px 16px; cursor: pointer;
+  box-shadow: 0 4px 0 rgba(0,0,0,0.4), 0 0 14px rgba(255,238,60,.35);
+}
+.dyf-root button.secondary {
+  font-family: 'Sixtyfour', monospace; text-transform: uppercase; letter-spacing: .06em; font-size: 0.78rem;
+  background: transparent; color: var(--dyf-teal); border: 2px solid var(--dyf-teal); border-radius: 6px; padding: 6px 16px; cursor: pointer;
+  box-shadow: 0 0 10px rgba(63,216,196,.3), inset 0 0 10px rgba(63,216,196,.15);
+}
+.dyf-root label.small { font-size: 0.76rem; color: var(--dyf-dim); display: flex; align-items: center; gap: 6px; }
+.dyf-root input[type="range"] { width: 80px; }
+.dyf-root .diagnostics {
+  width: 100%; max-width: 900px; margin-top: 6px;
+  font-size: 0.72rem; color: var(--dyf-dim);
+  display: flex; gap: 20px; flex-wrap: wrap; justify-content: center;
+}
+.dyf-root .diagnostics b { color: var(--dyf-teal); }
+.dyf-root .pressure-bar { width: 70px; height: 6px; border-radius: 3px; background: rgba(255,255,255,0.15); overflow: hidden; display: inline-block; vertical-align: middle; margin-left: 5px; }
+.dyf-root .pressure-fill { height: 100%; background: var(--dyf-pink); width: 0%; transition: width 0.05s linear; }
+
+@media (max-width: 1050px) {
+  .dyf-root { overflow: auto; }
+  .dyf-root .workspace { flex-direction: column; align-items: center; }
+  .dyf-root .side-panel { flex-direction: row; flex-wrap: wrap; width: auto; justify-content: center; }
+}
+
+/* ==================================================================
+   GUIDED TOUR — explains the order of operations: Template -> Canvas
+   -> Color/Tools -> Layers -> Download/Submit. Off by default, opened
+   only from the "i" button, so nothing appears uninvited.
+
+   Positioned `absolute` against .dyf-root (not `fixed` against the
+   viewport) since this tool now lives inside a modal card rather
+   than owning the whole page — this keeps the dimmed overlay and
+   tooltip confined to the tool's own area regardless of how the
+   surrounding modal is sized.
+   ================================================================== */
+.dyf-root .tour-btn {
+  position: absolute; top: 10px; right: 10px; z-index: 950;
+  width: 34px; height: 34px; border-radius: 50%; border: none; cursor: pointer;
+  background: var(--dyf-gold); color: #3a2e00;
+  font-family: Georgia, "Times New Roman", serif; font-style: italic; font-weight: 800; font-size: 1rem;
+  box-shadow: 0 4px 14px rgba(0,0,0,0.35);
+}
+.dyf-root .tour-btn:hover { transform: translateY(-1px); }
+
+/* Darkens the tool; a matching box-shadow "hole" (added per-step
+   via .spotlight) is the only see-through part. */
+.dyf-root .tour-dim {
+  display: none;
+  position: absolute; inset: 0; z-index: 980; border-radius: 16px; overflow: hidden;
+}
+.dyf-root .tour-dim.open { display: block; }
+.dyf-root .spotlight {
+  position: absolute; z-index: 981; border-radius: 12px;
+  box-shadow: 0 0 0 9999px rgba(4,10,16,0.72);
+  transition: top .2s ease, left .2s ease, width .2s ease, height .2s ease;
+  pointer-events: none;
+}
+.dyf-root .tour-card {
+  position: absolute; z-index: 982; width: min(300px, 86vw);
+  background: var(--dyf-bezel); border-radius: 12px; padding: 16px 18px;
+  box-shadow:
+    inset 2px 2px 0 rgba(255,255,255,0.08),
+    inset -2px -2px 0 rgba(0,0,0,0.6),
+    0 10px 30px rgba(0,0,0,0.5);
+  transition: top .2s ease, left .2s ease;
+}
+.dyf-root .tour-card h3 {
+  font-family: 'Sixtyfour', 'Courier New', monospace; font-weight: 400; font-size: 0.9rem;
+  text-transform: uppercase; letter-spacing: .04em; color: var(--dyf-gold); margin: 0 0 8px;
+}
+.dyf-root .tour-card p {
+  font-family: 'Baloo 2', system-ui, sans-serif; font-size: 0.86rem; line-height: 1.4;
+  color: var(--dyf-ink); margin: 0 0 14px;
+}
+.dyf-root .tour-controls { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.dyf-root .tour-dots { display: flex; gap: 5px; }
+.dyf-root .tour-dots span { width: 6px; height: 6px; border-radius: 50%; background: rgba(255,255,255,0.25); }
+.dyf-root .tour-dots span.on { background: var(--dyf-teal); }
+.dyf-root .tour-buttons { display: flex; gap: 6px; }
+.dyf-root .tour-buttons button {
+  font-family: 'Baloo 2', system-ui, sans-serif; font-weight: 700; font-size: 0.76rem; cursor: pointer;
+  border-radius: 6px; padding: 5px 11px; border: 1px solid rgba(255,255,255,0.2);
+  background: rgba(255,255,255,0.08); color: var(--dyf-ink);
+}
+.dyf-root .tour-buttons button.next { background: var(--dyf-teal); color: #04231c; border-color: var(--dyf-teal); }
+.dyf-root .tour-buttons button:disabled { opacity: 0.35; cursor: default; }
+.dyf-root .tour-skip {
+  align-self: flex-start; margin-top: -4px; margin-bottom: 10px;
+  background: none; border: none; color: var(--dyf-dim); font-size: 0.72rem;
+  text-decoration: underline; cursor: pointer; padding: 0;
+  font-family: 'Baloo 2', system-ui, sans-serif;
+}
