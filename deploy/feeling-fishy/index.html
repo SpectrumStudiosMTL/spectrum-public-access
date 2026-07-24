@@ -23,8 +23,6 @@ const EMBEDDED_IMAGES = {
   inlayKrita: "images/inlay-krita.webp",
   logo: "images/logo.webp",
   fish0: "images/fish/fish0.webp",
-  fish73: "images/fish/fish73.webp",
-  fish72: "images/fish/fish72.webp",
   fish1: "images/fish/fish1.webp",
   fish2: "images/fish/fish2.webp",
   fish3: "images/fish/fish3.webp",
@@ -197,6 +195,7 @@ const TEXT = {
     prevSchool: "Previous school of fish",
     createTitle: "Add your fish to the tank!",
     download: "Download the fish template",
+    draw: "Draw it yourself",
     submit: "Submit your fish",
     downloadTitle: "Choose your template",
     asIs: "Ready to print (PNG)",
@@ -208,6 +207,7 @@ const TEXT = {
     by: "by",
     designedBy: "Designed by",
     back: "Back to the tank",
+    drawTitle: "Draw your fish",
     submitTitle: "Submit your fish",
     submitFrameTitle: "Feeling Fishy submission form",
     info: "About this project",
@@ -218,7 +218,7 @@ const TEXT = {
     howTo: [
       "Drag anywhere in the tank to spin it and look around.",
       "Hover or tap a fish to see its creator's name.",
-      "Press \"Create your fish\" to download a blank template and submit your own drawing.",
+      "Press \"Create your fish\" to download a blank template and submit your own drawing, or draw right on the page.",
       "Press \"Feed the Fish\" for a fun surprise — no strings attached.",
       "The 🔊 button toggles sound, and EN/FR switches language.",
     ],
@@ -231,6 +231,7 @@ const TEXT = {
     prevSchool: "Banc de poissons précédent",
     createTitle: "Ajoute ton poisson à l'aquarium !",
     download: "Télécharger le modèle de poisson",
+    draw: "Dessine-le toi-même",
     submit: "Soumettre ton poisson",
     downloadTitle: "Choisis ton modèle",
     asIs: "Prêt à imprimer (PNG)",
@@ -242,6 +243,7 @@ const TEXT = {
     by: "par",
     designedBy: "Créé par",
     back: "Retour à l'aquarium",
+    drawTitle: "Dessine ton poisson",
     submitTitle: "Soumets ton poisson",
     submitFrameTitle: "Formulaire de soumission Feeling Fishy",
     info: "À propos de ce projet",
@@ -252,7 +254,7 @@ const TEXT = {
     howTo: [
       "Fais glisser n'importe où dans l'aquarium pour le faire tourner et regarder autour.",
       "Survole ou touche un poisson pour voir le nom de son créateur.",
-      "Appuie sur « Crée ton poisson » pour télécharger un modèle vierge et soumettre ton dessin.",
+      "Appuie sur « Crée ton poisson » pour télécharger un modèle vierge et soumettre ton dessin, ou dessine directement sur la page.",
       "Appuie sur « Nourrir les poissons » pour une petite surprise amusante — sans aucune obligation.",
       "Le bouton 🔊 active ou coupe le son, et EN/FR change la langue.",
     ],
@@ -345,8 +347,6 @@ const FISH = [
   { name: "", creator: "Emily", bio: "", image: EMBEDDED_IMAGES.fish69, sound: EMBEDDED_AUDIO.chime, height: 18, size: 130 },
   { name: "", creator: "Emily", bio: "", image: EMBEDDED_IMAGES.fish70, sound: EMBEDDED_AUDIO.chime, height: 32, size: 140 },
   { name: "", creator: "Ben", bio: "", image: EMBEDDED_IMAGES.fish71, sound: EMBEDDED_AUDIO.chime, height: 46, size: 115 },
-  { name: "", creator: "Kat", bio: "", image: EMBEDDED_IMAGES.fish72, sound: EMBEDDED_AUDIO.chime, height: 60, size: 135 },
-  { name: "this better work", creator: "cameron", bio: "", image: EMBEDDED_IMAGES.fish73, sound: EMBEDDED_AUDIO.chime, height: 25, size: 125 },
 ];
 
 /* SEA FLOOR DECORATIONS
@@ -750,6 +750,19 @@ header p  { font-size: clamp(0.85rem, 2vw, 1rem); opacity: 0.9; }
    room to breathe. The iframe scales with the card instead of
    staying a fixed 650×500, so it still fits on a phone screen. */
 .card.submit-card { max-width: 700px; }
+
+/* "Draw it yourself" card — the draw tool needs real workspace, not
+   just a couple of buttons, so this one is sized close to the full
+   viewport instead of the ~560-700px the other cards use. */
+.card.draw-card {
+  max-width: 96vw; width: 96vw; max-height: 92vh;
+  overflow: hidden;
+}
+#drawToolMount { display: flex; justify-content: center; }
+@media (max-width: 1050px) {
+  .card.draw-card { overflow-y: auto; }
+}
+
 .iframe-wrap {
   width: 100%;
   max-width: 650px;
@@ -1080,13 +1093,15 @@ body.calm .school-arrow, body.calm .school-dots {
   </div>
 </div>
 
-<!-- The "Create your fish" pop-up: download the template, or
-     submit a finished fish through the monday.com form -->
+<!-- The "Create your fish" pop-up: download the template, draw it
+     right on the page, or submit a finished fish through the
+     monday.com form -->
 <div class="card-overlay" id="createOverlay">
   <div class="card">
     <h2 id="createTitle"></h2>
     <div class="option-row">
       <a class="option-btn" id="optDownload"><span class="inlay" id="optDownloadLabel"></span></a>
+      <a class="option-btn" id="optDraw"><span class="inlay" id="optDrawLabel"></span></a>
       <a class="option-btn" id="optSubmit"><span class="inlay" id="optSubmitLabel"></span></a>
     </div>
     <button id="createClose" onclick="closeCreate()">Close</button>
@@ -1104,6 +1119,20 @@ body.calm .school-arrow, body.calm .school-dots {
     </div>
     <p class="download-note" id="downloadNote"></p>
     <button id="downloadBack">Back</button>
+  </div>
+</div>
+
+<!-- "Draw it yourself" pop-up: the draw-in-browser tool mounts into
+     #drawToolMount the first time this opens. Its CSS/JS/template
+     images aren't requested until that happens (see the lazy-load
+     wiring below), so nobody pays for this feature who never opens
+     it. Sized wider than the other cards since it needs real
+     workspace, not just a couple of buttons and a paragraph. -->
+<div class="card-overlay" id="drawOverlay" role="dialog" aria-modal="true" aria-labelledby="drawTitle">
+  <div class="card draw-card">
+    <h2 id="drawTitle"></h2>
+    <div id="drawToolMount"></div>
+    <button id="drawBack">Back</button>
   </div>
 </div>
 
@@ -1564,6 +1593,40 @@ if (SETTINGS.templateUrl || SETTINGS.submitUrl) {
     });
   } else optDownload.style.display = "none";
 
+  // "Draw it yourself" — lazy-loads the draw tool's stylesheet, its
+  // script, and (via that script, only once the template picker
+  // actually renders) its template images. Nothing here is fetched
+  // until this option is clicked for the first time.
+  const optDraw = document.getElementById("optDraw");
+  const drawOverlay = document.getElementById("drawOverlay");
+  const drawToolMount = document.getElementById("drawToolMount");
+  let drawToolLoading = null; // the in-flight load promise, so a
+                               // second click while loading doesn't
+                               // fetch the CSS/JS twice
+  function loadDrawTool() {
+    if (window.FishDrawTool) return Promise.resolve();
+    if (drawToolLoading) return drawToolLoading;
+    drawToolLoading = new Promise((resolve, reject) => {
+      const css = document.createElement("link");
+      css.rel = "stylesheet";
+      css.href = "create-your-fish-draw.css";
+      document.head.appendChild(css);
+
+      const script = document.createElement("script");
+      script.src = "create-your-fish-draw.js";
+      script.onload = resolve;
+      script.onerror = reject;
+      document.body.appendChild(script);
+    });
+    return drawToolLoading;
+  }
+  optDraw.addEventListener("click", () => {
+    lastFocused = optDraw;
+    createOverlay.classList.remove("open");
+    drawOverlay.classList.add("open");
+    loadDrawTool().then(() => window.FishDrawTool.mount(drawToolMount, lang));
+  });
+
   const submitOverlay = document.getElementById("submitOverlay");
   const submitFrame = document.getElementById("submitFrame");
   let submitFrameLoaded = false; // iframe.src reads back as a real URL even
@@ -1591,6 +1654,15 @@ if (SETTINGS.templateUrl || SETTINGS.submitUrl) {
   });
   submitOverlay.addEventListener("click", (e) => {
     if (e.target === submitOverlay) submitOverlay.classList.remove("open");
+  });
+
+  // Back returns to the create menu; backdrop click closes fully
+  document.getElementById("drawBack").addEventListener("click", () => {
+    drawOverlay.classList.remove("open");
+    createOverlay.classList.add("open");
+  });
+  drawOverlay.addEventListener("click", (e) => {
+    if (e.target === drawOverlay) drawOverlay.classList.remove("open");
   });
 
   // The three format buttons
@@ -1634,9 +1706,10 @@ if (SETTINGS.templateUrl || SETTINGS.submitUrl) {
   }
 
   // Every button in the menus plays the same click sound
-  [optDownload, optSubmit, dlPng, dlPsd, dlKrita,
+  [optDownload, optDraw, optSubmit, dlPng, dlPsd, dlKrita,
    document.getElementById("createClose"),
    document.getElementById("downloadBack"),
+   document.getElementById("drawBack"),
    document.getElementById("submitBack")]
     .forEach((btn) => btn.addEventListener("click", playPluck));
 }
@@ -1745,6 +1818,7 @@ function applyLanguage() {
   document.getElementById("cardBack").textContent = t.back;
   document.getElementById("createTitle").textContent = t.createTitle;
   document.getElementById("optDownloadLabel").textContent = t.download;
+  document.getElementById("optDrawLabel").textContent = t.draw;
   document.getElementById("optSubmitLabel").textContent = t.submit;
   document.getElementById("downloadTitle").textContent = t.downloadTitle;
   document.getElementById("dlPngLabel").textContent = t.asIs;
@@ -1753,9 +1827,14 @@ function applyLanguage() {
   document.getElementById("downloadNote").textContent = t.downloadNote;
   document.getElementById("downloadBack").textContent = t.goBack;
   document.getElementById("createClose").textContent = t.close;
+  document.getElementById("drawTitle").textContent = t.drawTitle;
+  document.getElementById("drawBack").textContent = t.goBack;
   document.getElementById("submitTitle").textContent = t.submitTitle;
   document.getElementById("submitFrame").title = t.submitFrameTitle;
   document.getElementById("submitBack").textContent = t.goBack;
+  // The draw tool loads its own strings lazily, only once someone has
+  // actually opened it — nothing to update if it isn't loaded yet.
+  if (window.FishDrawTool) window.FishDrawTool.setLanguage(lang);
   if (createBtn) createBtn.textContent = t.create;
   if (donateBtn) donateBtn.textContent = t.donate;
   // Info button + "About this project" pop-up
