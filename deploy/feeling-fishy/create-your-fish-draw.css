@@ -66,8 +66,9 @@
      height being set independently — that mismatch stretched every
      thumbnail to fit whatever box resulted, the same underlying
      issue as the stage below. The buffer itself is 180x126, so
-     that's the ratio locked here; width is derived and centered. */
-  width: auto; height: min(9vh, 84px); aspect-ratio: 180 / 126;
+     that's the ratio locked here; width is derived and centered.
+     Scaled down along with the stage above, for the same reason. */
+  width: auto; height: min(6vh, 58px); aspect-ratio: 180 / 126;
   border-radius: 6px; background: #fff; border: 1px solid rgba(255,255,255,0.3);
 }
 .dyf-root .pick-name { font-size: 0.74rem; color: var(--dyf-dim); display:flex; align-items:center; gap:5px; }
@@ -81,9 +82,14 @@
      canvas ratio, so the browser would stretch the bitmap to fill a
      box of the wrong shape. Locking to one ratio means the on-screen
      box always matches the canvas pixel buffer 1:1 — no stretching,
-     on any window or modal shape. */
+     on any window or modal shape.
+
+     The 46vh budget (not 66vh) accounts for this living inside a
+     modal card that also has its own title, Back button, and
+     padding around it — sized for the space actually left over,
+     not the full viewport the standalone tool originally assumed. */
   position: relative;
-  width: min(64vw, 940px, calc(66vh * 900 / 620));
+  width: min(64vw, 820px, calc(46vh * 900 / 620));
   aspect-ratio: 900 / 620;
   max-width: 100%;
   border-radius: 16px; overflow: hidden;

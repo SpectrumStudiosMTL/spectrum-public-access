@@ -756,9 +756,21 @@ header p  { font-size: clamp(0.85rem, 2vw, 1rem); opacity: 0.9; }
    viewport instead of the ~560-700px the other cards use. */
 .card.draw-card {
   max-width: 96vw; width: 96vw; max-height: 92vh;
-  overflow: hidden;
+  padding: 14px;
+  overflow-y: auto; /* safety net if content ever runs slightly tall */
+}
+/* The tool renders its own styled title ("Draw your fish" in the
+   same neon Sixtyfour treatment as the rest of the site) inside the
+   mounted component itself, so this h2 would be a plain-text
+   duplicate sitting above it. Kept in the DOM (not display:none) so
+   aria-labelledby on the dialog still names it for screen readers —
+   just not shown twice on screen. */
+.card.draw-card h2 {
+  position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+  overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0;
 }
 #drawToolMount { display: flex; justify-content: center; }
+#drawBack { margin-top: 8px; }
 @media (max-width: 1050px) {
   .card.draw-card { overflow-y: auto; }
 }
@@ -1609,11 +1621,11 @@ if (SETTINGS.templateUrl || SETTINGS.submitUrl) {
     drawToolLoading = new Promise((resolve, reject) => {
       const css = document.createElement("link");
       css.rel = "stylesheet";
-      css.href = "create-your-fish-draw.css";
+      css.href = "create-your-fish-draw.css?v=3";
       document.head.appendChild(css);
 
       const script = document.createElement("script");
-      script.src = "create-your-fish-draw.js";
+      script.src = "create-your-fish-draw.js?v=3";
       script.onload = resolve;
       script.onerror = reject;
       document.body.appendChild(script);
