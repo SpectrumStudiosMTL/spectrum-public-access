@@ -206,6 +206,15 @@ const TEXT = {
     close: "Close",
     by: "by",
     designedBy: "Designed by",
+    fishAlt: "Fish",
+    searchTitle: "Find a fish",
+    searchPlaceholder: "Type a name…",
+    searchResultsLabel: "Matching fish",
+    searchBrowseAll: "Browse every fish in the tank.",
+    searchCount: "Fish found.",
+    searchNone: "No fish found.",
+    prevCreatorFish: "Previous fish by this creator",
+    nextCreatorFish: "Next fish by this creator",
     back: "Back to the tank",
     drawTitle: "Draw your fish",
     submitTitle: "Submit your fish",
@@ -218,6 +227,8 @@ const TEXT = {
     howTo: [
       "Drag anywhere in the tank to spin it and look around.",
       "Hover or tap a fish to see its creator's name.",
+      "Press 🔍 to search for a fish by the artist's name — or leave it blank to browse everyone, using the arrow keys and Enter.",
+      "If a creator has more than one fish, arrows beside the picture let you page through all of theirs.",
       "Press \"Create your fish\" to download a blank template and submit your own drawing, or draw right on the page.",
       "Press \"Feed the Fish\" for a fun surprise — no strings attached.",
       "The 🔊 button toggles sound, and EN/FR switches language.",
@@ -242,6 +253,15 @@ const TEXT = {
     close: "Fermer",
     by: "par",
     designedBy: "Créé par",
+    fishAlt: "Poisson",
+    searchTitle: "Trouve un poisson",
+    searchPlaceholder: "Tape un nom…",
+    searchResultsLabel: "Poissons correspondants",
+    searchBrowseAll: "Découvre tous les poissons de l'aquarium.",
+    searchCount: "Poissons trouvés.",
+    searchNone: "Aucun poisson trouvé.",
+    prevCreatorFish: "Poisson précédent de ce créateur",
+    nextCreatorFish: "Poisson suivant de ce créateur",
     back: "Retour à l'aquarium",
     drawTitle: "Dessine ton poisson",
     submitTitle: "Soumets ton poisson",
@@ -254,6 +274,8 @@ const TEXT = {
     howTo: [
       "Fais glisser n'importe où dans l'aquarium pour le faire tourner et regarder autour.",
       "Survole ou touche un poisson pour voir le nom de son créateur.",
+      "Appuie sur 🔍 pour chercher un poisson par le nom de l'artiste — ou laisse le champ vide pour tous les voir, avec les flèches et Entrée.",
+      "Si un créateur a plusieurs poissons, des flèches à côté de l'image permettent de les parcourir tous.",
       "Appuie sur « Crée ton poisson » pour télécharger un modèle vierge et soumettre ton dessin, ou dessine directement sur la page.",
       "Appuie sur « Nourrir les poissons » pour une petite surprise amusante — sans aucune obligation.",
       "Le bouton 🔊 active ou coupe le son, et EN/FR change la langue.",
@@ -807,6 +829,43 @@ header p  { font-size: clamp(0.85rem, 2vw, 1rem); opacity: 0.9; }
 .info-card li { margin-bottom: 8px; }
 .info-card button { display: block; margin: 0 auto; }
 
+/* "Find a fish" search card — a themed combobox: text input plus a
+   scrollable listbox of matches, styled like the rest of the tank's
+   glass-and-bezel look. Left-aligned unlike the centered cards above,
+   since a list of names reads better that way. */
+.card.search-card { max-width: 420px; }
+.search-input {
+  width: 100%;
+  font: inherit;
+  font-size: 1rem;
+  padding: 11px 16px;
+  margin-top: 4px;
+  border-radius: 999px;
+  border: 2px solid rgba(255,255,255,0.25);
+  background: rgba(255,255,255,0.1);
+  color: var(--text);
+}
+.search-input::placeholder { color: rgba(244,251,253,0.55); }
+.search-input:focus-visible { outline: 3px solid #fff; outline-offset: 2px; }
+.search-status { font-size: 0.85rem; opacity: 0.8; margin: 10px 0 0; min-height: 1.2em; text-align: left; }
+.search-results {
+  list-style: none;
+  margin: 8px 0 18px;
+  padding: 0;
+  max-height: 260px;
+  overflow-y: auto;
+  text-align: left;
+  border-radius: 12px;
+}
+.search-results:not(:empty) { border: 1px solid rgba(255,255,255,0.15); }
+.search-result {
+  padding: 10px 16px;
+  cursor: pointer;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+}
+.search-result:last-child { border-bottom: none; }
+.search-result.active { background: rgba(255,255,255,0.18); }
+
 /* Sound toggle — part of the top-controls row */
 .sound-btn {
   order: 3;
@@ -865,13 +924,29 @@ header p  { font-size: clamp(0.85rem, 2vw, 1rem); opacity: 0.9; }
   box-shadow: 0 6px 20px rgba(4,26,44,0.35);
 }
 
+/* Search button — part of the top-controls row, leftmost of all five.
+   A keyboard/screen-reader path to any fish that doesn't depend on
+   hovering or clicking a moving target in the tank. */
+.search-btn {
+  order: 0;
+  width: 44px;
+  height: 44px;
+  border: none;
+  border-radius: 50%;
+  font-size: 1.05rem;
+  cursor: pointer;
+  box-shadow: 0 6px 20px rgba(4,26,44,0.35);
+}
+
 /* Keyboard-focus rings — visible outline for every interactive
    control so tabbing through the page is never a guessing game. */
 .info-btn:focus-visible,
+.search-btn:focus-visible,
 .sound-btn:focus-visible,
 .lang-btn:focus-visible,
 .donate-btn:focus-visible,
 .create-btn:focus-visible,
+.card-nav:focus-visible,
 .card button:focus-visible,
 .option-btn:focus-visible {
   outline: 3px solid #fff;
@@ -913,6 +988,32 @@ header p  { font-size: clamp(0.85rem, 2vw, 1rem); opacity: 0.9; }
   margin-bottom: 16px;
   filter: drop-shadow(0 8px 18px rgba(4,26,44,0.25));
 }
+
+/* Paging row for browsing one creator's other fish — flanks the
+   Back button rather than sitting over the artwork, so it never
+   covers the picture. Arrows hidden by default; shown in JS only
+   when the current fish's creator has more than one fish in the
+   tank, in which case Back stays centered between them. */
+.card-footer-nav { display: flex; align-items: center; justify-content: center; gap: 14px; }
+.card-nav {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  flex-shrink: 0;
+  border: none;
+  border-radius: 50%;
+  font-family: var(--title-font);
+  font-size: 1.2rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+/* JS toggles visibility to "inline-flex" (matching align/justify
+   above) — the base rule stays display:none so most cards, whose
+   creator has only one fish, show no arrows at all. */
+.card-nav.shown { display: inline-flex; }
+.card-nav:hover { transform: scale(1.08); }
 .card h2 { font-family: var(--title-font); font-size: 1.7rem; margin-bottom: 4px; }
 .card p  { opacity: 0.75; margin-bottom: 18px; }
 /* The creator's optional bio / artist statement */
@@ -936,7 +1037,7 @@ header p  { font-size: clamp(0.85rem, 2vw, 1rem); opacity: 0.9; }
 /* All buttons match the SPA logo: same neon yellow, same glow.
    The color comes from --logo-glow, so changing that one token
    re-themes the logo AND every button together. */
-.create-btn, .donate-btn, .sound-btn, .lang-btn, .info-btn, .school-arrow, .card button {
+.create-btn, .donate-btn, .sound-btn, .lang-btn, .info-btn, .search-btn, .school-arrow, .card-nav, .card button {
   background: rgb(var(--logo-glow));
   color: #123a52;
   box-shadow:
@@ -984,7 +1085,7 @@ header p  { font-size: clamp(0.85rem, 2vw, 1rem); opacity: 0.9; }
    is slow and gentle (the .calm rules), while the fade back IN is
    quick (the base rules), so the interface returns the instant
    the visitor moves. */
-header, .logo, .create-btn, .donate-btn, .sound-btn, .lang-btn, .info-btn {
+header, .logo, .create-btn, .donate-btn, .sound-btn, .lang-btn, .info-btn, .search-btn {
   transition: opacity 0.25s ease, translate 0.25s ease, transform 0.2s ease;
 }
 body.calm header      { opacity: 0; translate: 0 -16px; pointer-events: none; }
@@ -993,9 +1094,10 @@ body.calm .create-btn { opacity: 0; translate: 0  16px; pointer-events: none; }
 body.calm .donate-btn,
 body.calm .sound-btn,
 body.calm .lang-btn,
-body.calm .info-btn   { opacity: 0; translate: 0 -16px; pointer-events: none; }
+body.calm .info-btn,
+body.calm .search-btn { opacity: 0; translate: 0 -16px; pointer-events: none; }
 body.calm header, body.calm .logo, body.calm .create-btn,
-body.calm .donate-btn, body.calm .sound-btn, body.calm .lang-btn, body.calm .info-btn {
+body.calm .donate-btn, body.calm .sound-btn, body.calm .lang-btn, body.calm .info-btn, body.calm .search-btn {
   transition: opacity 1.6s ease, translate 1.6s ease;
 }
 
@@ -1095,13 +1197,22 @@ body.calm .school-arrow, body.calm .school-dots {
      not by the order they're added in JS. -->
 <div class="top-controls" id="topControls"></div>
 
-<div class="card-overlay" id="cardOverlay">
+<div class="card-overlay" id="cardOverlay" role="dialog" aria-modal="true" aria-labelledby="cardName">
   <div class="card">
     <div id="cardArt"></div>
     <h2 id="cardName"></h2>
     <p id="cardCreator"></p>
     <p class="bio" id="cardBio"></p>
-    <button id="cardBack" onclick="closeCard()">Back to the tank</button>
+    <!-- The prev/next arrows are shown only when this fish's creator
+         has more than one fish in the tank — paging straight through
+         all of theirs without going back to search each time. Placed
+         beside Back rather than over the artwork so they never cover
+         the picture. -->
+    <div class="card-footer-nav">
+      <button class="card-nav prev" id="cardPrev" type="button"><span aria-hidden="true">‹</span></button>
+      <button id="cardBack" onclick="closeCard()">Back to the tank</button>
+      <button class="card-nav next" id="cardNext" type="button"><span aria-hidden="true">›</span></button>
+    </div>
   </div>
 </div>
 
@@ -1171,6 +1282,26 @@ body.calm .school-arrow, body.calm .school-dots {
     <h3 id="howToTitle"></h3>
     <ol id="howToList"></ol>
     <button id="infoClose"></button>
+  </div>
+</div>
+
+<!-- "Find a fish" search pop-up: a keyboard- and screen-reader-
+     accessible way to jump straight to any fish's card by typing a
+     creator's name, instead of hovering or clicking a moving target
+     in the orbiting tank. Built as a combobox + listbox (see the
+     ARIA roles below) so arrow keys and Enter work, and an empty
+     query lists every fish — so this also works as a plain
+     browsable list of everyone in the tank. -->
+<div class="card-overlay" id="searchOverlay" role="dialog" aria-modal="true" aria-labelledby="searchTitle">
+  <div class="card search-card">
+    <h2 id="searchTitle"></h2>
+    <input type="text" id="searchInput" class="search-input"
+           role="combobox" aria-haspopup="listbox" aria-expanded="false"
+           aria-autocomplete="list" aria-controls="searchResults"
+           aria-labelledby="searchTitle" autocomplete="off">
+    <p id="searchStatus" class="search-status" aria-live="polite"></p>
+    <ul id="searchResults" class="search-results" role="listbox"></ul>
+    <button id="searchClose"></button>
   </div>
 </div>
 
@@ -1364,7 +1495,9 @@ const swimmers = FISH.map((fish, i) => {
 
   const img = document.createElement("img");
   img.src = fish.image;
-  img.alt = `${fish.name} by ${fish.creator}`;
+  // Placeholder — corrected to the localized, name-aware version by
+  // applyLanguage()'s loop below, which runs once right after this.
+  img.alt = fish.creator;
   img.onerror = () => img.replaceWith(placeholderFor(fish.image));
 
   const wiggle = document.createElement("div");
@@ -1808,11 +1941,138 @@ infoBtn.addEventListener("click", (e) => {
 document.getElementById("infoClose").addEventListener("click", () => closeOverlay(infoOverlay));
 infoOverlay.addEventListener("click", (e) => { if (e.target === infoOverlay) closeOverlay(infoOverlay); });
 
-// Escape closes whichever pop-up is currently open, from anywhere
+/* --- "Find a fish" search ----------------------------------------
+   A keyboard- and screen-reader-accessible way to reach any fish's
+   card directly, instead of hovering or clicking a moving target in
+   the orbiting tank — which pointer-only interaction can't reach at
+   all. Built as a combobox + listbox (WAI-ARIA pattern): arrow keys
+   move through matches, Enter opens the highlighted one, and an
+   empty query lists every fish — so this doubles as a plain
+   browsable list of everyone in the tank, not just a name lookup. */
+const searchBtn = document.createElement("button");
+searchBtn.className = "search-btn";
+searchBtn.textContent = "🔍";
+document.getElementById("topControls").appendChild(searchBtn);
+
+const searchOverlay = document.getElementById("searchOverlay");
+const searchInput = document.getElementById("searchInput");
+const searchResultsEl = document.getElementById("searchResults");
+const searchStatusEl = document.getElementById("searchStatus");
+let searchMatches = [];   // FISH indexes currently listed, in display order
+let searchActive = -1;    // index into searchMatches; -1 = none highlighted
+
+// Accent-insensitive, so typing "elie" still finds "Élie"
+function normalizeForSearch(str) {
+  return (str || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+}
+
+function renderSearchResults(query) {
+  const q = normalizeForSearch(query.trim());
+  searchMatches = FISH.map((_, i) => i)
+    .filter((i) => !q ||
+      normalizeForSearch(FISH[i].creator).includes(q) ||
+      normalizeForSearch(FISH[i].name).includes(q))
+    .sort((a, b) => FISH[a].creator.localeCompare(FISH[b].creator));
+
+  searchActive = -1;
+  searchInput.removeAttribute("aria-activedescendant");
+  searchResultsEl.innerHTML = "";
+  searchMatches.forEach((fishIndex, row) => {
+    const f = FISH[fishIndex];
+    const li = document.createElement("li");
+    li.id = "searchOption-" + row;
+    li.className = "search-result";
+    li.setAttribute("role", "option");
+    li.textContent = f.name ? `${f.name} — ${TEXT[lang].by} ${f.creator}` : f.creator;
+    li.addEventListener("click", () => selectSearchResult(row));
+    // Mouse hover and keyboard arrows share the same "active" state
+    li.addEventListener("pointerenter", () => setSearchActive(row));
+    searchResultsEl.appendChild(li);
+  });
+
+  const t = TEXT[lang];
+  if (!q) searchStatusEl.textContent = t.searchBrowseAll;
+  else searchStatusEl.textContent = searchMatches.length ? t.searchCount : t.searchNone;
+
+  searchInput.setAttribute("aria-expanded", searchMatches.length ? "true" : "false");
+}
+
+function setSearchActive(row) {
+  searchActive = row;
+  [...searchResultsEl.children].forEach((li, i) => li.classList.toggle("active", i === row));
+  if (row >= 0) {
+    searchInput.setAttribute("aria-activedescendant", "searchOption-" + row);
+    searchResultsEl.children[row].scrollIntoView({ block: "nearest" });
+  } else {
+    searchInput.removeAttribute("aria-activedescendant");
+  }
+}
+
+function selectSearchResult(row) {
+  const fishIndex = searchMatches[row];
+  if (fishIndex === undefined) return;
+  searchOverlay.classList.remove("open");
+  locateFish(fishIndex, searchBtn);
+}
+
+// Jumps to a fish's card even when it's in a school that isn't
+// currently on screen — switches schools first. No animated
+// swim-through for this jump; the card covers the tank a moment
+// later anyway, so the cut isn't visible the way it would be for
+// the prev/next arrows.
+function locateFish(index, trigger) {
+  const targetSchool = Math.floor(index / SCHOOL_SIZE);
+  const needsSchoolSwitch = targetSchool !== schoolIndex;
+  if (needsSchoolSwitch) {
+    schoolIndex = targetSchool;
+    setSchoolVisibility();
+    updateDots();
+  }
+  openCard(index, trigger, { skipFlight: needsSchoolSwitch });
+}
+
+searchBtn.addEventListener("click", (e) => {
+  e.stopPropagation();
+  // Focus goes straight into the input (not the heading, unlike
+  // openOverlay's default) so someone can start typing right away.
+  lastFocused = searchBtn;
+  searchOverlay.classList.add("open");
+  searchInput.value = "";
+  renderSearchResults("");
+  searchInput.focus();
+});
+document.getElementById("searchClose").addEventListener("click", () => closeOverlay(searchOverlay));
+searchOverlay.addEventListener("click", (e) => { if (e.target === searchOverlay) closeOverlay(searchOverlay); });
+
+searchInput.addEventListener("input", () => renderSearchResults(searchInput.value));
+searchInput.addEventListener("keydown", (e) => {
+  if (e.key === "ArrowDown") {
+    if (!searchMatches.length) return;
+    e.preventDefault();
+    setSearchActive(Math.min(searchActive + 1, searchMatches.length - 1));
+  } else if (e.key === "ArrowUp") {
+    if (!searchMatches.length) return;
+    e.preventDefault();
+    setSearchActive(Math.max(searchActive - 1, 0));
+  } else if (e.key === "Enter") {
+    if (!searchMatches.length) return;
+    e.preventDefault();
+    selectSearchResult(searchActive >= 0 ? searchActive : 0);
+  }
+  // Escape is left to the page-wide handler below, same as every
+  // other pop-up.
+});
+
+// Escape closes whichever pop-up is currently open, from anywhere.
+// The fish detail card needs its own cleanup (restoring the fish's
+// spot in the tank, removing the flight clone) so it can't just
+// reuse closeOverlay like the others.
 window.addEventListener("keydown", (e) => {
   if (e.key !== "Escape") return;
   const open = document.querySelector(".card-overlay.open");
-  if (open) closeOverlay(open);
+  if (!open) return;
+  if (open.id === "cardOverlay") closeCard();
+  else closeOverlay(open);
 });
 
 /* --- Language system --------------------------------------------
@@ -1869,10 +2129,29 @@ function applyLanguage() {
   document.querySelectorAll(".school-arrow.next").forEach((b) => {
     b.title = t.nextSchool; b.setAttribute("aria-label", t.nextSchool);
   });
-  // Update every fish's name tag ("by" / "par")
+  // Update every fish's name tag ("by" / "par") and image alt text
   document.querySelectorAll(".fish .name-tag").forEach((tag, i) => {
     tag.textContent = t.by + " " + FISH[i].creator;
   });
+  document.querySelectorAll(".fish img").forEach((img, i) => {
+    const f = FISH[i];
+    img.alt = f.name ? `${f.name} ${t.by} ${f.creator}` : `${t.fishAlt} ${t.by} ${f.creator}`;
+  });
+  // "Find a fish" search
+  searchBtn.title = t.searchTitle;
+  searchBtn.setAttribute("aria-label", t.searchTitle);
+  document.getElementById("searchTitle").textContent = t.searchTitle;
+  searchInput.placeholder = t.searchPlaceholder;
+  document.getElementById("searchClose").textContent = t.close;
+  searchResultsEl.setAttribute("aria-label", t.searchResultsLabel);
+  // Re-render so match text, "by"/"par", and the status count switch
+  // language immediately even while the search pop-up is open
+  renderSearchResults(searchInput.value);
+  // Creator-fish paging arrows on the detail card
+  document.getElementById("cardPrev").title = t.prevCreatorFish;
+  document.getElementById("cardPrev").setAttribute("aria-label", t.prevCreatorFish);
+  document.getElementById("cardNext").title = t.nextCreatorFish;
+  document.getElementById("cardNext").setAttribute("aria-label", t.nextCreatorFish);
   // The button shows the language you'd switch TO
   langBtn.textContent = lang === "en" ? "FR" : "EN";
 }
@@ -1927,7 +2206,7 @@ function stopDragSound() {
 }
 
 window.addEventListener("pointerdown", (e) => {
-  if (e.target.closest(".create-btn, .donate-btn, .sound-btn, .lang-btn, .info-btn, .school-arrow, .school-dots, .card")) return;
+  if (e.target.closest(".create-btn, .donate-btn, .sound-btn, .lang-btn, .info-btn, .search-btn, .school-arrow, .school-dots, .card")) return;
   isDragging = true;
   wasDragged = false;
   lastPointerX = e.clientX;
@@ -2097,17 +2376,52 @@ requestAnimationFrame(animate);
    The card's text fades up underneath meanwhile (.reveal class). */
 const overlay = document.getElementById("cardOverlay");
 const cardEl = overlay.querySelector(".card");
-let openFishIndex = null;
+let openFishIndex = null;    // which fish the flight animation hid, if any
+let currentCardIndex = null; // whichever fish the card is showing right now
 
-function openCard(index) {
+// Every fish index sharing this creator, in FISH order — used for the
+// paging arrows so someone can browse straight through one creator's
+// fish without returning to search each time.
+function creatorFishIndexes(creator) {
+  return FISH.map((_, i) => i).filter((i) => FISH[i].creator === creator);
+}
+
+const cardPrevBtn = document.getElementById("cardPrev");
+const cardNextBtn = document.getElementById("cardNext");
+
+function stepCreatorFish(dir) {
+  if (currentCardIndex === null) return;
+  const siblings = creatorFishIndexes(FISH[currentCardIndex].creator);
+  const pos = siblings.indexOf(currentCardIndex);
+  if (pos === -1 || siblings.length < 2) return;
+  const nextIndex = siblings[(pos + dir + siblings.length) % siblings.length];
+  // Same trigger as before (don't overwrite where focus should return
+  // to on close), no flight animation, and keep focus on this arrow
+  // so repeated clicks/Enter presses page straight through.
+  openCard(nextIndex, lastFocused, { skipFlight: true, keepFocus: true });
+}
+cardPrevBtn.addEventListener("click", (e) => { e.stopPropagation(); stepCreatorFish(-1); });
+cardNextBtn.addEventListener("click", (e) => { e.stopPropagation(); stepCreatorFish(1); });
+
+// trigger: the element focus should return to when the card closes
+// (defaults to whatever was focused, same convention as openOverlay).
+// opts.skipFlight: skip the fish-flies-to-the-card animation — used
+// by locateFish() when it had to switch schools first, and by the
+// paging arrows, since in both cases the fish's old on-screen
+// position isn't meaningful.
+// opts.keepFocus: don't move focus to the heading — used by the
+// paging arrows so focus stays put and repeated presses keep working.
+function openCard(index, trigger, opts = {}) {
   const fish = FISH[index];
+  lastFocused = trigger || document.activeElement;
+  currentCardIndex = index;
 
   // Fill in the card's content
   const cardArt = document.getElementById("cardArt");
   cardArt.innerHTML = "";
   const cardImg = document.createElement("img");
   cardImg.src = fish.image;
-  cardImg.alt = fish.name;
+  cardImg.alt = fish.name || (TEXT[lang].fishAlt + " " + TEXT[lang].by + " " + fish.creator);
   cardImg.onerror = () => { cardImg.style.display = "none"; };
   cardArt.appendChild(cardImg);
   document.getElementById("cardName").textContent = fish.name;
@@ -2117,9 +2431,28 @@ function openCard(index) {
   bioEl.textContent = fish.bio || "";
   bioEl.style.display = fish.bio ? "block" : "none";
 
-  // Reduced motion (or a missing image): open the card plainly
-  if (stillMotion || !fish.image) {
+  // Paging arrows only show up when this creator has more than one
+  // fish in the tank — most creators have exactly one, so most cards
+  // show no arrows at all.
+  const hasSiblings = creatorFishIndexes(fish.creator).length > 1;
+  cardPrevBtn.classList.toggle("shown", hasSiblings);
+  cardNextBtn.classList.toggle("shown", hasSiblings);
+
+  // Moves focus into the dialog for keyboard/screen-reader users —
+  // needed no matter which branch below runs, unless this is an
+  // in-place page to a sibling fish (opts.keepFocus).
+  function focusCard() {
+    if (opts.keepFocus) return;
+    const heading = document.getElementById("cardName");
+    heading.setAttribute("tabindex", "-1");
+    heading.focus();
+  }
+
+  // Reduced motion, a missing image, or a fish located from a school
+  // that wasn't on screen: open the card plainly, no flight animation
+  if (stillMotion || opts.skipFlight || !fish.image) {
     overlay.classList.add("open");
+    focusCard();
     return;
   }
 
@@ -2131,6 +2464,7 @@ function openCard(index) {
   cardImg.style.opacity = "0";
   cardEl.classList.add("reveal");
   overlay.classList.add("open");
+  focusCard();
 
   requestAnimationFrame(() => {
     const target = cardImg.getBoundingClientRect();
@@ -2175,7 +2509,9 @@ function closeCard() {
     swimmers[openFishIndex].el.style.visibility = "";
     openFishIndex = null;
   }
+  currentCardIndex = null;
   document.querySelectorAll(".flight").forEach((f) => f.remove());
+  if (lastFocused && lastFocused.focus) lastFocused.focus();
 }
 overlay.addEventListener("click", (e) => { if (e.target === overlay) closeCard(); });
 </script>
