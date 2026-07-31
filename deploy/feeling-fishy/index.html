@@ -1696,10 +1696,14 @@ if (SETTINGS.music || hasAnySfx) {
     setSound(!soundOn);
   });
 
-  // Start the sound on the visitor's first interaction anywhere,
-  // and warm up the chime engine so the first hover rings instantly
+  // Sound stays off until the visitor explicitly hits the speaker
+  // button — it should never turn itself on. But browsers only allow
+  // starting an AudioContext / decoding audio after a genuine user
+  // gesture, so this quietly warms up the chime engine on the first
+  // tap anywhere (inaudible — just downloading/decoding a buffer) so
+  // that whenever sound IS turned on, the first hover rings instantly
+  // instead of lagging while the sample loads.
   window.addEventListener("pointerdown", function firstTap() {
-    if (!soundOn) setSound(true);
     if (hasAnySfx) {
       initChimeEngine();
       const firstWithSound = FISH.find((f) => f.sound);

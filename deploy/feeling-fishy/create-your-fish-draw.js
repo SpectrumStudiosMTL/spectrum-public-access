@@ -155,6 +155,7 @@
           </div>
         </div>
       </div>
+      <div class="toast dyf-toast" role="status" aria-live="polite"></div>
       <div class="workspace">
         <div class="side-panel dyf-template-sidebar">
           <span class="row-label dyf-template-label"></span>
@@ -207,8 +208,25 @@
 
   function q(sel) { return root.querySelector(sel); }
 
+  // Non-blocking status message — see the .toast rules in the
+  // stylesheet for why this replaces alert(). Longer messages (the
+  // submit stub) get more time on screen via the duration argument.
+  let toastTimer = null;
+  function showToast(message, duration = 3400) {
+    const toast = q(".dyf-toast");
+    toast.textContent = message;
+    toast.classList.add("show");
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => toast.classList.remove("show"), duration);
+  }
+
   function build() {
     const s = state;
+    // Let people dismiss the toast early instead of waiting it out
+    q(".dyf-toast").addEventListener("click", () => {
+      q(".dyf-toast").classList.remove("show");
+      clearTimeout(toastTimer);
+    });
     s.stage = q(".dyf-stage");
     s.baseCanvas = q(".dyf-canvas-base");
     s.accentCanvas = q(".dyf-canvas-accent");
@@ -331,7 +349,7 @@
     });
 
     q(".dyf-autofill-btn").addEventListener("click", () => {
-      if (!s.activeTemplate) { alert(STRINGS[currentLang].pickTemplateAlert); return; }
+      if (!s.activeTemplate) { showToast(STRINGS[currentLang].pickTemplateAlert); return; }
       const baseIdx = s.layers.findIndex((l) => l.id === "base");
       setActiveLayer(baseIdx);
       pushUndo();
@@ -349,7 +367,7 @@
     });
 
     q(".dyf-clean-btn").addEventListener("click", () => {
-      if (!s.activeTemplate) { alert(STRINGS[currentLang].pickTemplateAlert); return; }
+      if (!s.activeTemplate) { showToast(STRINGS[currentLang].pickTemplateAlert); return; }
       const p = imagePlacement(s.activeTemplate.cleanMaskImg);
       ["base", "accent"].forEach((id) => {
         const idx = s.layers.findIndex((l) => l.id === id);
@@ -461,7 +479,7 @@
     // flattened PNG instead of asking for a manual download/upload.
     submitBtn.addEventListener("click", () => {
       flattenCanvas(); // TODO: pass this to the real submission endpoint once it exists
-      alert(STRINGS[currentLang].submitStub);
+      showToast(STRINGS[currentLang].submitStub, 6000);
     });
 
     function pushUndo() {

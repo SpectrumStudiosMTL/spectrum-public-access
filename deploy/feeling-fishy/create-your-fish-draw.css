@@ -242,3 +242,36 @@
   text-decoration: underline; cursor: pointer; padding: 0;
   font-family: 'Baloo 2', system-ui, sans-serif;
 }
+
+/* ==================================================================
+   TOAST — a non-blocking status message ("pick a template first",
+   the submit stub), replacing native alert() so a plain message
+   doesn't freeze the page behind a system popup. Faded via opacity
+   (not display) so aria-live can still announce it to screen readers
+   even while it's visually hidden between messages. Tap to dismiss
+   early, or it fades on its own after a few seconds.
+   ================================================================== */
+.dyf-root .toast {
+  position: absolute;
+  bottom: 14px; left: 50%;
+  translate: -50% 0;
+  z-index: 990;
+  max-width: min(360px, 90%);
+  background: var(--dyf-bezel); color: var(--dyf-ink);
+  font-family: 'Baloo 2', system-ui, sans-serif;
+  font-weight: 700; font-size: 0.86rem; line-height: 1.35; text-align: center;
+  padding: 12px 20px;
+  border-radius: 16px;
+  box-shadow:
+    inset 2px 2px 0 rgba(255,255,255,0.08),
+    inset -2px -2px 0 rgba(0,0,0,0.6),
+    0 10px 30px rgba(0,0,0,0.45);
+  opacity: 0;
+  pointer-events: none;
+  cursor: pointer;
+  transition: opacity 0.25s ease, translate 0.25s ease;
+}
+.dyf-root .toast.show { opacity: 1; translate: -50% -6px; pointer-events: auto; }
+@media (prefers-reduced-motion: reduce) {
+  .dyf-root .toast { transition: opacity 0.2s ease; translate: -50% 0 !important; }
+}
