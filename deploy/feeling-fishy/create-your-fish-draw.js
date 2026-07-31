@@ -518,6 +518,11 @@
         ctx.lineWidth = widthForEvent(e);
         ctx.beginPath();
         ctx.moveTo(p.x, p.y);
+        // A plain click never fires pointermove, so without this a
+        // single tap (no drag) would leave nothing on the canvas —
+        // stroking a zero-length line paints one round dot right away.
+        ctx.lineTo(p.x, p.y);
+        ctx.stroke();
         canvas.setPointerCapture(e.pointerId);
       });
       canvas.addEventListener("pointermove", (e) => {
