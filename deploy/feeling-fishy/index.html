@@ -109,6 +109,11 @@ const EMBEDDED_AUDIO = {
    file instead:  backgroundVideo: "video/scene.mp4"  */
 const EMBEDDED_VIDEO = "video/background.mp4";
 
+/* A still frame from the video above, shown instantly while the
+   video itself is still buffering — otherwise there's a blank gap
+   (just the gradient) for however long the video takes to load. */
+const EMBEDDED_VIDEO_POSTER = "video/background-poster.webp";
+
 /* The printable fish template, embedded at full print quality.
    On the real site, use a file: templateUrl: "files/template.png" */
 const EMBEDDED_TEMPLATE = "files/fish-template.png";
@@ -178,6 +183,11 @@ const SETTINGS = {
   // A looping video backdrop (e.g. rendered from Unreal Engine).
   // Overrides `background`. Use .mp4 or .webm, e.g. "video/scene.mp4"
   backgroundVideo: EMBEDDED_VIDEO,
+
+  // A still frame from the video, shown the instant the page loads
+  // while the real video is still buffering. Set to null to skip
+  // (shows the gradient instead until the video is ready).
+  backgroundVideoPoster: EMBEDDED_VIDEO_POSTER,
 
   // Darkens the video slightly so the fish stand out.
   // 0 = off, 0.15 = subtle, 0.4 = moody. Only affects video backdrops.
@@ -1223,9 +1233,9 @@ body.calm .school-arrow, body.calm .school-dots {
   <div class="card">
     <h2 id="createTitle"></h2>
     <div class="option-row">
-      <a class="option-btn" id="optDownload"><span class="inlay" id="optDownloadLabel"></span></a>
-      <a class="option-btn" id="optDraw"><span class="inlay" id="optDrawLabel"></span></a>
-      <a class="option-btn" id="optSubmit"><span class="inlay" id="optSubmitLabel"></span></a>
+      <a class="option-btn" id="optDownload" role="button" tabindex="0"><span class="inlay" id="optDownloadLabel"></span></a>
+      <a class="option-btn" id="optDraw" role="button" tabindex="0"><span class="inlay" id="optDrawLabel"></span></a>
+      <a class="option-btn" id="optSubmit" role="button" tabindex="0"><span class="inlay" id="optSubmitLabel"></span></a>
     </div>
     <button id="createClose" onclick="closeCreate()">Close</button>
   </div>
@@ -1317,6 +1327,7 @@ if (SETTINGS.background) tank.style.backgroundImage = `url(${SETTINGS.background
 if (SETTINGS.backgroundVideo) {
   const vid = document.createElement("video");
   vid.src = SETTINGS.backgroundVideo;
+  if (SETTINGS.backgroundVideoPoster) vid.poster = SETTINGS.backgroundVideoPoster;
   vid.autoplay = true;
   vid.loop = true;
   vid.muted = true;
@@ -1719,8 +1730,7 @@ if (SETTINGS.templateUrl || SETTINGS.submitUrl) {
   createBtn.addEventListener("click", (e) => {
     e.stopPropagation();
     playPluck();
-    lastFocused = createBtn;
-    createOverlay.classList.add("open");
+    openOverlay(createOverlay, createBtn);
   });
   document.body.appendChild(createBtn);
 
@@ -1732,9 +1742,9 @@ if (SETTINGS.templateUrl || SETTINGS.submitUrl) {
   // "Download the fish template" opens the format submenu
   if (SETTINGS.templateUrl || SETTINGS.templatePsd || SETTINGS.templateKrita) {
     optDownload.addEventListener("click", () => {
-      lastFocused = optDownload;
       createOverlay.classList.remove("open");
       downloadOverlay.classList.add("open");
+      focusOverlayHeading(downloadOverlay);
     });
   } else optDownload.style.display = "none";
 
@@ -1766,10 +1776,22 @@ if (SETTINGS.templateUrl || SETTINGS.submitUrl) {
     return drawToolLoading;
   }
   optDraw.addEventListener("click", () => {
-    lastFocused = optDraw;
     createOverlay.classList.remove("open");
     drawOverlay.classList.add("open");
+    focusOverlayHeading(drawOverlay);
     loadDrawTool().then(() => window.FishDrawTool.mount(drawToolMount, lang));
+  });
+
+  // These three are <a> tags with no href (they navigate within the
+  // page via JS, not to a real URL), so role="button" alone doesn't
+  // grant them the native keyboard activation a real <button> gets —
+  // Enter/Space need to be wired to trigger the same click handler.
+  [optDownload, optDraw, optSubmit].forEach((btn) => {
+    btn.addEventListener("keydown", (e) => {
+      if (e.key !== "Enter" && e.key !== " ") return;
+      e.preventDefault();
+      btn.click();
+    });
   });
 
   const submitOverlay = document.getElementById("submitOverlay");
@@ -1786,9 +1808,9 @@ if (SETTINGS.templateUrl || SETTINGS.submitUrl) {
         submitFrame.src = SETTINGS.submitEmbedUrl;
         submitFrameLoaded = true;
       }
-      lastFocused = optSubmit;
       createOverlay.classList.remove("open");
       submitOverlay.classList.add("open");
+      focusOverlayHeading(submitOverlay);
     });
   } else optSubmit.style.display = "none";
 
@@ -1796,18 +1818,24 @@ if (SETTINGS.templateUrl || SETTINGS.submitUrl) {
   document.getElementById("submitBack").addEventListener("click", () => {
     submitOverlay.classList.remove("open");
     createOverlay.classList.add("open");
+    focusOverlayHeading(createOverlay);
   });
   submitOverlay.addEventListener("click", (e) => {
-    if (e.target === submitOverlay) submitOverlay.classList.remove("open");
+    if (e.target !== submitOverlay) return;
+    submitOverlay.classList.remove("open");
+    if (lastFocused && lastFocused.focus) lastFocused.focus();
   });
 
   // Back returns to the create menu; backdrop click closes fully
   document.getElementById("drawBack").addEventListener("click", () => {
     drawOverlay.classList.remove("open");
     createOverlay.classList.add("open");
+    focusOverlayHeading(createOverlay);
   });
   drawOverlay.addEventListener("click", (e) => {
-    if (e.target === drawOverlay) drawOverlay.classList.remove("open");
+    if (e.target !== drawOverlay) return;
+    drawOverlay.classList.remove("open");
+    if (lastFocused && lastFocused.focus) lastFocused.focus();
   });
 
   // The three format buttons
@@ -1827,10 +1855,13 @@ if (SETTINGS.templateUrl || SETTINGS.submitUrl) {
   document.getElementById("downloadBack").addEventListener("click", () => {
     downloadOverlay.classList.remove("open");
     createOverlay.classList.add("open");
+    focusOverlayHeading(createOverlay);
   });
   // Clicking the dark backdrop closes the submenu
   downloadOverlay.addEventListener("click", (e) => {
-    if (e.target === downloadOverlay) downloadOverlay.classList.remove("open");
+    if (e.target !== downloadOverlay) return;
+    downloadOverlay.classList.remove("open");
+    if (lastFocused && lastFocused.focus) lastFocused.focus();
   });
 
   // Your inlay artwork: an <img> placed above the text label
@@ -1859,7 +1890,10 @@ if (SETTINGS.templateUrl || SETTINGS.submitUrl) {
     .forEach((btn) => btn.addEventListener("click", playPluck));
 }
 
-function closeCreate() { createOverlay.classList.remove("open"); }
+function closeCreate() {
+  createOverlay.classList.remove("open");
+  if (lastFocused && lastFocused.focus) lastFocused.focus();
+}
 createOverlay.addEventListener("click", (e) => {
   if (e.target === createOverlay) closeCreate();
 });
@@ -1922,17 +1956,66 @@ document.getElementById("topControls").appendChild(infoBtn);
 const infoOverlay = document.getElementById("infoOverlay");
 let lastFocused = null; // remembers what to return focus to on close
 
+// Moves focus into a dialog for keyboard/screen-reader users. Split
+// out from openOverlay() so multi-step flows (Create → Download →
+// back to Create, etc.) can move focus at every step without
+// disturbing lastFocused, which should only change at the true
+// entry/exit points of the whole flow.
+function focusOverlayHeading(overlay) {
+  const heading = overlay.querySelector("h2");
+  if (heading) { heading.setAttribute("tabindex", "-1"); heading.focus(); }
+}
 function openOverlay(overlay, trigger) {
   lastFocused = trigger || document.activeElement;
   overlay.classList.add("open");
-  // Move focus into the dialog for keyboard/screen-reader users
-  const heading = overlay.querySelector("h2");
-  if (heading) { heading.setAttribute("tabindex", "-1"); heading.focus(); }
+  focusOverlayHeading(overlay);
 }
 function closeOverlay(overlay) {
   overlay.classList.remove("open");
   if (lastFocused && lastFocused.focus) lastFocused.focus();
 }
+
+// Every element a dialog's Tab trap can land on: standard focusable
+// tags, plus <iframe> for the monday.com submission form, minus
+// anything hidden (offsetParent is null for display:none — covers
+// the format buttons and creator-paging arrows that only sometimes
+// show) or explicitly taken out of the tab order (tabindex="-1", the
+// convention used for each dialog's own heading).
+function getFocusableIn(container) {
+  const selector = 'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), iframe, [tabindex]:not([tabindex="-1"])';
+  return [...container.querySelectorAll(selector)].filter((el) => el.offsetParent !== null);
+}
+
+// Keeps Tab/Shift+Tab cycling within whichever dialog is currently
+// open, instead of escaping into the tank/header/buttons behind it.
+window.addEventListener("keydown", (e) => {
+  if (e.key !== "Tab") return;
+  const openOverlayEl = document.querySelector(".card-overlay.open");
+  if (!openOverlayEl) return;
+  const focusables = getFocusableIn(openOverlayEl);
+  if (!focusables.length) return;
+  const first = focusables[0], last = focusables[focusables.length - 1];
+  if (e.shiftKey && document.activeElement === first) {
+    e.preventDefault();
+    last.focus();
+  } else if (!e.shiftKey && document.activeElement === last) {
+    e.preventDefault();
+    first.focus();
+  }
+});
+
+// Safety net for the common trap's blind spot: the submission form
+// is a third-party (monday.com) iframe, so the parent page can't see
+// Tab presses made once focus is inside it — tabbing backward out of
+// it would otherwise land wherever the browser's native tab order
+// puts it, which could be the tank behind the dialog. Whenever focus
+// lands outside the open dialog for any reason, pull it back in.
+document.addEventListener("focusin", (e) => {
+  const openOverlayEl = document.querySelector(".card-overlay.open");
+  if (!openOverlayEl || openOverlayEl.contains(e.target)) return;
+  const focusables = getFocusableIn(openOverlayEl);
+  if (focusables.length) focusables[0].focus();
+});
 
 infoBtn.addEventListener("click", (e) => {
   e.stopPropagation();
