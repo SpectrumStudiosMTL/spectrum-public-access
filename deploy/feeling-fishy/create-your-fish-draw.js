@@ -164,6 +164,7 @@
             <canvas class="draw-surface dyf-canvas-base" width="900" height="620"></canvas>
             <canvas class="draw-surface dyf-canvas-accent" width="900" height="620"></canvas>
             <canvas class="draw-surface dyf-canvas-template" width="900" height="620"></canvas>
+            <div class="brush-cursor dyf-brush-cursor"></div>
           </div>
           <div class="panel">
             <div class="row dyf-row-color">
@@ -391,8 +392,45 @@
     const submitBtn = q(".dyf-submit-btn");
     s.tool = "brush";
 
-    brushBtn.addEventListener("click", () => { s.tool = "brush"; brushBtn.classList.add("active"); eraserBtn.classList.remove("active"); });
-    eraserBtn.addEventListener("click", () => { s.tool = "eraser"; eraserBtn.classList.add("active"); brushBtn.classList.remove("active"); });
+    brushBtn.addEventListener("click", () => { s.tool = "brush"; brushBtn.classList.add("active"); eraserBtn.classList.remove("active"); s.brushCursor.classList.remove("eraser"); });
+    eraserBtn.addEventListener("click", () => { s.tool = "eraser"; eraserBtn.classList.add("active"); brushBtn.classList.remove("active"); s.brushCursor.classList.add("eraser"); });
+
+    /* ---- Custom brush-size cursor ----
+       Replaces the page's default grab-hand cursor (set globally on
+       body for dragging the fish tank) with a circle that matches the
+       selected brush/eraser size, the way desktop paint tools do it.
+       Sized in screen pixels: the slider's value is in canvas units
+       (900x620), so it's scaled by how much smaller/larger the stage
+       is actually rendered on screen. */
+    s.brushCursor = q(".dyf-brush-cursor");
+    function updateBrushCursorSize() {
+      const scale = s.stage.getBoundingClientRect().width / W;
+      const size = parseFloat(sizeSlider.value) * scale;
+      s.brushCursor.style.width = size + "px";
+      s.brushCursor.style.height = size + "px";
+    }
+    function moveBrushCursor(e) {
+      const rect = s.stage.getBoundingClientRect();
+      s.brushCursor.style.left = (e.clientX - rect.left) + "px";
+      s.brushCursor.style.top = (e.clientY - rect.top) + "px";
+    }
+    // Touch has no hover state, so skip it there — the circle would
+    // just be stuck wherever the last touch happened.
+    s.stage.addEventListener("pointerenter", (e) => {
+      if (e.pointerType === "touch") return;
+      moveBrushCursor(e);
+      updateBrushCursorSize();
+      s.brushCursor.style.display = "block";
+    });
+    s.stage.addEventListener("pointermove", (e) => {
+      if (e.pointerType === "touch") return;
+      moveBrushCursor(e);
+    });
+    s.stage.addEventListener("pointerleave", (e) => {
+      if (e.pointerType === "touch") return;
+      s.brushCursor.style.display = "none";
+    });
+    sizeSlider.addEventListener("input", updateBrushCursorSize);
 
     clearBtn.addEventListener("click", () => {
       const l = s.layers[s.activeLayer];

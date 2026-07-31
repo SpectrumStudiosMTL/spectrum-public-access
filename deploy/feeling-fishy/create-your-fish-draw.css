@@ -98,6 +98,28 @@
 }
 .dyf-root .draw-surface { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: block; touch-action: none; }
 
+/* The page's body sets cursor:grab globally (for dragging the fish
+   tank), which otherwise leaks in here since this tool mounts inside
+   the same document. Swap it for a brush-size circle instead. */
+.dyf-root .stage { cursor: none; }
+
+/* Custom brush cursor — a circle matching the selected brush/eraser
+   size, positioned in JS (left/top = pointer position, width/height =
+   size). Black-on-white double outline so it stays visible over any
+   canvas color. */
+.dyf-root .brush-cursor {
+  position: absolute;
+  top: 0; left: 0;
+  border-radius: 50%;
+  border: 1.5px solid rgba(0,0,0,0.85);
+  box-shadow: 0 0 0 1px rgba(255,255,255,0.85);
+  pointer-events: none;
+  transform: translate(-50%, -50%);
+  z-index: 40;
+  display: none;
+}
+.dyf-root .brush-cursor.eraser { border-style: dashed; }
+
 .dyf-root .center-column { display: flex; flex-direction: column; align-items: center; }
 
 .dyf-root .panel {
