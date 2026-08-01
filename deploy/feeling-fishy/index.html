@@ -130,6 +130,15 @@ const EMBEDDED_VIDEO = "video/background.mp4";
    (just the gradient) for however long the video takes to load. */
 const EMBEDDED_VIDEO_POSTER = "video/background-poster.webp";
 
+/* Portrait-cropped versions of the two above, used on phones instead.
+   object-fit:cover on a tall narrow screen already only shows a
+   ~26% center slice of the widescreen video — this is that same
+   slice, pre-cropped before encoding, so the file is ~53% smaller
+   with zero visible quality loss (nothing here was ever going to be
+   on screen on a phone anyway). */
+const EMBEDDED_VIDEO_MOBILE = "video/background-mobile.mp4";
+const EMBEDDED_VIDEO_POSTER_MOBILE = "video/background-poster-mobile.webp";
+
 /* The printable fish template, embedded at full print quality.
    On the real site, use a file: templateUrl: "files/template.png" */
 const EMBEDDED_TEMPLATE = "files/fish-template.png";
@@ -205,6 +214,12 @@ const SETTINGS = {
   // (shows the gradient instead until the video is ready).
   backgroundVideoPoster: EMBEDDED_VIDEO_POSTER,
 
+  // Optional lighter/portrait-cropped versions used below 640px
+  // width instead of the two above. Set either to null to just use
+  // the regular version everywhere.
+  backgroundVideoMobile: EMBEDDED_VIDEO_MOBILE,
+  backgroundVideoPosterMobile: EMBEDDED_VIDEO_POSTER_MOBILE,
+
   // Darkens the video slightly so the fish stand out.
   // 0 = off, 0.15 = subtle, 0.4 = moody. Only affects video backdrops.
   videoDimmer: 0.15,
@@ -235,6 +250,8 @@ const TEXT = {
     fishAlt: "Fish",
     searchTitle: "Find a fish",
     menuLabel: "Menu",
+    splashPrompt: "Tap to dive in",
+    splashAriaLabel: "Enter the Feeling Fishy tank",
     searchPlaceholder: "Type a name…",
     searchResultsLabel: "Matching fish",
     searchBrowseAll: "Browse every fish in the tank.",
@@ -283,6 +300,8 @@ const TEXT = {
     fishAlt: "Poisson",
     searchTitle: "Trouve un poisson",
     menuLabel: "Menu",
+    splashPrompt: "Touche pour plonger",
+    splashAriaLabel: "Entre dans l'aquarium Feeling Fishy",
     searchPlaceholder: "Tape un nom…",
     searchResultsLabel: "Poissons correspondants",
     searchBrowseAll: "Découvre tous les poissons de l'aquarium.",
@@ -1210,6 +1229,52 @@ body.calm .school-arrow, body.calm .school-dots {
   padding: 6px;
 }
 
+/* "Tap to dive in" splash — sizing/typography here; actual
+   show/hide and its background image are set from JS (see the
+   mobile-video setup), since only JS knows which poster SETTINGS
+   picked and whether there's even a video to gate in the first
+   place. Layout/positioning live in the mobile media query below,
+   since this only ever appears there. */
+.mobile-splash {
+  display: none;
+  border: none;
+  margin: 0;
+  padding: 24px;
+  font: inherit;
+  color: var(--text);
+  text-align: center;
+  cursor: pointer;
+}
+.mobile-splash-title {
+  display: block;
+  font-family: 'Sixtyfour', 'Courier New', monospace;
+  font-size: clamp(1.5rem, 7vw, 2.2rem);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: rgb(var(--title-glow));
+  text-shadow:
+    0 0 4px  rgba(var(--title-glow), 0.9),
+    0 0 14px rgba(var(--title-glow), 0.55),
+    0 0 34px rgba(var(--title-glow), 0.3);
+  margin-bottom: 18px;
+}
+.mobile-splash-prompt {
+  display: block;
+  font-family: var(--title-font);
+  font-weight: 700;
+  font-size: 1.05rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: rgb(var(--logo-glow));
+  text-shadow: 0 0 4px rgba(var(--logo-glow), 0.9), 0 0 14px rgba(var(--logo-glow), 0.55);
+  animation: splashPulse 1.6s ease-in-out infinite;
+}
+@keyframes splashPulse {
+  0%, 100% { opacity: 1; }
+  50%      { opacity: 0.5; }
+}
+.mobile-splash:focus-visible { outline: 3px solid #fff; outline-offset: -6px; }
+
 /* ---------- MOBILE ----------
    Everything above is position:fixed with desktop offsets, which
    doesn't reflow the way normal content does — at phone widths the
@@ -1227,6 +1292,15 @@ body.calm .school-arrow, body.calm .school-dots {
   /* Fully covered by the Info modal already — pure duplication that
      costs header height on a screen where vertical space is scarce. */
   header p { display: none; }
+
+  .mobile-splash.show {
+    display: flex;
+    flex-direction: column; align-items: center; justify-content: center;
+    position: fixed; inset: 0; z-index: 1500;
+    background-size: cover; background-position: center;
+    transition: opacity 0.4s ease;
+  }
+  .mobile-splash.dismissing { opacity: 0; pointer-events: none; }
 
   /* Five permanently-visible buttons (search/info/feed/sound/lang)
      ate too much of the tank view on a phone. Collapse them behind
@@ -1288,6 +1362,7 @@ body.calm .school-arrow, body.calm .school-dots {
   .bubble, .ray,
   .flight-wiggle,
   body.feeding .fish .wiggle,
+  .mobile-splash-prompt,
   .card.reveal h2, .card.reveal p, .card.reveal button { animation: none; }
   .bubble, .pellet { display: none; }
   .flight { transition: none; }
@@ -1299,6 +1374,17 @@ body.calm .school-arrow, body.calm .school-dots {
 <body>
 
 <div id="tank"></div>
+
+<!-- Mobile-only "tap to dive in" splash: see the comment above the
+     background-video setup further down for why this exists.
+     Dismissing it is what starts the video, so by the time the tank
+     is revealed playback has already begun, instead of the video
+     suddenly starting later on some unrelated first tap. Hidden
+     entirely above 640px width — see the CSS. -->
+<button type="button" id="mobileSplash" class="mobile-splash">
+  <span class="mobile-splash-title">Feeling Fishy</span>
+  <span class="mobile-splash-prompt" id="splashPrompt"></span>
+</button>
 
 <header>
   <h1>Feeling Fishy</h1>
@@ -1435,8 +1521,23 @@ if (SETTINGS.background) tank.style.backgroundImage = `url(${SETTINGS.background
 // an explicit .play() call rather than relying on the autoplay
 // attribute by itself. Without this it silently just sits on the
 // poster frame forever instead of looking broken.
+// Shared with the mobile "tap to dive in" splash further down, so it
+// can trigger the exact same play() attempt from its own dismiss tap.
+let bgVideo = null;
+let tryPlayBgVideo = () => {};
+
 if (SETTINGS.backgroundVideo) {
+  // Same 640px line every other mobile adjustment on this page uses.
+  // Checked once at load — background video isn't worth hot-swapping
+  // mid-session over a resize/rotation.
+  const isMobileViewport = window.innerWidth < 640;
+  const videoSrc = (isMobileViewport && SETTINGS.backgroundVideoMobile)
+    ? SETTINGS.backgroundVideoMobile : SETTINGS.backgroundVideo;
+  const posterSrc = (isMobileViewport && SETTINGS.backgroundVideoPosterMobile)
+    ? SETTINGS.backgroundVideoPosterMobile : SETTINGS.backgroundVideoPoster;
+
   const vid = document.createElement("video");
+  bgVideo = vid;
   vid.muted = true;
   vid.defaultMuted = true;
   vid.setAttribute("muted", "");
@@ -1445,13 +1546,14 @@ if (SETTINGS.backgroundVideo) {
   vid.playsInline = true;
   vid.autoplay = true;
   vid.loop = true;
-  if (SETTINGS.backgroundVideoPoster) vid.poster = SETTINGS.backgroundVideoPoster;
-  vid.src = SETTINGS.backgroundVideo;
+  if (posterSrc) vid.poster = posterSrc;
+  vid.src = videoSrc;
   vid.setAttribute("style",
     "position:absolute; inset:0; width:100%; height:100%; " +
     "object-fit:cover; z-index:0; pointer-events:none;");
   tank.prepend(vid);
   const tryPlay = () => vid.play().catch(() => {});
+  tryPlayBgVideo = tryPlay;
   tryPlay();
   // iOS sometimes ignores the first attempt if it happens before the
   // element is fully attached/laid out — retry once metadata is in.
@@ -1475,6 +1577,38 @@ if (SETTINGS.backgroundVideo) {
       "position:absolute; inset:0; background:black; z-index:1; " +
       "pointer-events:none; opacity:" + SETTINGS.videoDimmer + ";");
     tank.appendChild(veil);
+  }
+
+  /* --- "Tap to dive in" splash (mobile only) -----------------------
+     iOS can silently block muted+playsinline autoplay — Low Power
+     Mode is the common cause — and without this, the video would
+     only start later on whatever random first tap happened to land
+     (the retry logic above), which felt like a jarring glitch
+     mid-interaction. This turns that same required tap into a
+     deliberate "enter the tank" moment instead: dismissing it is
+     what starts the video, so playback has already begun by the
+     time the tank is revealed. Every mobile visitor sees this, not
+     just ones actually affected by an autoplay block — there's no
+     way to detect Low Power Mode from JS to skip it selectively. */
+  if (isMobileViewport) {
+    const splash = document.getElementById("mobileSplash");
+    if (posterSrc) {
+      splash.style.backgroundImage =
+        `linear-gradient(rgba(5,25,43,.6), rgba(5,25,43,.6)), url(${posterSrc})`;
+    }
+    splash.classList.add("show");
+    splash.focus();
+
+    function dismissSplash() {
+      tryPlayBgVideo();
+      splash.classList.add("dismissing");
+      splash.addEventListener("transitionend", () => splash.remove(), { once: true });
+      setTimeout(() => splash.remove(), 500); // safety net if transitionend never fires
+    }
+    splash.addEventListener("click", dismissSplash);
+    window.addEventListener("keydown", (e) => {
+      if (e.key === "Escape" && document.body.contains(splash)) dismissSplash();
+    });
   }
 }
 
@@ -2400,6 +2534,13 @@ function applyLanguage() {
   // Mobile menu toggle
   menuToggleBtn.title = t.menuLabel;
   menuToggleBtn.setAttribute("aria-label", t.menuLabel);
+
+  // Mobile "tap to dive in" splash (harmless to set even if it was
+  // never shown/has already been dismissed and removed)
+  const splashPromptEl = document.getElementById("splashPrompt");
+  if (splashPromptEl) splashPromptEl.textContent = t.splashPrompt;
+  const splashEl = document.getElementById("mobileSplash");
+  if (splashEl) splashEl.setAttribute("aria-label", t.splashAriaLabel);
 
   // "Find a fish" search
   searchBtn.title = t.searchTitle;
