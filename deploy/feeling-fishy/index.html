@@ -37,7 +37,7 @@
 const EMBEDDED_IMAGES = {
   inlayPng: "images/inlay-print.webp",
   inlayKrita: "images/inlay-krita.webp",
-  logo: "images/logo.webp",
+  logo: "images/logo-2.webp",
   fish0: "images/fish/fish0.webp",
   fish1: "images/fish/fish1.webp",
   fish2: "images/fish/fish2.webp",
@@ -1539,6 +1539,38 @@ body.calm .school-arrow, body.calm .school-dots {
    ============================================================== */
 const tank = document.getElementById("tank");
 if (SETTINGS.background) tank.style.backgroundImage = `url(${SETTINGS.background})`;
+
+// On mobile the title stacks into "Feeling" / "Fishy" on two lines
+// (see the CSS). The segmented font is close to monospace, so the
+// shorter word renders visibly narrower than the one above it —
+// stretch it horizontally to match, so both lines form one even
+// block instead of a ragged right edge. Measures the actual glyph
+// width via canvas rather than getBoundingClientRect(), since these
+// spans are display:block (so they can stack), which makes their
+// rect report the full parent width instead of the text's own —
+// canvas measurement isn't affected by that box-model quirk at all.
+if (window.innerWidth < 640) {
+  const titleLines = [...document.querySelectorAll("header h1 .title-line")];
+  if (titleLines.length === 2) {
+    const measureCanvas = document.createElement("canvas").getContext("2d");
+    function textWidth(el) {
+      const cs = getComputedStyle(el);
+      measureCanvas.font = `${cs.fontWeight} ${cs.fontSize} ${cs.fontFamily}`;
+      const base = measureCanvas.measureText(el.textContent).width;
+      const letterSpacing = parseFloat(cs.letterSpacing) || 0; // measureText ignores letter-spacing
+      return base + letterSpacing * Math.max(0, el.textContent.length - 1);
+    }
+    const [first, second] = titleLines;
+    const firstWidth = textWidth(first);
+    const secondWidth = textWidth(second);
+    if (firstWidth > 0 && secondWidth > 0 && firstWidth !== secondWidth) {
+      const narrower = firstWidth < secondWidth ? first : second;
+      const ratio = Math.max(firstWidth, secondWidth) / Math.min(firstWidth, secondWidth);
+      narrower.style.transformOrigin = "left";
+      narrower.style.transform = `scaleX(${ratio})`;
+    }
+  }
+}
 
 // Looping video backdrop (e.g. rendered from your Unreal scene).
 // muted + playsinline are required for browsers to autoplay it — and
