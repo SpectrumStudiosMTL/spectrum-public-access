@@ -234,6 +234,7 @@ const TEXT = {
     designedBy: "Designed by",
     fishAlt: "Fish",
     searchTitle: "Find a fish",
+    menuLabel: "Menu",
     searchPlaceholder: "Type a name…",
     searchResultsLabel: "Matching fish",
     searchBrowseAll: "Browse every fish in the tank.",
@@ -281,6 +282,7 @@ const TEXT = {
     designedBy: "Créé par",
     fishAlt: "Poisson",
     searchTitle: "Trouve un poisson",
+    menuLabel: "Menu",
     searchPlaceholder: "Tape un nom…",
     searchResultsLabel: "Poissons correspondants",
     searchBrowseAll: "Découvre tous les poissons de l'aquarium.",
@@ -636,6 +638,10 @@ body.feeding .fish .wiggle { animation: frenzy 0.22s ease-in-out infinite altern
   gap: 12px;
 }
 
+/* Only ever shown on mobile — see the media query further down,
+   which both reveals this and hides the row it collapses. */
+.menu-toggle-btn { display: none; }
+
 /* Donate button — part of the top-controls row */
 .donate-btn {
   order: 2;
@@ -968,6 +974,7 @@ header p  { font-size: clamp(0.85rem, 2vw, 1rem); opacity: 0.9; }
    control so tabbing through the page is never a guessing game. */
 .info-btn:focus-visible,
 .search-btn:focus-visible,
+.menu-toggle-btn:focus-visible,
 .sound-btn:focus-visible,
 .lang-btn:focus-visible,
 .donate-btn:focus-visible,
@@ -1063,7 +1070,7 @@ header p  { font-size: clamp(0.85rem, 2vw, 1rem); opacity: 0.9; }
 /* All buttons match the SPA logo: same neon yellow, same glow.
    The color comes from --logo-glow, so changing that one token
    re-themes the logo AND every button together. */
-.create-btn, .donate-btn, .sound-btn, .lang-btn, .info-btn, .search-btn, .school-arrow, .card-nav, .card button {
+.create-btn, .donate-btn, .sound-btn, .lang-btn, .info-btn, .search-btn, .menu-toggle-btn, .school-arrow, .card-nav, .card button {
   background: rgb(var(--logo-glow));
   color: #123a52;
   box-shadow:
@@ -1111,7 +1118,7 @@ header p  { font-size: clamp(0.85rem, 2vw, 1rem); opacity: 0.9; }
    is slow and gentle (the .calm rules), while the fade back IN is
    quick (the base rules), so the interface returns the instant
    the visitor moves. */
-header, .logo, .create-btn, .donate-btn, .sound-btn, .lang-btn, .info-btn, .search-btn {
+header, .logo, .create-btn, .donate-btn, .sound-btn, .lang-btn, .info-btn, .search-btn, .menu-toggle-btn {
   transition: opacity 0.25s ease, translate 0.25s ease, transform 0.2s ease;
 }
 body.calm header      { opacity: 0; translate: 0 -16px; pointer-events: none; }
@@ -1121,9 +1128,10 @@ body.calm .donate-btn,
 body.calm .sound-btn,
 body.calm .lang-btn,
 body.calm .info-btn,
-body.calm .search-btn { opacity: 0; translate: 0 -16px; pointer-events: none; }
+body.calm .search-btn,
+body.calm .menu-toggle-btn { opacity: 0; translate: 0 -16px; pointer-events: none; }
 body.calm header, body.calm .logo, body.calm .create-btn,
-body.calm .donate-btn, body.calm .sound-btn, body.calm .lang-btn, body.calm .info-btn, body.calm .search-btn {
+body.calm .donate-btn, body.calm .sound-btn, body.calm .lang-btn, body.calm .info-btn, body.calm .search-btn, body.calm .menu-toggle-btn {
   transition: opacity 1.6s ease, translate 1.6s ease;
 }
 
@@ -1207,8 +1215,30 @@ body.calm .school-arrow, body.calm .school-dots {
    beside it, and collapse "Feed the Fish" to match its icon-only
    neighbors so the row stays compact regardless of language. */
 @media (max-width: 640px) {
-  .top-controls { top: 92px; right: 14px; gap: 10px; }
   header { padding: 18px 20px; }
+  /* Fully covered by the Info modal already — pure duplication that
+     costs header height on a screen where vertical space is scarce. */
+  header p { display: none; }
+
+  /* Five permanently-visible buttons (search/info/feed/sound/lang)
+     ate too much of the tank view on a phone. Collapse them behind
+     one menu-toggle button; JS adds/removes .menu-open on click, tap
+     elsewhere, or Escape. The toggle itself always stays visible —
+     everything else in this row only shows up once opened. */
+  .top-controls {
+    top: 20px; right: 14px; gap: 10px;
+    flex-direction: column; align-items: flex-end;
+  }
+  .menu-toggle-btn {
+    display: flex; align-items: center; justify-content: center;
+    order: -1;
+    width: 44px; height: 44px;
+    border: none; border-radius: 50%;
+    font-size: 1.2rem;
+    cursor: pointer;
+  }
+  .top-controls > *:not(.menu-toggle-btn) { display: none; }
+  .top-controls.menu-open > *:not(.menu-toggle-btn) { display: flex; }
 
   /* Text stays in the DOM (so its accessible name/translations are
      untouched) but is visually replaced by an icon — font-size:0
@@ -1218,7 +1248,7 @@ body.calm .school-arrow, body.calm .school-dots {
     order: 2;
     width: 44px; height: 44px;
     padding: 0;
-    display: flex; align-items: center; justify-content: center;
+    align-items: center; justify-content: center;
     font-size: 0;
   }
   .donate-btn::before {
@@ -1407,6 +1437,17 @@ if (SETTINGS.backgroundVideo) {
   // iOS sometimes ignores the first attempt if it happens before the
   // element is fully attached/laid out — retry once metadata is in.
   vid.addEventListener("loadedmetadata", tryPlay, { once: true });
+  // Belt-and-suspenders for iOS: things like Low Power Mode can block
+  // even a muted+playsinline autoplay, showing iOS's own "tap to
+  // play" icon — which the visitor can't actually tap, since the
+  // video is pointer-events:none so it doesn't steal taps meant for
+  // dragging the tank. A genuine user gesture reliably overrides
+  // that block, so retry on every tap anywhere until it actually
+  // starts, then stop listening.
+  window.addEventListener("pointerdown", tryPlay);
+  vid.addEventListener("playing", () => {
+    window.removeEventListener("pointerdown", tryPlay);
+  }, { once: true });
 
   // Optional dark veil over the video so the fish stand out
   if (SETTINGS.videoDimmer > 0) {
@@ -2099,6 +2140,48 @@ infoBtn.addEventListener("click", (e) => {
 document.getElementById("infoClose").addEventListener("click", () => closeOverlay(infoOverlay));
 infoOverlay.addEventListener("click", (e) => { if (e.target === infoOverlay) closeOverlay(infoOverlay); });
 
+/* --- Mobile menu toggle -------------------------------------------
+   Below ~640px (see the CSS), search/info/feed/sound/lang collapse
+   behind this one button instead of staying permanently parked over
+   the tank. Only mattered/visible on mobile — CSS keeps it hidden
+   above that width, so this is inert there. */
+const topControls = document.getElementById("topControls");
+const menuToggleBtn = document.createElement("button");
+menuToggleBtn.className = "menu-toggle-btn";
+menuToggleBtn.textContent = "☰";
+menuToggleBtn.setAttribute("aria-haspopup", "true");
+menuToggleBtn.setAttribute("aria-expanded", "false");
+topControls.prepend(menuToggleBtn);
+
+function setMobileMenuOpen(open) {
+  topControls.classList.toggle("menu-open", open);
+  menuToggleBtn.setAttribute("aria-expanded", String(open));
+}
+menuToggleBtn.addEventListener("click", (e) => {
+  e.stopPropagation();
+  setMobileMenuOpen(!topControls.classList.contains("menu-open"));
+});
+// Picking any control inside closes the menu back up rather than
+// leaving it open over whatever just happened. Capture phase, since
+// each of these buttons calls stopPropagation() in its own click
+// handler (originally so clicking them doesn't also start a tank
+// drag) — that would block a normal bubble-phase listener here, but
+// capture listeners on an ancestor fire before that ever happens.
+topControls.addEventListener("click", (e) => {
+  if (e.target === menuToggleBtn) return;
+  setMobileMenuOpen(false);
+}, true);
+// Tapping anywhere else on the page closes it too
+window.addEventListener("pointerdown", (e) => {
+  if (!topControls.classList.contains("menu-open")) return;
+  if (e.target.closest("#topControls")) return;
+  setMobileMenuOpen(false);
+});
+// ...and so does Escape, same as every other pop-up on the page
+window.addEventListener("keydown", (e) => {
+  if (e.key === "Escape" && topControls.classList.contains("menu-open")) setMobileMenuOpen(false);
+});
+
 /* --- "Find a fish" search ----------------------------------------
    A keyboard- and screen-reader-accessible way to reach any fish's
    card directly, instead of hovering or clicking a moving target in
@@ -2295,6 +2378,10 @@ function applyLanguage() {
     const f = FISH[i];
     img.alt = f.name ? `${f.name} ${t.by} ${f.creator}` : `${t.fishAlt} ${t.by} ${f.creator}`;
   });
+  // Mobile menu toggle
+  menuToggleBtn.title = t.menuLabel;
+  menuToggleBtn.setAttribute("aria-label", t.menuLabel);
+
   // "Find a fish" search
   searchBtn.title = t.searchTitle;
   searchBtn.setAttribute("aria-label", t.searchTitle);
@@ -2364,7 +2451,7 @@ function stopDragSound() {
 }
 
 window.addEventListener("pointerdown", (e) => {
-  if (e.target.closest(".create-btn, .donate-btn, .sound-btn, .lang-btn, .info-btn, .search-btn, .school-arrow, .school-dots, .card")) return;
+  if (e.target.closest(".create-btn, .donate-btn, .sound-btn, .lang-btn, .info-btn, .search-btn, .menu-toggle-btn, .school-arrow, .school-dots, .card")) return;
   isDragging = true;
   wasDragged = false;
   lastPointerX = e.clientX;
