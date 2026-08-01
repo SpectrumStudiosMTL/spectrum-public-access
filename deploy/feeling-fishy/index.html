@@ -1305,6 +1305,20 @@ body.calm .school-arrow, body.calm .school-dots {
      of the fish. Move them down to just above the bottom row
      (Create your Fish / the logo) instead. */
   .school-arrow { top: auto; bottom: 88px; transform: none; }
+  /* The desktop :hover effect re-adds translateY(-50%), which the
+     button no longer needs now that it's positioned via `bottom`
+     instead of vertical centering — without this override, tapping
+     it (touchscreens apply :hover on tap, with no mouse-leave to
+     clear it afterward) made it visibly jump and stay jumped until
+     tapping elsewhere. Replaced with a small press animation on
+     :active instead, which suits a tap much better than a hover
+     effect does anyway. */
+  .school-arrow:hover { transform: none; }
+  .school-arrow:active { transform: scale(0.88); }
+
+  /* Same row as the arrows instead of hugging the very bottom, where
+     it sat too close to Create your Fish. */
+  .school-dots { bottom: 106px; }
 
   .mobile-splash.show {
     display: flex;
