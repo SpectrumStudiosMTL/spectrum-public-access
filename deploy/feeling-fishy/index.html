@@ -906,6 +906,8 @@ header p  { font-size: clamp(0.85rem, 2vw, 1rem); opacity: 0.9; }
   border: none;
   border-radius: 50%;
   font-size: 1.15rem;
+  line-height: 1;
+  display: flex; align-items: center; justify-content: center;
   cursor: pointer;
   box-shadow: 0 6px 20px rgba(4,26,44,0.35);
 }
@@ -937,6 +939,8 @@ header p  { font-size: clamp(0.85rem, 2vw, 1rem); opacity: 0.9; }
   border-radius: 50%;
   font-weight: 700;
   font-size: 0.9rem;
+  line-height: 1;
+  display: flex; align-items: center; justify-content: center;
   cursor: pointer;
   box-shadow: 0 6px 20px rgba(4,26,44,0.35);
 }
@@ -952,6 +956,8 @@ header p  { font-size: clamp(0.85rem, 2vw, 1rem); opacity: 0.9; }
   font-style: italic;
   font-weight: 800;
   font-size: 1.15rem;
+  line-height: 1;
+  display: flex; align-items: center; justify-content: center;
   cursor: pointer;
   box-shadow: 0 6px 20px rgba(4,26,44,0.35);
 }
@@ -966,6 +972,8 @@ header p  { font-size: clamp(0.85rem, 2vw, 1rem); opacity: 0.9; }
   border: none;
   border-radius: 50%;
   font-size: 1.05rem;
+  line-height: 1;
+  display: flex; align-items: center; justify-content: center;
   cursor: pointer;
   box-shadow: 0 6px 20px rgba(4,26,44,0.35);
 }
@@ -1235,10 +1243,20 @@ body.calm .school-arrow, body.calm .school-dots {
     width: 44px; height: 44px;
     border: none; border-radius: 50%;
     font-size: 1.2rem;
+    line-height: 1;
     cursor: pointer;
   }
   .top-controls > *:not(.menu-toggle-btn) { display: none; }
   .top-controls.menu-open > *:not(.menu-toggle-btn) { display: flex; }
+  /* Open, this was a single column tall enough to reach down into
+     the school-arrow buttons (which sit at the vertical center of
+     the screen) on shorter phones. Wrapping it into two columns
+     instead roughly halves how far down it extends. */
+  .top-controls.menu-open {
+    flex-direction: row; flex-wrap: wrap;
+    width: 98px; /* two 44px buttons + one 10px gap between them */
+    justify-content: flex-end;
+  }
 
   /* Text stays in the DOM (so its accessible name/translations are
      untouched) but is visually replaced by an icon — font-size:0
@@ -1254,6 +1272,7 @@ body.calm .school-arrow, body.calm .school-dots {
   .donate-btn::before {
     content: "🐟";
     font-size: 1.15rem;
+    line-height: 1;
   }
 
   /* Guards against the create-btn/logo colliding on the narrowest
