@@ -33,9 +33,6 @@
 }
 
 :root{
-  --logo-yellow:#ffee3c;   /* 255,238,60 — SPA logo yellow */
-  --fishy-cyan:#3dd9ff;    /* 61,217,255 — Feeling Fishy title glow */
-  --pete-orange:#ff6b47;   /* 255,107,71 — Eats with Pete accent */
   --cg-white:#ede9df;
 }
 
@@ -108,6 +105,13 @@ body:after{
   display:flex; gap:36px; flex-wrap:wrap; justify-content:center;
 }
 
+/* One shared rule for every link, instead of one hand-written rule
+   (plus a matching :hover rule) per link. Each button gets its own
+   glow color and its own stagger delay entirely from two inline
+   custom properties — --opt-rgb and --opt-delay — set once in JS
+   from the LINKS array below. Adding a new link never touches this
+   CSS at all. The ", 255,255,255" after each var(--opt-rgb) is just
+   a fallback in case that property is ever missing. */
 .opt{
   font-family:'Alarm Clock','Sixtyfour',monospace;
   font-size:clamp(14px, 2.4vw, 21px);
@@ -118,45 +122,37 @@ body:after{
   border:2px solid currentColor;
   border-radius:14px;
   opacity:0;
+  color:rgb(var(--opt-rgb, 255,255,255));
+  text-shadow:0 0 6px rgba(var(--opt-rgb, 255,255,255),.7), 0 0 20px rgba(var(--opt-rgb, 255,255,255),.3);
+  box-shadow:0 0 14px rgba(var(--opt-rgb, 255,255,255),.25), inset 0 0 14px rgba(var(--opt-rgb, 255,255,255),.15);
   transition:transform .12s ease;
+  animation:optOn .7s steps(1,end) forwards;
+  animation-delay:var(--opt-delay, 0s);
 }
 .opt:active{ transform:scale(.97); }
 .opt:focus-visible{ outline:3px solid var(--cg-white); outline-offset:4px; }
-
-.opt.stream{
-  color:var(--logo-yellow);
-  text-shadow:0 0 6px rgba(255,238,60,.7), 0 0 20px rgba(255,238,60,.3);
-  box-shadow:0 0 14px rgba(255,238,60,.25), inset 0 0 14px rgba(255,238,60,.15);
-  animation:optOn .7s steps(1,end) 2.15s forwards;
-}
-.opt.fishy{
-  color:var(--fishy-cyan);
-  text-shadow:0 0 6px rgba(61,217,255,.7), 0 0 20px rgba(61,217,255,.3);
-  box-shadow:0 0 14px rgba(61,217,255,.25), inset 0 0 14px rgba(61,217,255,.15);
-  animation:optOn .7s steps(1,end) 2.45s forwards;
-}
-.opt.pete{
-  color:var(--pete-orange);
-  text-shadow:0 0 6px rgba(255,107,71,.7), 0 0 20px rgba(255,107,71,.3);
-  box-shadow:0 0 14px rgba(255,107,71,.25), inset 0 0 14px rgba(255,107,71,.15);
-  animation:optOn .7s steps(1,end) 2.75s forwards;
+.opt:hover{
+  text-shadow:0 0 8px rgba(var(--opt-rgb, 255,255,255),.95), 0 0 30px rgba(var(--opt-rgb, 255,255,255),.5);
+  box-shadow:0 0 26px rgba(var(--opt-rgb, 255,255,255),.45), inset 0 0 20px rgba(var(--opt-rgb, 255,255,255),.25);
 }
 
 @keyframes optOn{
   0%{opacity:0;} 20%{opacity:.6;} 35%{opacity:.1;} 55%{opacity:.8;} 70%{opacity:.3;} 100%{opacity:1;}
 }
 
-.opt.stream:hover{
-  text-shadow:0 0 8px rgba(255,238,60,.95), 0 0 30px rgba(255,238,60,.5);
-  box-shadow:0 0 26px rgba(255,238,60,.45), inset 0 0 20px rgba(255,238,60,.25);
-}
-.opt.fishy:hover{
-  text-shadow:0 0 8px rgba(61,217,255,.95), 0 0 30px rgba(61,217,255,.5);
-  box-shadow:0 0 26px rgba(61,217,255,.45), inset 0 0 20px rgba(61,217,255,.25);
-}
-.opt.pete:hover{
-  text-shadow:0 0 8px rgba(255,107,71,.95), 0 0 30px rgba(255,107,71,.5);
-  box-shadow:0 0 26px rgba(255,107,71,.45), inset 0 0 20px rgba(255,107,71,.25);
+/* Plain, static styling for the noscript fallback below — no glow
+   colors to assign since there's no JS running to hand them out. */
+.opt-fallback{
+  display:inline-block; margin:8px;
+  font-family:'Alarm Clock','Sixtyfour',monospace;
+  font-size:clamp(14px, 2.4vw, 21px);
+  letter-spacing:.08em;
+  text-transform:uppercase;
+  text-decoration:none;
+  padding:20px 30px;
+  border:2px solid var(--cg-white);
+  border-radius:14px;
+  color:var(--cg-white);
 }
 
 /* reduced motion: no flicker, everything simply on */
@@ -171,17 +167,55 @@ body:after{
 <main class="stage">
   <img class="logo" src="images/logo.png" alt="Spectrum Public Access">
 
-  <!-- WATCH THE STREAM is intentionally unlinked for now — add an href
-       here once that page/stream exists. FEELING FISHY points at the
-       Feeling Fishy build, deployed at /feeling-fishy. EATS WITH PETE
-       is a separate project on its own domain, so it opens in a new
-       tab rather than navigating away from this page. -->
-  <nav class="options" aria-label="Choose an experience">
-    <a class="opt stream">WATCH THE STREAM</a>
-    <a class="opt fishy" href="/feeling-fishy">FEELING FISHY</a>
-    <a class="opt pete" href="https://eatswithpete.com" target="_blank" rel="noopener noreferrer" aria-label="Eats with Pete — opens in a new tab">EATS WITH PETE</a>
+  <nav class="options" id="options" aria-label="Choose an experience">
+    <!-- Shown only if JS is disabled — replaced the instant the
+         script below runs. Kept in sync by hand since it's a rare,
+         static fallback, not the real navigation. -->
+    <noscript>
+      <a class="opt-fallback" href="/feeling-fishy">FEELING FISHY</a>
+      <a class="opt-fallback" href="https://eatswithpete.com">EATS WITH PETE</a>
+    </noscript>
   </nav>
 </main>
+
+<script>
+/* ██████████████████████████████████████████████████████████████
+   ██  YOUR LINKS — add a new destination any time              ██
+   ██  Everything below renders and staggers itself from this.  ██
+   ██████████████████████████████████████████████████████████████
+   label    — button text (rendered in caps regardless of case here)
+   href     — where it goes; leave null to keep it unlinked/inert
+              for now, like Watch the Stream until that page exists
+   rgb      — "R,G,B" for this button's neon color — the only place
+              that color is ever written; every glow/hover effect
+              is computed from it, so nothing can drift out of sync
+   external — true opens it in a new tab (for links off this domain) */
+const LINKS = [
+  { label: "Watch the Stream", href: null,                        rgb: "255,238,60" },  // SPA logo yellow
+  { label: "Feeling Fishy",    href: "/feeling-fishy",             rgb: "61,217,255", external: true },  // Feeling Fishy title glow — new tab too, so this hub page stays put as a home base
+  { label: "Eats with Pete",   href: "https://eatswithpete.com",   rgb: "255,107,71", external: true },
+];
+
+const BASE_DELAY = 2.15; // seconds before the first button starts flickering in
+const STEP_DELAY = 0.3;  // gap between each button after that
+
+const optionsNav = document.getElementById("options");
+optionsNav.innerHTML = ""; // clears the noscript fallback now that JS is running
+LINKS.forEach((link, i) => {
+  const a = document.createElement("a");
+  a.className = "opt";
+  a.textContent = link.label;
+  a.style.setProperty("--opt-rgb", link.rgb);
+  a.style.setProperty("--opt-delay", (BASE_DELAY + i * STEP_DELAY).toFixed(2) + "s");
+  if (link.href) a.href = link.href;
+  if (link.external) {
+    a.target = "_blank";
+    a.rel = "noopener noreferrer";
+    a.setAttribute("aria-label", link.label + " — opens in a new tab");
+  }
+  optionsNav.appendChild(a);
+});
+</script>
 
 </body>
 </html>
