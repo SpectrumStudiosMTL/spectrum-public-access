@@ -1296,6 +1296,15 @@ body.calm .school-arrow, body.calm .school-dots {
      by side — stays inline as one line on desktop (see the base
      .title-line rule, there isn't one, so it's just normal text). */
   header h1 .title-line { display: block; }
+  /* A couple points bigger than the desktop-tuned clamp() was
+     landing on at this width. */
+  header h1 { font-size: 1.4rem; }
+
+  /* The school-switching arrows sit at the vertical center of the
+     viewport by default, which on a phone lands right in the middle
+     of the fish. Move them down to just above the bottom row
+     (Create your Fish / the logo) instead. */
+  .school-arrow { top: auto; bottom: 88px; transform: none; }
 
   .mobile-splash.show {
     display: flex;
