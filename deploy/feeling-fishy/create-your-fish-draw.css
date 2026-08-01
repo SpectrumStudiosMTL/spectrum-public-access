@@ -38,6 +38,11 @@
      color the water background never produces on its own, so it
      always pops, and it echoes the SPA logo itself. */
   text-shadow: 0 0 4px rgba(255,238,60,.9), 0 0 14px rgba(255,238,60,.5), 0 0 30px rgba(255,238,60,.25);
+  /* Reserves room for the "i" tour button sitting absolutely
+     positioned in the top-right corner — without this the centered
+     title's own text runs underneath it once the tool is narrow
+     enough that "DRAW YOUR FISH" nearly fills the available width. */
+  max-width: calc(100% - 76px);
 }
 
 .dyf-root .workspace { display: flex; gap: 14px; align-items: flex-start; justify-content: center; }

@@ -1194,6 +1194,46 @@ body.calm .school-arrow, body.calm .school-dots {
   padding: 6px;
 }
 
+/* ---------- MOBILE ----------
+   Everything above is position:fixed with desktop offsets, which
+   doesn't reflow the way normal content does — at phone widths the
+   top-controls row (search/info/Feed the Fish/sound/lang) and the
+   header title occupy nearly the same space and sit on top of each
+   other. "Feed the Fish" is the worst offender: it's the only
+   variable-width text pill in that row (its neighbors are all fixed
+   44px circles), and in French ("Nourrir les poissons") it's long
+   enough to wrap onto two lines, making the overlap worse. Below
+   this width: drop the top-controls row below the header instead of
+   beside it, and collapse "Feed the Fish" to match its icon-only
+   neighbors so the row stays compact regardless of language. */
+@media (max-width: 640px) {
+  .top-controls { top: 92px; right: 14px; gap: 10px; }
+  header { padding: 18px 20px; }
+
+  /* Text stays in the DOM (so its accessible name/translations are
+     untouched) but is visually replaced by an icon — font-size:0
+     hides it from view without removing it from the accessibility
+     tree, unlike display:none or visibility:hidden. */
+  .donate-btn {
+    order: 2;
+    width: 44px; height: 44px;
+    padding: 0;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0;
+  }
+  .donate-btn::before {
+    content: "🐟";
+    font-size: 1.15rem;
+  }
+
+  /* Guards against the create-btn/logo colliding on the narrowest
+     phones still in use (~320-360px) — the logo's 110px floor and
+     create-btn's full-text width leave very little room between
+     them at that size otherwise. */
+  .create-btn { padding: 10px 16px; font-size: 0.9rem; }
+  .logo { width: clamp(80px, 16vw, 190px); }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .decoration.sways, .fish:hover .wiggle,
   .bubble, .ray,
@@ -1784,11 +1824,11 @@ if (SETTINGS.templateUrl || SETTINGS.submitUrl) {
     drawToolLoading = new Promise((resolve, reject) => {
       const css = document.createElement("link");
       css.rel = "stylesheet";
-      css.href = "create-your-fish-draw.css?v=3";
+      css.href = "create-your-fish-draw.css?v=4";
       document.head.appendChild(css);
 
       const script = document.createElement("script");
-      script.src = "create-your-fish-draw.js?v=3";
+      script.src = "create-your-fish-draw.js?v=4";
       script.onload = resolve;
       script.onerror = reject;
       document.body.appendChild(script);
