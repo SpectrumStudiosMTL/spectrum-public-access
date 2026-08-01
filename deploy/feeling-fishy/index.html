@@ -1292,6 +1292,10 @@ body.calm .school-arrow, body.calm .school-dots {
   /* Fully covered by the Info modal already — pure duplication that
      costs header height on a screen where vertical space is scarce. */
   header p { display: none; }
+  /* "Feeling" / "Fishy" stacked on their own lines instead of side
+     by side — stays inline as one line on desktop (see the base
+     .title-line rule, there isn't one, so it's just normal text). */
+  header h1 .title-line { display: block; }
 
   .mobile-splash.show {
     display: flex;
@@ -1387,7 +1391,7 @@ body.calm .school-arrow, body.calm .school-dots {
 </button>
 
 <header>
-  <h1>Feeling Fishy</h1>
+  <h1><span class="title-line">Feeling</span> <span class="title-line">Fishy</span></h1>
   <p id="tagline">Drag to spin the tank. Hover a fish to meet its creator.</p>
 </header>
 
