@@ -1379,19 +1379,34 @@ const tank = document.getElementById("tank");
 if (SETTINGS.background) tank.style.backgroundImage = `url(${SETTINGS.background})`;
 
 // Looping video backdrop (e.g. rendered from your Unreal scene).
-// muted + playsinline are required for browsers to autoplay it.
+// muted + playsinline are required for browsers to autoplay it — and
+// on iOS Safari specifically, setting the .muted/.playsInline JS
+// properties alone isn't reliable for a <video> created dynamically
+// like this; it wants the actual HTML attributes present too, plus
+// an explicit .play() call rather than relying on the autoplay
+// attribute by itself. Without this it silently just sits on the
+// poster frame forever instead of looking broken.
 if (SETTINGS.backgroundVideo) {
   const vid = document.createElement("video");
-  vid.src = SETTINGS.backgroundVideo;
-  if (SETTINGS.backgroundVideoPoster) vid.poster = SETTINGS.backgroundVideoPoster;
+  vid.muted = true;
+  vid.defaultMuted = true;
+  vid.setAttribute("muted", "");
+  vid.setAttribute("playsinline", "");
+  vid.setAttribute("webkit-playsinline", "");
+  vid.playsInline = true;
   vid.autoplay = true;
   vid.loop = true;
-  vid.muted = true;
-  vid.playsInline = true;
+  if (SETTINGS.backgroundVideoPoster) vid.poster = SETTINGS.backgroundVideoPoster;
+  vid.src = SETTINGS.backgroundVideo;
   vid.setAttribute("style",
     "position:absolute; inset:0; width:100%; height:100%; " +
     "object-fit:cover; z-index:0; pointer-events:none;");
   tank.prepend(vid);
+  const tryPlay = () => vid.play().catch(() => {});
+  tryPlay();
+  // iOS sometimes ignores the first attempt if it happens before the
+  // element is fully attached/laid out — retry once metadata is in.
+  vid.addEventListener("loadedmetadata", tryPlay, { once: true });
 
   // Optional dark veil over the video so the fish stand out
   if (SETTINGS.videoDimmer > 0) {
@@ -2457,6 +2472,19 @@ function animate(now) {
   const cx = window.innerWidth / 2;
   const orbitRadius = window.innerWidth * ORBIT.radiusX;
 
+  // Fish sizes in the FISH array are tuned for a desktop-width tank.
+  // The orbit radius above already shrinks proportionally on narrow
+  // screens (it's a fraction of innerWidth), but fish themselves were
+  // still a fixed pixel width regardless of viewport — on a phone
+  // that meant a ~150px fish taking up a third of the screen, and a
+  // packed-looking school as a result. Scaling it down here (read
+  // fresh every frame, so rotating the phone adjusts it immediately)
+  // keeps the fish proportioned to the orbit the same way at every
+  // screen size. 900px is roughly where the tank stops feeling
+  // crowded at full size; below that, fish shrink down to a 55% floor
+  // so they don't get too small to read the artwork on tiny phones.
+  const fishSizeScale = Math.max(0.55, Math.min(1, window.innerWidth / 900));
+
   for (const fish of swimmers) {
     if (!fish.active) continue;   // fish in other schools sit this out
 
@@ -2490,9 +2518,10 @@ function animate(now) {
       fish.el.classList.toggle("flipped", fish.flipped);
     }
 
-    fish.el.style.width = fish.size + "px";
+    const renderedSize = fish.size * fishSizeScale;
+    fish.el.style.width = renderedSize + "px";
     fish.el.style.transform =
-      `translate(${screenX - fish.size / 2}px, ${screenY}px) scale(${scale})`;
+      `translate(${screenX - renderedSize / 2}px, ${screenY}px) scale(${scale})`;
     fish.el.style.opacity = fish.hovered ? 1 : opacity;
     // Hovered fish un-blur so the name tag and bubble stay crisp
     const totalBlur = (fish.hovered ? 0 : blur) + motionBlur;
