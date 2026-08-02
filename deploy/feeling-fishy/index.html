@@ -1386,45 +1386,41 @@ body.calm .school-arrow, body.calm .school-dots {
   .logo { width: clamp(80px, 16vw, 190px); }
 
   /* "Create your fish" and "choose a template" pop-ups: at the
-     desktop sizing (140-210px square buttons, aspect-ratio 5/4) three
-     stacked on a phone run to 500px+ of buttons alone, forcing the
-     card to scroll. Keeping the stacked (one-per-row) layout but
-     switching each button from a big square icon-over-text tile to a
-     slim icon-beside-text row fits all three, plus the title and
-     close button, well inside the viewport with no scrolling. */
+     desktop sizing (140-210px square buttons) three stacked on a
+     phone run past 500px of buttons alone, forcing the card to
+     scroll. Scaling the same square tile down (still icon-over-text,
+     just smaller) instead of restyling it lets all three stack and
+     fit with no scrolling. The heading is dropped visually — with
+     three self-explanatory buttons right there it was just repeating
+     "create your fish"/"choose a template" a phone screen has no
+     spare room for — but stays in the DOM (see the same technique
+     already used for .draw-card h2) so aria-labelledby still names
+     the dialog for screen readers. */
   #createOverlay .card, #downloadOverlay .card { padding: 22px 18px; }
+  #createOverlay .card > h2, #downloadOverlay .card > h2 {
+    position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+    overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0;
+  }
   #createOverlay .option-row, #downloadOverlay .option-row {
     flex-direction: column;
+    align-items: center;
     flex-wrap: nowrap;
-    gap: 10px;
-    margin: 14px 0 8px;
+    gap: 12px;
+    margin: 0 0 26px;
   }
   #createOverlay .card .option-btn, #downloadOverlay .card .option-btn {
     /* flex:0 0 auto overrides the base flex:1 (flex-basis:0%) — with
        the row now flex-direction:column, that basis applies on the
-       vertical axis and was collapsing each button to just its
-       padding, ignoring the height set below entirely. */
+       vertical axis and would otherwise stretch every button to
+       fill the row instead of staying its own square size. */
     flex: 0 0 auto;
-    width: 100%;
+    width: 108px;
     min-width: 0;
     max-width: none;
-    aspect-ratio: auto;
-    height: 58px;
-    padding: 6px;
+    aspect-ratio: 1 / 1;
   }
   #createOverlay .card .option-btn .inlay, #downloadOverlay .card .option-btn .inlay {
-    inset: 6px;
-    flex-direction: row;
-    justify-content: flex-start;
-    gap: 10px;
-    padding: 0 12px;
-    font-size: 0.85rem;
-    text-align: left;
-  }
-  #createOverlay .card .option-btn .inlay img, #downloadOverlay .card .option-btn .inlay img {
-    width: 30px;
-    max-height: 30px;
-    flex-shrink: 0;
+    font-size: 0.68rem;
   }
 }
 
