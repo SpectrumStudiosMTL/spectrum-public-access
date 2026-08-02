@@ -491,6 +491,14 @@ body.dragging { cursor: grabbing; }
     var(--water-top) 0%, var(--water-mid) 45%, var(--water-bottom) 100%);
   background-size: cover;
   background-position: center;
+  /* Without this, a touch-drag that drifts vertically can get
+     reinterpreted mid-gesture as a page scroll/pull-to-refresh on
+     mobile — the browser cancels the pointer sequence (pointercancel,
+     not pointerup) to take it over, which left isDragging stuck true
+     and the carousel frozen (see the pointercancel handler in JS).
+     Scoped to #tank rather than body so overlay cards elsewhere in
+     the page keep their own scrollable content. */
+  touch-action: none;
 }
 
 /* WATER EFFECTS — bubbles and light rays (created by JS) */
@@ -2938,11 +2946,16 @@ window.addEventListener("pointermove", (e) => {
     dragAudio.playbackRate = 0.8 + Math.min(Math.abs(dx) / 12, 1) * 0.8;
   }
 });
-window.addEventListener("pointerup", () => {
+function endDrag() {
   if (isDragging) stopDragSound();
   isDragging = false;
   document.body.classList.remove("dragging");
-});
+}
+window.addEventListener("pointerup", endDrag);
+// Fires instead of pointerup when the browser takes the gesture over
+// mid-drag (e.g. an edge-swipe or OS gesture on mobile) — without
+// this, isDragging never resets and the carousel stays frozen.
+window.addEventListener("pointercancel", endDrag);
 
 /* --- Calm mode ---------------------------------------------------
    After 3 seconds without any input, the interface fades away and
