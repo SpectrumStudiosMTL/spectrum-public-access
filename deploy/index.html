@@ -186,6 +186,53 @@ body:after{
     padding:16px 20px;
   }
 }
+
+/* ---------- STREAM POP-UP ----------
+   "Watch the Stream" plays here instead of leaving the page, once
+   there's a real live URL to embed (see LINKS' popup/popupEmbed). */
+.stream-modal{
+  display:none;
+  position:fixed; inset:0; z-index:100;
+  align-items:center; justify-content:center;
+  padding:24px;
+}
+.stream-modal.open{ display:flex; }
+.stream-modal-backdrop{
+  position:absolute; inset:0;
+  background:rgba(5,6,9,.88);
+}
+.stream-modal-box{
+  position:relative;
+  width:min(1000px, 100%);
+}
+.stream-modal-frame{
+  position:relative;
+  width:100%;
+  aspect-ratio:16/9;
+  border-radius:14px;
+  overflow:hidden;
+  background:#000;
+  box-shadow:0 0 24px rgba(255,238,60,.35), 0 0 70px rgba(0,0,0,.6);
+  border:2px solid rgba(255,238,60,.6);
+}
+.stream-modal-frame iframe{
+  position:absolute; inset:0; width:100%; height:100%; border:0;
+}
+/* Sits inside the frame's own rounded corners rather than floating
+   above it, so it's never clipped by a short viewport on mobile. */
+.stream-modal-close{
+  position:absolute; top:10px; right:10px; z-index:2;
+  width:36px; height:36px;
+  border-radius:50%;
+  border:2px solid var(--cg-white);
+  background:rgba(5,6,9,.7);
+  color:var(--cg-white);
+  font-size:22px; line-height:1;
+  cursor:pointer;
+  display:flex; align-items:center; justify-content:center;
+}
+.stream-modal-close:hover{ background:rgba(255,238,60,.2); }
+.stream-modal-close:focus-visible{ outline:3px solid var(--cg-white); outline-offset:3px; }
 </style>
 </head>
 <body>
@@ -205,6 +252,18 @@ body:after{
   </nav>
 </main>
 
+<div class="stream-modal" id="streamModal" role="dialog" aria-modal="true" aria-label="Watch the Stream">
+  <div class="stream-modal-backdrop"></div>
+  <div class="stream-modal-box">
+    <div class="stream-modal-frame">
+      <button class="stream-modal-close" id="streamModalClose" type="button" aria-label="Close">&times;</button>
+      <iframe id="streamModalIframe" title="Live stream"
+        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+        referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+    </div>
+  </div>
+</div>
+
 <script>
 /* ██████████████████████████████████████████████████████████████
    ██  YOUR LINKS — add a new destination any time              ██
@@ -216,11 +275,24 @@ body:after{
    rgb      — "R,G,B" for this button's neon color — the only place
               that color is ever written; every glow/hover effect
               is computed from it, so nothing can drift out of sync
-   external — true opens it in a new tab (for links off this domain) */
+   external — true opens it in a new tab (for links off this domain)
+   popup    — true plays it in the on-page pop-up instead of
+              navigating (see popupEmbed below and .stream-modal in
+              the CSS); href/external stay set alongside it as the
+              fallback for a middle-click, Ctrl/Cmd-click, or no-JS
+   popupEmbed — the embeddable URL for a popup link (YouTube's
+              /embed/VIDEO_ID form, not the regular watch/live URL) */
 const LINKS = [
-  // Points straight at the YouTube live stream for now — swap this
-  // for the real live-channel-switcher page once that's built.
-  { label: "Watch the Stream", href: "https://www.youtube.com/live/ow3RDIXTPXk", rgb: "255,238,60", external: true },  // SPA logo yellow
+  // Plays inline for now — swap this for the real live-channel-
+  // switcher page once that's built (drop `popup`/`popupEmbed` to
+  // just navigate to `href` instead). The si= value is YouTube's own
+  // share-embed token for this video (from Share -> Embed) — plain
+  // /embed/VIDEO_ID URLs without it hit YouTube's Error 153 for this
+  // stream even with embedding allowed, but the official share link
+  // works, so this matches that exactly rather than a param-stripped
+  // version of it.
+  { label: "Watch the Stream", href: "https://www.youtube.com/live/ow3RDIXTPXk", rgb: "255,238,60", external: true,
+    popup: true, popupEmbed: "https://www.youtube.com/embed/ow3RDIXTPXk?si=NgFK3XYpDQOLObrl&autoplay=1" },  // SPA logo yellow
   { label: "Feeling Fishy",    href: "/feeling-fishy",             rgb: "61,217,255", external: true },  // Feeling Fishy title glow — new tab too, so this hub page stays put as a home base
   { label: "Eats with Pete",   href: "https://eatswithpete.com",   rgb: "255,107,71", external: true },
 ];
@@ -240,9 +312,41 @@ LINKS.forEach((link, i) => {
   if (link.external) {
     a.target = "_blank";
     a.rel = "noopener noreferrer";
-    a.setAttribute("aria-label", link.label + " — opens in a new tab");
+    a.setAttribute("aria-label", link.label + (link.popup ? " — plays in a pop-up" : " — opens in a new tab"));
+  }
+  if (link.popup) {
+    a.addEventListener("click", (e) => {
+      // Middle-click, Ctrl/Cmd-click, etc. — let the browser open the
+      // real href in a new tab as usual instead of hijacking it.
+      if (e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+      e.preventDefault();
+      openStreamModal(link.popupEmbed, a);
+    });
   }
   optionsNav.appendChild(a);
+});
+
+/* ---------- STREAM POP-UP ---------- */
+const streamModal = document.getElementById("streamModal");
+const streamModalIframe = document.getElementById("streamModalIframe");
+const streamModalClose = document.getElementById("streamModalClose");
+let streamModalTrigger = null; // where focus returns to on close
+
+function openStreamModal(embedSrc, trigger) {
+  streamModalTrigger = trigger;
+  streamModalIframe.src = embedSrc;
+  streamModal.classList.add("open");
+  streamModalClose.focus();
+}
+function closeStreamModal() {
+  streamModal.classList.remove("open");
+  streamModalIframe.src = ""; // stops playback rather than just hiding it
+  if (streamModalTrigger && streamModalTrigger.focus) streamModalTrigger.focus();
+}
+streamModalClose.addEventListener("click", closeStreamModal);
+document.querySelector(".stream-modal-backdrop").addEventListener("click", closeStreamModal);
+window.addEventListener("keydown", (e) => {
+  if (e.key === "Escape" && streamModal.classList.contains("open")) closeStreamModal();
 });
 </script>
 
