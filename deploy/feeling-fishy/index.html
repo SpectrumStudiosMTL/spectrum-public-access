@@ -234,6 +234,8 @@ const TEXT = {
     donate: "Feed the Fish",
     nextSchool: "Next school of fish",
     prevSchool: "Previous school of fish",
+    nextOption: "Next option",
+    prevOption: "Previous option",
     createTitle: "Add your fish to the tank!",
     download: "Download the fish template",
     draw: "Draw it yourself",
@@ -285,6 +287,8 @@ const TEXT = {
     donate: "Nourrir les poissons",
     nextSchool: "Banc de poissons suivant",
     prevSchool: "Banc de poissons précédent",
+    nextOption: "Option suivante",
+    prevOption: "Option précédente",
     createTitle: "Ajoute ton poisson à l'aquarium !",
     download: "Télécharger le modèle de poisson",
     draw: "Dessine-le toi-même",
@@ -1430,42 +1434,56 @@ body.calm .school-arrow, body.calm .school-dots {
   .create-btn { padding: 10px 16px; font-size: 0.9rem; }
   .logo { width: clamp(80px, 16vw, 190px); }
 
-  /* "Create your fish" and "choose a template" pop-ups: at the
-     desktop sizing (140-210px square buttons) three stacked on a
-     phone run past 500px of buttons alone, forcing the card to
-     scroll. Scaling the same square tile down (still icon-over-text,
-     just smaller) instead of restyling it lets all three stack and
-     fit with no scrolling. The heading is dropped visually — with
-     three self-explanatory buttons right there it was just repeating
-     "create your fish"/"choose a template" a phone screen has no
-     spare room for — but stays in the DOM (see the same technique
-     already used for .draw-card h2) so aria-labelledby still names
-     the dialog for screen readers. */
+  /* "Create your fish" and "choose a template" pop-ups: on a phone,
+     buildOptionCarousel() (see the JS) shows one option at a time
+     with prev/next arrows instead of stacking all three, so there's
+     room to scale the visible button up much bigger. The heading is
+     dropped visually too — with a single big self-explanatory button
+     on screen it was just repeating "create your fish"/"choose your
+     template" a phone has no spare room for — but stays in the DOM
+     (same technique already used for .draw-card h2) so
+     aria-labelledby still names the dialog for screen readers. */
   #createOverlay .card, #downloadOverlay .card { padding: 22px 18px; }
   #createOverlay .card > h2, #downloadOverlay .card > h2 {
     position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
     overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0;
   }
-  #createOverlay .option-row, #downloadOverlay .option-row {
-    flex-direction: column;
+  .option-carousel {
+    display: flex;
     align-items: center;
-    flex-wrap: nowrap;
-    gap: 12px;
-    margin: 0 0 26px;
+    justify-content: center;
+    gap: 14px;
+    margin: 0 0 22px;
   }
-  #createOverlay .card .option-btn, #downloadOverlay .card .option-btn {
-    /* flex:0 0 auto overrides the base flex:1 (flex-basis:0%) — with
-       the row now flex-direction:column, that basis applies on the
-       vertical axis and would otherwise stretch every button to
-       fill the row instead of staying its own square size. */
+  .option-carousel .option-row { margin: 0; }
+  .option-carousel .option-btn {
+    /* flex:0 0 auto overrides the base flex:1 (flex-basis:0%), which
+       would otherwise stretch the lone visible button to fill the
+       row instead of staying its own square size. */
     flex: 0 0 auto;
-    width: 108px;
+    width: 172px;
     min-width: 0;
     max-width: none;
     aspect-ratio: 1 / 1;
   }
-  #createOverlay .card .option-btn .inlay, #downloadOverlay .card .option-btn .inlay {
-    font-size: 0.68rem;
+  .option-carousel .option-btn.carousel-hidden { display: none; }
+
+  /* One dot per option, echoing the school-dots pattern elsewhere on
+     the page — the lit dot is the one currently shown. */
+  .option-dots {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin: 0 0 26px;
+  }
+  .option-dots button {
+    width: 10px; height: 10px; padding: 0; border: none; border-radius: 50%;
+    cursor: pointer;
+    background: rgba(255,255,255,0.35);
+  }
+  .option-dots button.active {
+    background: rgb(var(--logo-glow));
+    box-shadow: 0 0 8px rgba(var(--logo-glow), 0.8);
   }
 }
 
@@ -2134,6 +2152,17 @@ if (SETTINGS.music || hasAnySfx) {
 let createBtn = null;
 const createOverlay = document.getElementById("createOverlay");
 
+// On mobile, an option-row's three buttons page one at a time
+// instead of stacking (see buildOptionCarousel() below) — this jumps
+// it back to the first option whenever its menu is (re)opened, so it
+// never reopens sitting on whichever one was last viewed. A no-op
+// wherever no carousel was built (desktop, or a menu with only one
+// option), since showCarouselOption is only ever set by that code.
+function resetOptionCarousel(overlay) {
+  const row = overlay.querySelector(".option-row");
+  if (row && row.showCarouselOption) row.showCarouselOption(0);
+}
+
 if (SETTINGS.templateUrl || SETTINGS.submitUrl) {
   createBtn = document.createElement("button");
   createBtn.className = "create-btn";
@@ -2151,6 +2180,7 @@ if (SETTINGS.templateUrl || SETTINGS.submitUrl) {
   createBtn.addEventListener("click", (e) => {
     e.stopPropagation();
     playPluck();
+    resetOptionCarousel(createOverlay);
     openOverlay(createOverlay, createBtn);
   });
   document.body.appendChild(createBtn);
@@ -2164,6 +2194,7 @@ if (SETTINGS.templateUrl || SETTINGS.submitUrl) {
   if (SETTINGS.templateUrl || SETTINGS.templatePsd || SETTINGS.templateKrita) {
     optDownload.addEventListener("click", () => {
       createOverlay.classList.remove("open");
+      resetOptionCarousel(downloadOverlay);
       downloadOverlay.classList.add("open");
       focusOverlayHeading(downloadOverlay);
     });
@@ -2238,6 +2269,7 @@ if (SETTINGS.templateUrl || SETTINGS.submitUrl) {
   // Back returns to the create menu; backdrop click closes fully
   document.getElementById("submitBack").addEventListener("click", () => {
     submitOverlay.classList.remove("open");
+    resetOptionCarousel(createOverlay);
     createOverlay.classList.add("open");
     focusOverlayHeading(createOverlay);
   });
@@ -2250,6 +2282,7 @@ if (SETTINGS.templateUrl || SETTINGS.submitUrl) {
   // Back returns to the create menu; backdrop click closes fully
   document.getElementById("drawBack").addEventListener("click", () => {
     drawOverlay.classList.remove("open");
+    resetOptionCarousel(createOverlay);
     createOverlay.classList.add("open");
     focusOverlayHeading(createOverlay);
   });
@@ -2275,6 +2308,7 @@ if (SETTINGS.templateUrl || SETTINGS.submitUrl) {
   // Back returns to the create menu
   document.getElementById("downloadBack").addEventListener("click", () => {
     downloadOverlay.classList.remove("open");
+    resetOptionCarousel(createOverlay);
     createOverlay.classList.add("open");
     focusOverlayHeading(createOverlay);
   });
@@ -2309,6 +2343,61 @@ if (SETTINGS.templateUrl || SETTINGS.submitUrl) {
    document.getElementById("drawBack"),
    document.getElementById("submitBack")]
     .forEach((btn) => btn.addEventListener("click", playPluck));
+
+  // Mobile only: page through an option-row one button at a time
+  // with prev/next arrows and dots, instead of stacking all three —
+  // frees up the room to scale the visible button up much bigger
+  // (see the CSS). Desktop keeps the plain row untouched.
+  if (window.innerWidth < 640) {
+    function buildOptionCarousel(overlay) {
+      const row = overlay.querySelector(".option-row");
+      // Buttons for a URL SETTINGS never configured were already set
+      // to display:none above — those aren't real pages to swipe to.
+      const items = [...row.children].filter((el) => el.style.display !== "none");
+      if (items.length <= 1) return; // nothing to page through
+
+      const wrap = document.createElement("div");
+      wrap.className = "option-carousel";
+      row.parentNode.insertBefore(wrap, row);
+
+      const prevBtn = document.createElement("button");
+      prevBtn.type = "button";
+      prevBtn.className = "card-nav option-nav-prev shown";
+      prevBtn.innerHTML = '<span aria-hidden="true">‹</span>';
+      const nextBtn = document.createElement("button");
+      nextBtn.type = "button";
+      nextBtn.className = "card-nav option-nav-next shown";
+      nextBtn.innerHTML = '<span aria-hidden="true">›</span>';
+      wrap.append(prevBtn, row, nextBtn);
+
+      const dots = document.createElement("div");
+      dots.className = "option-dots";
+      items.forEach((_, i) => {
+        const dot = document.createElement("button");
+        dot.type = "button";
+        dot.addEventListener("click", () => show(i));
+        dots.appendChild(dot);
+      });
+      wrap.after(dots);
+
+      let index = 0;
+      function show(i) {
+        index = (i + items.length) % items.length;
+        items.forEach((el, j) => el.classList.toggle("carousel-hidden", j !== index));
+        [...dots.children].forEach((d, j) => d.classList.toggle("active", j === index));
+      }
+      prevBtn.addEventListener("click", () => { playPluck(); show(index - 1); });
+      nextBtn.addEventListener("click", () => { playPluck(); show(index + 1); });
+      show(0);
+
+      // Exposed on the row itself (rather than a module-level map
+      // keyed by overlay) so resetOptionCarousel() can reach it from
+      // outside this closure without either carousel needing a name.
+      row.showCarouselOption = show;
+    }
+    buildOptionCarousel(createOverlay);
+    buildOptionCarousel(downloadOverlay);
+  }
 }
 
 function closeCreate() {
@@ -2675,6 +2764,12 @@ function applyLanguage() {
   });
   document.querySelectorAll(".school-arrow.next").forEach((b) => {
     b.title = t.nextSchool; b.setAttribute("aria-label", t.nextSchool);
+  });
+  document.querySelectorAll(".option-nav-prev").forEach((b) => {
+    b.title = t.prevOption; b.setAttribute("aria-label", t.prevOption);
+  });
+  document.querySelectorAll(".option-nav-next").forEach((b) => {
+    b.title = t.nextOption; b.setAttribute("aria-label", t.nextOption);
   });
   // Update every fish's name tag ("by" / "par") and image alt text
   document.querySelectorAll(".fish .name-tag").forEach((tag, i) => {
