@@ -252,6 +252,7 @@ const TEXT = {
     menuLabel: "Menu",
     splashPrompt: "Tap to dive in",
     splashAriaLabel: "Enter the Feeling Fishy tank",
+    rotatePrompt: "Please rotate your device to portrait to view Feeling Fishy.",
     searchPlaceholder: "Type a name…",
     searchResultsLabel: "Matching fish",
     searchBrowseAll: "Browse every fish in the tank.",
@@ -302,6 +303,7 @@ const TEXT = {
     menuLabel: "Menu",
     splashPrompt: "Touche pour plonger",
     splashAriaLabel: "Entre dans l'aquarium Feeling Fishy",
+    rotatePrompt: "Veuillez faire pivoter votre appareil en mode portrait pour voir Feeling Fishy.",
     searchPlaceholder: "Tape un nom…",
     searchResultsLabel: "Poissons correspondants",
     searchBrowseAll: "Découvre tous les poissons de l'aquarium.",
@@ -1277,6 +1279,49 @@ body.calm .school-arrow, body.calm .school-dots {
 }
 .mobile-splash:focus-visible { outline: 3px solid #fff; outline-offset: -6px; }
 
+/* "Please rotate" overlay — on a phone turned sideways, the tank's
+   portrait-cropped background video and everything else tuned for a
+   tall narrow viewport gets visibly stretched/mismatched. Rather
+   than reworking every mobile-only piece to also handle a wide-short
+   viewport, this fully covers the tank so that never gets seen at
+   all. It's pure CSS (no JS timing to race), so it's applied by the
+   browser as part of layout itself — in sync with the rotation, not
+   a frame behind it. Matched on max-height rather than max-width —
+   width is what's LARGE in landscape — so only phones trigger it;
+   a landscape tablet or a short desktop window has plenty of height
+   to spare and stays fully interactive. */
+.rotate-overlay { display: none; }
+@media (orientation: landscape) and (max-height: 640px) {
+  .rotate-overlay {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    position: fixed;
+    inset: 0;
+    z-index: 3000;
+    background: var(--water-bottom);
+    text-align: center;
+    padding: 24px;
+  }
+  .rotate-overlay-icon {
+    font-size: 2.6rem;
+    animation: rotateHint 1.8s ease-in-out infinite;
+  }
+  .rotate-overlay-text {
+    font-family: var(--title-font);
+    font-weight: 700;
+    font-size: 1.05rem;
+    max-width: 280px;
+    color: var(--text);
+  }
+}
+@keyframes rotateHint {
+  0%, 100% { transform: rotate(0deg); }
+  50%      { transform: rotate(-90deg); }
+}
+
 /* ---------- MOBILE ----------
    Everything above is position:fixed with desktop offsets, which
    doesn't reflow the way normal content does — at phone widths the
@@ -1430,6 +1475,7 @@ body.calm .school-arrow, body.calm .school-dots {
   .flight-wiggle,
   body.feeding .fish .wiggle,
   .mobile-splash-prompt,
+  .rotate-overlay-icon,
   .card.reveal h2, .card.reveal p, .card.reveal button { animation: none; }
   .bubble, .pellet { display: none; }
   .flight { transition: none; }
@@ -1452,6 +1498,13 @@ body.calm .school-arrow, body.calm .school-dots {
   <span class="mobile-splash-title">Feeling Fishy</span>
   <span class="mobile-splash-prompt" id="splashPrompt"></span>
 </button>
+
+<!-- Pure-CSS "please rotate" cover for phones turned sideways — see
+     the .rotate-overlay CSS for why this exists and isn't JS-driven. -->
+<div class="rotate-overlay" role="alert">
+  <span class="rotate-overlay-icon" aria-hidden="true">📱</span>
+  <span class="rotate-overlay-text" id="rotateOverlayText"></span>
+</div>
 
 <header>
   <h1><span class="title-line">Feeling</span> <span class="title-line">Fishy</span></h1>
@@ -2641,6 +2694,7 @@ function applyLanguage() {
   if (splashPromptEl) splashPromptEl.textContent = t.splashPrompt;
   const splashEl = document.getElementById("mobileSplash");
   if (splashEl) splashEl.setAttribute("aria-label", t.splashAriaLabel);
+  document.getElementById("rotateOverlayText").textContent = t.rotatePrompt;
 
   // "Find a fish" search
   searchBtn.title = t.searchTitle;
