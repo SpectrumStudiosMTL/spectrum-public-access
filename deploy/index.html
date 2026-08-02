@@ -245,6 +245,15 @@ body:after{
    "rediscover" the button otherwise. Leaving it live means hovering
    that corner still reveals it even while faded. */
 .stream-modal.close-idle .stream-modal-close{ opacity:0; }
+/* Touchscreens have no persistent hover to bring a faded button back
+   — a tap on the video itself happens inside the cross-origin iframe,
+   invisible to this page, so there's no reliable "wake" signal at
+   all there the way there is with a mouse. Rather than leave it
+   fading in and never reliably coming back, just never fade it on a
+   device whose primary input can't hover in the first place. */
+@media (hover: none){
+  .stream-modal.close-idle .stream-modal-close{ opacity:1; }
+}
 @media (prefers-reduced-motion: reduce){
   .stream-modal-close{ transition:none; }
 }
@@ -305,12 +314,15 @@ const LINKS = [
   // /embed/VIDEO_ID URLs without it hit YouTube's Error 153 for this
   // stream even with embedding allowed, but the official share link
   // works, so this matches that exactly rather than a param-stripped
-  // version of it. mute=1 is required for autoplay to actually work
-  // on mobile browsers (same reason the background video elsewhere
-  // on this site is muted+playsinline) — visitors can unmute from
-  // the player's own speaker icon.
+  // version of it. mute=1 + playsinline=1 are both there for mobile
+  // autoplay (same reason the background video elsewhere on this
+  // site is muted+playsinline) — visitors can unmute from the
+  // player's own speaker icon. Even with both set, some mobile
+  // browsers (iOS Low Power Mode in particular) still block it
+  // outright — YouTube's player falls back to its own tap-to-play
+  // thumbnail in that case, same as any other embedded video.
   { label: "Watch the Stream", href: "https://www.youtube.com/live/ow3RDIXTPXk", rgb: "255,238,60", external: true,
-    popup: true, popupEmbed: "https://www.youtube.com/embed/ow3RDIXTPXk?si=NgFK3XYpDQOLObrl&autoplay=1&mute=1" },  // SPA logo yellow
+    popup: true, popupEmbed: "https://www.youtube.com/embed/ow3RDIXTPXk?si=NgFK3XYpDQOLObrl&autoplay=1&mute=1&playsinline=1" },  // SPA logo yellow
   { label: "Feeling Fishy",    href: "/feeling-fishy",             rgb: "61,217,255", external: true },  // Feeling Fishy title glow — new tab too, so this hub page stays put as a home base
   { label: "Eats with Pete",   href: "https://eatswithpete.com",   rgb: "255,107,71", external: true },
 ];
