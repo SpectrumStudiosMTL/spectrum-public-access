@@ -2822,7 +2822,12 @@ applyLanguage();
 // right when the logo is created — createBtn has no label text yet
 // at that point (its width/height are still just empty padding),
 // which would bake in the wrong offset once its real text arrives.
-if (logoEl && createBtn) {
+// Mobile only: on desktop the logo is much taller relative to the
+// button (up to 190px vs ~44px), so centering it on the button's
+// small vertical center pushes the logo's bottom edge past the
+// viewport — it was computing a negative `bottom` and getting
+// cropped by the screen. Desktop keeps its plain CSS position.
+if (window.innerWidth < 640 && logoEl && createBtn) {
   const btnRect = createBtn.getBoundingClientRect();
   const logoRect = logoEl.getBoundingClientRect();
   const btnCenter = (btnRect.top + btnRect.bottom) / 2;
