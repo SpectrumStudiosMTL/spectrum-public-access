@@ -2772,6 +2772,13 @@ const langBtn = document.createElement("button");
 langBtn.className = "lang-btn";
 document.getElementById("topControls").appendChild(langBtn);
 
+// Sets an option button's label text via its .inlay-text child, not
+// the .inlay span itself — see the comment where this is called.
+function setInlayText(labelId, text) {
+  const el = document.getElementById(labelId);
+  if (el) el.querySelector(".inlay-text").textContent = text;
+}
+
 function applyLanguage() {
   const t = TEXT[lang];
   document.documentElement.lang = lang;
@@ -3224,10 +3231,4 @@ overlay.addEventListener("click", (e) => { if (e.target === overlay) closeCard()
 </script>
 </body>
 </html>
-// Sets an option button's label text via its .inlay-text child, not
-// the .inlay span itself — see the comment where this is called.
-function setInlayText(labelId, text) {
-  const el = document.getElementById(labelId);
-  if (el) el.querySelector(".inlay-text").textContent = text;
-}
 
