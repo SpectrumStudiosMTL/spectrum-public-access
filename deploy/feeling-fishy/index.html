@@ -2086,9 +2086,12 @@ function updateDots() {
     dot.classList.toggle("active", i === schoolIndex));
 }
 
-function changeSchool(dir) {
-  if (schoolAnim || schoolCount < 2) return;
-  const next = (schoolIndex + dir + schoolCount) % schoolCount;
+// dir is only for the swim-through animation (which side the current
+// school exits/enters from) — next is the actual destination, so this
+// jumps straight there in one animation regardless of how far away it
+// is, rather than stepping through every school in between.
+function goToSchool(next, dir) {
+  if (schoolAnim || schoolCount < 2 || next === schoolIndex) return;
   if (stillMotion) {              // reduced motion: instant swap
     schoolIndex = next;
     setSchoolVisibility();
@@ -2101,6 +2104,9 @@ function changeSchool(dir) {
   // back to the root coming back
   const withSound = FISH.find((f) => f.sound);
   if (withSound) playChime(withSound.sound, dir > 0 ? 7 : 0);
+}
+function changeSchool(dir) {
+  goToSchool((schoolIndex + dir + schoolCount) % schoolCount, dir);
 }
 
 if (schoolCount > 1) {
@@ -2119,7 +2125,12 @@ if (schoolCount > 1) {
   for (let s = 0; s < schoolCount; s++) {
     const dot = document.createElement("button");
     dot.addEventListener("click", () => {
-      if (s !== schoolIndex) changeSchool(s > schoolIndex ? 1 : -1);
+      // Whichever way around the circular list is fewer schools —
+      // purely which side the swim-through animation exits/enters
+      // from, since goToSchool jumps straight to s either way.
+      const forward = (s - schoolIndex + schoolCount) % schoolCount;
+      const backward = (schoolIndex - s + schoolCount) % schoolCount;
+      goToSchool(s, forward <= backward ? 1 : -1);
     });
     schoolDots.appendChild(dot);
   }
@@ -2206,7 +2217,7 @@ function resetOptionCarousel(overlay) {
   if (row && row.showCarouselOption) row.showCarouselOption(0);
 }
 
-if (SETTINGS.templateUrl || SETTINGS.submitUrl) {
+if (SETTINGS.templateUrl || SETTINGS.submitEmbedUrl) {
   createBtn = document.createElement("button");
   createBtn.className = "create-btn";
 
