@@ -1100,7 +1100,18 @@ header p  { font-size: clamp(0.85rem, 2vw, 1rem); opacity: 0.9; }
    creator has only one fish, show no arrows at all. */
 .card-nav.shown { display: inline-flex; }
 .card-nav:hover { transform: scale(1.08); }
-.card h2 { font-family: var(--title-font); font-size: 1.7rem; margin-bottom: 4px; }
+/* Every overlay's heading gets tabindex="-1" + .focus() when its
+   dialog opens (see focusOverlayHeading()) purely to move screen-
+   reader focus — it's deliberately excluded from the tab order, so a
+   sighted user never actually tabs to it. Browsers can't always tell
+   that apart from a "real" keyboard focus, so on a fresh page load
+   (no prior mouse click yet for their :focus-visible heuristic to go
+   on) they draw the default outline anyway; one click anywhere else
+   and the heuristic switches, so it never comes back until reload.
+   Always invisible on plain small headings, suddenly obvious on
+   #cardName's large glowing text. No outline needed here either way
+   — nothing sighted users tab to. */
+.card h2 { font-family: var(--title-font); font-size: 1.7rem; margin-bottom: 4px; outline: none; }
 .card p  { opacity: 0.75; margin-bottom: 18px; }
 /* The fish detail card's headline used to be fish.name (always blank
    — no fish in this tank has one) with the creator credited below in
