@@ -219,7 +219,10 @@ body:after{
   position:absolute; inset:0; width:100%; height:100%; border:0;
 }
 /* Sits inside the frame's own rounded corners rather than floating
-   above it, so it's never clipped by a short viewport on mobile. */
+   above it, so it's never clipped by a short viewport on mobile.
+   Fades out after a few seconds idle (see the JS) so it doesn't sit
+   on top of the video the whole time it's open — same idea as a
+   video player's own auto-hiding controls. */
 .stream-modal-close{
   position:absolute; top:10px; right:10px; z-index:2;
   width:36px; height:36px;
@@ -230,9 +233,21 @@ body:after{
   font-size:22px; line-height:1;
   cursor:pointer;
   display:flex; align-items:center; justify-content:center;
+  opacity:1;
+  transition:opacity .3s ease;
 }
 .stream-modal-close:hover{ background:rgba(255,238,60,.2); }
 .stream-modal-close:focus-visible{ outline:3px solid var(--cg-white); outline-offset:3px; }
+/* Stays clickable/hoverable at full opacity 0 too (no pointer-events:
+   none) — it's a small, predictable corner target, and a cross-origin
+   YouTube iframe fills the rest of the frame, so the parent page has
+   no way to see mouse movement happening over the video itself to
+   "rediscover" the button otherwise. Leaving it live means hovering
+   that corner still reveals it even while faded. */
+.stream-modal.close-idle .stream-modal-close{ opacity:0; }
+@media (prefers-reduced-motion: reduce){
+  .stream-modal-close{ transition:none; }
+}
 </style>
 </head>
 <body>
@@ -332,14 +347,39 @@ const streamModalIframe = document.getElementById("streamModalIframe");
 const streamModalClose = document.getElementById("streamModalClose");
 let streamModalTrigger = null; // where focus returns to on close
 
+// Fades the close button after a few idle seconds so it isn't
+// permanently sitting on top of the video — anything that happens on
+// the parent page (moving over the backdrop, a key press, hovering
+// the button itself) brings it back. Movement over the video itself
+// can't be seen from here (cross-origin iframe), which is fine: that
+// IS the idle state this is meant to produce.
+let closeIdleTimer = null;
+function scheduleCloseIdle() {
+  clearTimeout(closeIdleTimer);
+  closeIdleTimer = setTimeout(() => streamModal.classList.add("close-idle"), 3000);
+}
+function wakeClose() {
+  streamModal.classList.remove("close-idle");
+  scheduleCloseIdle();
+}
+streamModal.addEventListener("pointermove", wakeClose);
+streamModal.addEventListener("pointerdown", wakeClose);
+streamModal.addEventListener("keydown", wakeClose);
+// Pauses the countdown while the cursor is resting directly on the
+// button, rather than letting it fade out from under the pointer.
+streamModalClose.addEventListener("pointerenter", wakeClose);
+streamModalClose.addEventListener("pointerleave", scheduleCloseIdle);
+
 function openStreamModal(embedSrc, trigger) {
   streamModalTrigger = trigger;
   streamModalIframe.src = embedSrc;
   streamModal.classList.add("open");
   streamModalClose.focus();
+  wakeClose();
 }
 function closeStreamModal() {
-  streamModal.classList.remove("open");
+  streamModal.classList.remove("open", "close-idle");
+  clearTimeout(closeIdleTimer);
   streamModalIframe.src = ""; // stops playback rather than just hiding it
   if (streamModalTrigger && streamModalTrigger.focus) streamModalTrigger.focus();
 }
