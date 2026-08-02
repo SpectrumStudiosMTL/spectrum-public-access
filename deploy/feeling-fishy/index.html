@@ -2156,12 +2156,6 @@ let soundOn = false;   // master switch — fish SFX check this too
 const hasAnySfx = FISH.some((fish) => fish.sound);
 
 if (SETTINGS.music || hasAnySfx) {
-  if (SETTINGS.music) {
-    audio = new Audio(SETTINGS.music);
-    audio.loop = true;
-    audio.volume = 0.5;
-  }
-
   const soundBtn = document.createElement("button");
   soundBtn.className = "sound-btn";
   soundBtn.textContent = "🔇";
@@ -2169,11 +2163,24 @@ if (SETTINGS.music || hasAnySfx) {
   soundBtn.setAttribute("aria-label", "Toggle sound");
   document.getElementById("topControls").appendChild(soundBtn);
 
+  // The music track (audio) is only created here, the first time sound
+  // is actually turned on — same lazy pattern as the pluck/drag SFX
+  // below. Creating it eagerly at load, like this used to, made the
+  // browser start fetching the whole file (1.5MB+) on every visit
+  // whether or not anyone ever turns sound on at all.
   function setSound(on) {
     soundOn = on;
-    if (audio) {
-      if (on) audio.play().catch(() => {});
-      else audio.pause();
+    if (SETTINGS.music) {
+      if (on) {
+        if (!audio) {
+          audio = new Audio(SETTINGS.music);
+          audio.loop = true;
+          audio.volume = 0.5;
+        }
+        audio.play().catch(() => {});
+      } else if (audio) {
+        audio.pause();
+      }
     }
     soundBtn.textContent = on ? "🔊" : "🔇";
     soundBtn.title = on ? "Turn sound off" : "Turn sound on";
