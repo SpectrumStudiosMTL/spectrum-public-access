@@ -249,6 +249,7 @@ const TEXT = {
     splashPrompt: "Tap to dive in",
     splashAriaLabel: "Enter the Feeling Fishy tank",
     rotatePrompt: "Please rotate your device to portrait to view Feeling Fishy.",
+    nightMode: "Night mode — coming soon",
     searchPlaceholder: "Type a name…",
     searchResultsLabel: "Matching fish",
     searchBrowseAll: "Browse every fish in the tank.",
@@ -301,6 +302,7 @@ const TEXT = {
     splashPrompt: "Touche pour plonger",
     splashAriaLabel: "Entre dans l'aquarium Feeling Fishy",
     rotatePrompt: "Veuillez faire pivoter votre appareil en mode portrait pour voir Feeling Fishy.",
+    nightMode: "Mode nuit — bientôt disponible",
     searchPlaceholder: "Tape un nom…",
     searchResultsLabel: "Poissons correspondants",
     searchBrowseAll: "Découvre tous les poissons de l'aquarium.",
@@ -925,6 +927,20 @@ header p  { font-size: clamp(0.85rem, 2vw, 1rem); opacity: 0.9; }
   box-shadow: 0 6px 20px rgba(4,26,44,0.35);
 }
 
+/* Night mode toggle — part of the top-controls row (after language) */
+.night-btn {
+  order: 5;
+  width: 44px;
+  height: 44px;
+  border: none;
+  border-radius: 50%;
+  font-size: 1.15rem;
+  line-height: 1;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 6px 20px rgba(4,26,44,0.35);
+}
+
 /* Info button — part of the top-controls row (leftmost of the four) */
 .info-btn {
   order: 1;
@@ -965,6 +981,7 @@ header p  { font-size: clamp(0.85rem, 2vw, 1rem); opacity: 0.9; }
 .menu-toggle-btn:focus-visible,
 .sound-btn:focus-visible,
 .lang-btn:focus-visible,
+.night-btn:focus-visible,
 .create-btn:focus-visible,
 .card-nav:focus-visible,
 .card button:focus-visible,
@@ -1112,7 +1129,7 @@ header p  { font-size: clamp(0.85rem, 2vw, 1rem); opacity: 0.9; }
 /* All buttons match the SPA logo: same neon yellow, same glow.
    The color comes from --logo-glow, so changing that one token
    re-themes the logo AND every button together. */
-.create-btn, .sound-btn, .lang-btn, .info-btn, .search-btn, .menu-toggle-btn, .school-arrow, .card-nav, .card button {
+.create-btn, .sound-btn, .lang-btn, .night-btn, .info-btn, .search-btn, .menu-toggle-btn, .school-arrow, .card-nav, .card button {
   background: rgb(var(--logo-glow));
   color: #123a52;
   box-shadow:
@@ -1152,7 +1169,7 @@ header p  { font-size: clamp(0.85rem, 2vw, 1rem); opacity: 0.9; }
    is slow and gentle (the .calm rules), while the fade back IN is
    quick (the base rules), so the interface returns the instant
    the visitor moves. */
-header, .logo, .create-btn, .sound-btn, .lang-btn, .info-btn, .search-btn, .menu-toggle-btn {
+header, .logo, .create-btn, .sound-btn, .lang-btn, .night-btn, .info-btn, .search-btn, .menu-toggle-btn {
   transition: opacity 0.25s ease, translate 0.25s ease, transform 0.2s ease;
 }
 body.calm header      { opacity: 0; translate: 0 -16px; pointer-events: none; }
@@ -1160,11 +1177,12 @@ body.calm .logo       { opacity: 0; translate: 0  16px; }
 body.calm .create-btn { opacity: 0; translate: 0  16px; pointer-events: none; }
 body.calm .sound-btn,
 body.calm .lang-btn,
+body.calm .night-btn,
 body.calm .info-btn,
 body.calm .search-btn,
 body.calm .menu-toggle-btn { opacity: 0; translate: 0 -16px; pointer-events: none; }
 body.calm header, body.calm .logo, body.calm .create-btn,
-body.calm .sound-btn, body.calm .lang-btn, body.calm .info-btn, body.calm .search-btn, body.calm .menu-toggle-btn {
+body.calm .sound-btn, body.calm .lang-btn, body.calm .night-btn, body.calm .info-btn, body.calm .search-btn, body.calm .menu-toggle-btn {
   transition: opacity 1.6s ease, translate 1.6s ease;
 }
 
@@ -2719,6 +2737,15 @@ const langBtn = document.createElement("button");
 langBtn.className = "lang-btn";
 document.getElementById("topControls").appendChild(langBtn);
 
+/* --- Night mode toggle -------------------------------------------
+   Placeholder: the button takes its place in the row so the layout
+   is final, but it's inert until there's a night-time video
+   background to switch to — clicking it does nothing yet. */
+const nightBtn = document.createElement("button");
+nightBtn.className = "night-btn";
+nightBtn.textContent = "🌙";
+document.getElementById("topControls").appendChild(nightBtn);
+
 // Sets an option button's label text via its .inlay-text child, not
 // the .inlay span itself — see the comment where this is called.
 function setInlayText(labelId, text) {
@@ -2782,6 +2809,8 @@ function applyLanguage() {
   document.querySelectorAll(".option-nav-next").forEach((b) => {
     b.title = t.nextOption; b.setAttribute("aria-label", t.nextOption);
   });
+  nightBtn.title = t.nightMode;
+  nightBtn.setAttribute("aria-label", t.nightMode);
   // Update every fish's name tag ("by" / "par") and image alt text
   document.querySelectorAll(".fish .name-tag").forEach((tag, i) => {
     tag.textContent = t.by + " " + FISH[i].creator;
@@ -2888,7 +2917,7 @@ function stopDragSound() {
 }
 
 window.addEventListener("pointerdown", (e) => {
-  if (e.target.closest(".create-btn, .sound-btn, .lang-btn, .info-btn, .search-btn, .menu-toggle-btn, .school-arrow, .school-dots, .card")) return;
+  if (e.target.closest(".create-btn, .sound-btn, .lang-btn, .night-btn, .info-btn, .search-btn, .menu-toggle-btn, .school-arrow, .school-dots, .card")) return;
   isDragging = true;
   wasDragged = false;
   lastPointerX = e.clientX;
@@ -3161,4 +3190,3 @@ overlay.addEventListener("click", (e) => { if (e.target === overlay) closeCard()
 </script>
 </body>
 </html>
-
