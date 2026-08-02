@@ -260,6 +260,7 @@ const TEXT = {
     searchBrowseAll: "Browse every fish in the tank.",
     searchCount: "Fish found.",
     searchNone: "No fish found.",
+    searchTruncated: "Showing the first {n} — type a name to narrow it down.",
     prevCreatorFish: "Previous fish by this creator",
     nextCreatorFish: "Next fish by this creator",
     back: "Close",
@@ -313,6 +314,7 @@ const TEXT = {
     searchBrowseAll: "Découvre tous les poissons de l'aquarium.",
     searchCount: "Poissons trouvés.",
     searchNone: "Aucun poisson trouvé.",
+    searchTruncated: "Affichage des {n} premiers — tape un nom pour affiner.",
     prevCreatorFish: "Poisson précédent de ce créateur",
     nextCreatorFish: "Poisson suivant de ce créateur",
     back: "Fermer",
@@ -2687,6 +2689,14 @@ const searchResultsEl = document.getElementById("searchResults");
 const searchStatusEl = document.getElementById("searchStatus");
 let searchMatches = [];   // FISH indexes currently listed, in display order
 let searchActive = -1;    // index into searchMatches; -1 = none highlighted
+// A blank query matches every fish in the tank ("browse everyone" —
+// see searchBrowseAll below), so this caps how many of those matches
+// actually get listed/rendered. Without it, a tank with hundreds of
+// fish would build hundreds of <li> elements (each with its own
+// click + hover listener) in one go every time the query changes,
+// and nobody wants to scroll through hundreds of names anyway —
+// typing narrows it down well before that's needed.
+const SEARCH_RESULT_CAP = 50; // keep in sync with the {n} in TEXT.searchTruncated
 
 // Accent-insensitive, so typing "elie" still finds "Élie"
 function normalizeForSearch(str) {
@@ -2695,11 +2705,12 @@ function normalizeForSearch(str) {
 
 function renderSearchResults(query) {
   const q = normalizeForSearch(query.trim());
-  searchMatches = FISH.map((_, i) => i)
+  const allMatches = FISH.map((_, i) => i)
     .filter((i) => !q ||
       normalizeForSearch(FISH[i].creator).includes(q) ||
       normalizeForSearch(FISH[i].name).includes(q))
     .sort((a, b) => FISH[a].creator.localeCompare(FISH[b].creator));
+  searchMatches = allMatches.slice(0, SEARCH_RESULT_CAP);
 
   searchActive = -1;
   searchInput.removeAttribute("aria-activedescendant");
@@ -2718,8 +2729,13 @@ function renderSearchResults(query) {
   });
 
   const t = TEXT[lang];
-  if (!q) searchStatusEl.textContent = t.searchBrowseAll;
-  else searchStatusEl.textContent = searchMatches.length ? t.searchCount : t.searchNone;
+  if (!allMatches.length) {
+    searchStatusEl.textContent = q ? t.searchNone : t.searchBrowseAll;
+  } else if (allMatches.length > SEARCH_RESULT_CAP) {
+    searchStatusEl.textContent = t.searchTruncated.replace("{n}", SEARCH_RESULT_CAP);
+  } else {
+    searchStatusEl.textContent = q ? t.searchCount : t.searchBrowseAll;
+  }
 
   searchInput.setAttribute("aria-expanded", searchMatches.length ? "true" : "false");
 }
