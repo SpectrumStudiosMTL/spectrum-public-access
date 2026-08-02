@@ -305,9 +305,12 @@ const LINKS = [
   // /embed/VIDEO_ID URLs without it hit YouTube's Error 153 for this
   // stream even with embedding allowed, but the official share link
   // works, so this matches that exactly rather than a param-stripped
-  // version of it.
+  // version of it. mute=1 is required for autoplay to actually work
+  // on mobile browsers (same reason the background video elsewhere
+  // on this site is muted+playsinline) — visitors can unmute from
+  // the player's own speaker icon.
   { label: "Watch the Stream", href: "https://www.youtube.com/live/ow3RDIXTPXk", rgb: "255,238,60", external: true,
-    popup: true, popupEmbed: "https://www.youtube.com/embed/ow3RDIXTPXk?si=NgFK3XYpDQOLObrl&autoplay=1" },  // SPA logo yellow
+    popup: true, popupEmbed: "https://www.youtube.com/embed/ow3RDIXTPXk?si=NgFK3XYpDQOLObrl&autoplay=1&mute=1" },  // SPA logo yellow
   { label: "Feeling Fishy",    href: "/feeling-fishy",             rgb: "61,217,255", external: true },  // Feeling Fishy title glow — new tab too, so this hub page stays put as a home base
   { label: "Eats with Pete",   href: "https://eatswithpete.com",   rgb: "255,107,71", external: true },
 ];
