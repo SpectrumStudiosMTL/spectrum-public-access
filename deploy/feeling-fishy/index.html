@@ -248,7 +248,7 @@ const TEXT = {
     goBack: "Back",
     close: "Close",
     by: "by",
-    designedBy: "Designed by",
+    artworkBy: "Artwork by",
     fishAlt: "Fish",
     searchTitle: "Find a fish",
     menuLabel: "Menu",
@@ -262,7 +262,7 @@ const TEXT = {
     searchNone: "No fish found.",
     prevCreatorFish: "Previous fish by this creator",
     nextCreatorFish: "Next fish by this creator",
-    back: "Back to the tank",
+    back: "Close",
     drawTitle: "Draw your fish",
     submitTitle: "Submit your fish",
     submitFrameTitle: "Feeling Fishy submission form",
@@ -301,7 +301,7 @@ const TEXT = {
     goBack: "Retour",
     close: "Fermer",
     by: "par",
-    designedBy: "Créé par",
+    artworkBy: "Œuvre de",
     fishAlt: "Poisson",
     searchTitle: "Trouve un poisson",
     menuLabel: "Menu",
@@ -315,7 +315,7 @@ const TEXT = {
     searchNone: "Aucun poisson trouvé.",
     prevCreatorFish: "Poisson précédent de ce créateur",
     nextCreatorFish: "Poisson suivant de ce créateur",
-    back: "Retour à l'aquarium",
+    back: "Fermer",
     drawTitle: "Dessine ton poisson",
     submitTitle: "Soumets ton poisson",
     submitFrameTitle: "Formulaire de soumission Feeling Fishy",
@@ -1102,6 +1102,32 @@ header p  { font-size: clamp(0.85rem, 2vw, 1rem); opacity: 0.9; }
 .card-nav:hover { transform: scale(1.08); }
 .card h2 { font-family: var(--title-font); font-size: 1.7rem; margin-bottom: 4px; }
 .card p  { opacity: 0.75; margin-bottom: 18px; }
+/* The fish detail card's headline used to be fish.name (always blank
+   — no fish in this tank has one) with the creator credited below in
+   a small, dim line, so the credit read as an afterthought under a
+   lot of buttons. The creator's name IS the content here, so it gets
+   the headline treatment instead, with a small label above it. */
+.card-eyebrow {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  opacity: 0.6;
+  margin-bottom: 2px;
+}
+#cardName {
+  font-size: 4.2rem;
+  font-weight: 800;
+  line-height: 1;    /* at this size, normal line-height's leading
+                         above the glyphs read as extra gap under the
+                         eyebrow label, on top of its own margin */
+  color: rgb(var(--logo-glow));
+  text-shadow:
+    0 0 4px  rgba(var(--logo-glow), 0.9),
+    0 0 14px rgba(var(--logo-glow), 0.55),
+    0 0 34px rgba(var(--logo-glow), 0.3);
+  margin-bottom: 18px;
+}
 /* The creator's optional bio / artist statement */
 .card .bio {
   font-size: 0.98rem;
@@ -1349,6 +1375,13 @@ body.calm .school-arrow, body.calm .school-dots {
    beside it, and collapse "Feed the Fish" to match its icon-only
    neighbors so the row stays compact regardless of language. */
 @media (max-width: 640px) {
+  /* Kept to one line regardless of how long a creator's name is —
+     JS measures and shrinks the font-size to fit (see openCard()),
+     since a fixed font-size can't guarantee that for arbitrary
+     names. nowrap here is what makes an over-wide name overflow
+     instead of wrapping, which is what JS then measures against. */
+  #cardName { white-space: nowrap; }
+
   header { padding: 18px 20px; }
   /* Fully covered by the Info modal already — pure duplication that
      costs header height on a screen where vertical space is scarce. */
@@ -1548,8 +1581,8 @@ body.calm .school-arrow, body.calm .school-dots {
 <div class="card-overlay" id="cardOverlay" role="dialog" aria-modal="true" aria-labelledby="cardName">
   <div class="card">
     <div id="cardArt"></div>
+    <p class="card-eyebrow" id="cardEyebrow"></p>
     <h2 id="cardName"></h2>
-    <p id="cardCreator"></p>
     <p class="bio" id="cardBio"></p>
     <!-- The prev/next arrows are shown only when this fish's creator
          has more than one fish in the tank — paging straight through
@@ -3116,9 +3149,18 @@ function openCard(index, trigger, opts = {}) {
   cardImg.alt = fish.name || (TEXT[lang].fishAlt + " " + TEXT[lang].by + " " + fish.creator);
   cardImg.onerror = () => { cardImg.style.display = "none"; };
   cardArt.appendChild(cardImg);
-  document.getElementById("cardName").textContent = fish.name;
-  document.getElementById("cardCreator").textContent =
-    TEXT[lang].designedBy + " " + fish.creator;
+  // No fish in this tank has its own name yet, so the creator's name
+  // is the real headline; a fish.name (if one's ever added) takes the
+  // spotlight instead, with the credit demoted to the eyebrow label.
+  document.getElementById("cardEyebrow").textContent =
+    fish.name ? TEXT[lang].artworkBy + " " + fish.creator : TEXT[lang].artworkBy;
+  const nameEl = document.getElementById("cardName");
+  nameEl.style.fontSize = ""; // reset before measuring — a longer
+                               // name replacing a shorter one would
+                               // otherwise measure against the PREVIOUS
+                               // fish's shrunk size instead of the
+                               // full CSS size.
+  nameEl.textContent = fish.name || fish.creator;
   const bioEl = document.getElementById("cardBio");
   bioEl.textContent = fish.bio || "";
   bioEl.style.display = fish.bio ? "block" : "none";
@@ -3132,6 +3174,22 @@ function openCard(index, trigger, opts = {}) {
 
   overlay.classList.add("open");
   cardEl.classList.toggle("reveal", !opts.instant && !stillMotion);
+
+  // Mobile only: shrink the name to keep it on one line (nowrap in
+  // the CSS makes an over-wide name overflow rather than wrap, which
+  // is what scrollWidth measures against here) instead of wrapping
+  // to two lines, since names vary too much for a fixed font-size to
+  // guarantee that on its own. Must run AFTER the overlay opens —
+  // clientWidth/scrollWidth both read 0 while its display is still
+  // none, which silently skipped this entirely.
+  if (window.innerWidth < 640) {
+    const available = nameEl.clientWidth;
+    const natural = nameEl.scrollWidth;
+    if (natural > available) {
+      const currentPx = parseFloat(getComputedStyle(nameEl).fontSize);
+      nameEl.style.fontSize = (currentPx * available / natural) + "px";
+    }
+  }
 
   if (!opts.keepFocus) {
     const heading = document.getElementById("cardName");
