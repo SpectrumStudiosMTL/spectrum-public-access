@@ -1050,10 +1050,28 @@ header p  { font-size: clamp(0.85rem, 2vw, 1rem); opacity: 0.9; }
   text-align: center;
   box-shadow: 0 20px 60px rgba(0,0,0,0.35);
 }
-.card img {
+/* Fixed-size box, not sized to whatever fish happens to be showing —
+   otherwise paging through one creator's fish (different images,
+   different aspect ratios) resized the card on every click and the
+   Back/paging buttons jumped around beneath it. Square, and sized to
+   the tallest fish in the tank relative to its own width (roughly
+   1:1 — see the fish image dimension check) — every other fish is
+   wider-than-tall and just letterboxes a bit inside the same box. */
+#cardArt {
   width: 100%;
   max-width: 430px;
-  margin-bottom: 16px;
+  aspect-ratio: 1 / 1;
+  margin: 0 auto 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+#cardArt img {
+  max-width: 100%;
+  max-height: 100%;
+  width: auto;
+  height: auto;
+  object-fit: contain;
   filter: drop-shadow(0 8px 18px rgba(4,26,44,0.25));
 }
 
@@ -1114,31 +1132,23 @@ header p  { font-size: clamp(0.85rem, 2vw, 1rem); opacity: 0.9; }
     0 0 32px rgba(var(--logo-glow), 0.28);
 }
 
-/* The "flight": when a fish is clicked, a copy of it swims out of
-   the school toward the viewer — wiggling excitedly — and grows
-   until it lands in place on the pop-up card. */
-.flight {
-  position: fixed;
-  z-index: 950;                  /* above the overlay while flying */
-  pointer-events: none;
-  transition: left  0.55s cubic-bezier(0.3, 0.7, 0.2, 1),
-              top   0.55s cubic-bezier(0.3, 0.7, 0.2, 1),
-              width 0.55s cubic-bezier(0.3, 0.7, 0.2, 1),
-              height 0.55s cubic-bezier(0.3, 0.7, 0.2, 1);
+/* When the fish detail card opens, its art pops in and the text
+   fades up beneath it (.reveal, toggled in openCard()). This
+   replaces the old "flying fish clone" — a copy of the clicked fish
+   that tracked its on-screen position across several
+   requestAnimationFrame steps and animated left/top/width/height to
+   the card. It looked nice but could break: opening a second fish
+   before the first's flight finished left the first one permanently
+   hidden in the tank (its "currently flying, don't show it" flag got
+   overwritten). Pure CSS has no position to track and nothing that
+   can get stuck. */
+.card.reveal #cardArt {
+  animation: pop-in 0.4s cubic-bezier(0.22, 1.4, 0.36, 1) both;
 }
-.flight-wiggle {
-  width: 100%;
-  height: 100%;
-  /* the excited wiggle — faster than the hover swim */
-  animation: excited 0.28s ease-in-out infinite alternate;
+@keyframes pop-in {
+  from { opacity: 0; transform: scale(0.75); }
+  to   { opacity: 1; transform: scale(1); }
 }
-.flight img { width: 100%; height: 100%; object-fit: contain; }
-@keyframes excited {
-  from { transform: rotate(-6deg); }
-  to   { transform: rotate(6deg); }
-}
-
-/* While the fish arrives, the card's text fades up underneath it */
 .card.reveal h2, .card.reveal p, .card.reveal button {
   animation: fade-up 0.45s ease 0.32s both;
 }
@@ -1490,13 +1500,12 @@ body.calm .school-arrow, body.calm .school-dots {
 @media (prefers-reduced-motion: reduce) {
   .decoration.sways, .fish:hover .wiggle,
   .bubble, .ray,
-  .flight-wiggle,
   body.feeding .fish .wiggle,
   .mobile-splash-prompt,
   .rotate-overlay-icon,
+  .card.reveal #cardArt,
   .card.reveal h2, .card.reveal p, .card.reveal button { animation: none; }
   .bubble, .pellet { display: none; }
-  .flight { transition: none; }
   .thought { transition: opacity 0.2s ease; transform: none; }
   .fish:hover .thought { transition-delay: 3s; }
 }
@@ -2664,7 +2673,7 @@ function locateFish(index, trigger) {
     setSchoolVisibility();
     updateDots();
   }
-  openCard(index, trigger, { skipFlight: needsSchoolSwitch });
+  openCard(index, trigger, { instant: needsSchoolSwitch });
 }
 
 searchBtn.addEventListener("click", (e) => {
@@ -2700,9 +2709,9 @@ searchInput.addEventListener("keydown", (e) => {
 });
 
 // Escape closes whichever pop-up is currently open, from anywhere.
-// The fish detail card needs its own cleanup (restoring the fish's
-// spot in the tank, removing the flight clone) so it can't just
-// reuse closeOverlay like the others.
+// The fish detail card tracks its own currentCardIndex/.reveal state
+// (closeOverlay doesn't know about either), so it gets its own
+// closeCard() instead of reusing closeOverlay like the others.
 window.addEventListener("keydown", (e) => {
   if (e.key !== "Escape") return;
   const open = document.querySelector(".card-overlay.open");
@@ -3049,19 +3058,18 @@ function animate(now) {
 }
 requestAnimationFrame(animate);
 
-/* --- Detail card + the flight transition ------------------------
-   Clicking a fish doesn't just open the card — the fish visibly
-   leaves the school and swims up to it:
-   1. Measure where the fish is on screen right now
-   2. Open the card with its image slot invisible, measure where
-      the image WILL be
-   3. Hide the real fish, place a flying copy at position 1, and
-      let CSS transition it to position 2 (wiggling all the way)
-   4. When it lands: show the card image, remove the flying copy
-   The card's text fades up underneath meanwhile (.reveal class). */
+/* --- Detail card -------------------------------------------------
+   Opening a card fills in its content and pops the art in with a
+   CSS animation (.reveal — see the CSS). Used to instead animate a
+   cloned copy of the clicked fish flying from its spot in the school
+   to the card, tracked across a few requestAnimationFrame steps —
+   it looked nice but could break: opening a second fish before the
+   first one's flight finished left the first fish permanently
+   hidden in the tank, since there was only ever one "currently
+   flying" flag to restore on close. Plain CSS has no per-fish
+   position to track and nothing that can get left in a bad state. */
 const overlay = document.getElementById("cardOverlay");
 const cardEl = overlay.querySelector(".card");
-let openFishIndex = null;    // which fish the flight animation hid, if any
 let currentCardIndex = null; // whichever fish the card is showing right now
 
 // Every fish index sharing this creator, in FISH order — used for the
@@ -3081,19 +3089,19 @@ function stepCreatorFish(dir) {
   if (pos === -1 || siblings.length < 2) return;
   const nextIndex = siblings[(pos + dir + siblings.length) % siblings.length];
   // Same trigger as before (don't overwrite where focus should return
-  // to on close), no flight animation, and keep focus on this arrow
-  // so repeated clicks/Enter presses page straight through.
-  openCard(nextIndex, lastFocused, { skipFlight: true, keepFocus: true });
+  // to on close). Instant + keeps focus on this arrow so repeated
+  // clicks/Enter presses page straight through without re-animating
+  // or losing keyboard focus each time.
+  openCard(nextIndex, lastFocused, { instant: true, keepFocus: true });
 }
 cardPrevBtn.addEventListener("click", (e) => { e.stopPropagation(); stepCreatorFish(-1); });
 cardNextBtn.addEventListener("click", (e) => { e.stopPropagation(); stepCreatorFish(1); });
 
 // trigger: the element focus should return to when the card closes
 // (defaults to whatever was focused, same convention as openOverlay).
-// opts.skipFlight: skip the fish-flies-to-the-card animation — used
-// by locateFish() when it had to switch schools first, and by the
-// paging arrows, since in both cases the fish's old on-screen
-// position isn't meaningful.
+// opts.instant: skip the pop-in animation — used by the paging arrows,
+// so browsing several of one creator's fish in a row feels snappy
+// instead of re-popping on every click.
 // opts.keepFocus: don't move focus to the heading — used by the
 // paging arrows so focus stays put and repeated presses keep working.
 function openCard(index, trigger, opts = {}) {
@@ -3101,7 +3109,6 @@ function openCard(index, trigger, opts = {}) {
   lastFocused = trigger || document.activeElement;
   currentCardIndex = index;
 
-  // Fill in the card's content
   const cardArt = document.getElementById("cardArt");
   cardArt.innerHTML = "";
   const cardImg = document.createElement("img");
@@ -3123,79 +3130,20 @@ function openCard(index, trigger, opts = {}) {
   cardPrevBtn.classList.toggle("shown", hasSiblings);
   cardNextBtn.classList.toggle("shown", hasSiblings);
 
-  // Moves focus into the dialog for keyboard/screen-reader users —
-  // needed no matter which branch below runs, unless this is an
-  // in-place page to a sibling fish (opts.keepFocus).
-  function focusCard() {
-    if (opts.keepFocus) return;
+  overlay.classList.add("open");
+  cardEl.classList.toggle("reveal", !opts.instant && !stillMotion);
+
+  if (!opts.keepFocus) {
     const heading = document.getElementById("cardName");
     heading.setAttribute("tabindex", "-1");
     heading.focus();
   }
-
-  // Reduced motion, a missing image, or a fish located from a school
-  // that wasn't on screen: open the card plainly, no flight animation
-  if (stillMotion || opts.skipFlight || !fish.image) {
-    overlay.classList.add("open");
-    focusCard();
-    return;
-  }
-
-  // 1. Where is the fish right now?
-  const sourceEl = swimmers[index].el;
-  const start = sourceEl.getBoundingClientRect();
-
-  // 2. Open the card, but keep its image invisible for now
-  cardImg.style.opacity = "0";
-  cardEl.classList.add("reveal");
-  overlay.classList.add("open");
-  focusCard();
-
-  requestAnimationFrame(() => {
-    const target = cardImg.getBoundingClientRect();
-
-    // 3. The flying copy, starting exactly where the fish was
-    const clone = document.createElement("div");
-    clone.className = "flight";
-    clone.style.left = start.left + "px";
-    clone.style.top = start.top + "px";
-    clone.style.width = start.width + "px";
-    clone.style.height = start.height + "px";
-    clone.innerHTML =
-      `<div class="flight-wiggle"><img src="${fish.image}" alt=""></div>`;
-    document.body.appendChild(clone);
-
-    sourceEl.style.visibility = "hidden";   // its spot in the school empties
-    openFishIndex = index;
-
-    // Next frame, give it its destination — CSS animates the trip
-    requestAnimationFrame(() => {
-      clone.style.left = target.left + "px";
-      clone.style.top = target.top + "px";
-      clone.style.width = target.width + "px";
-      clone.style.height = target.height + "px";
-    });
-
-    // 4. Touchdown: swap the flying copy for the card's own image
-    const land = () => {
-      cardImg.style.opacity = "";
-      clone.remove();
-    };
-    clone.addEventListener("transitionend", land, { once: true });
-    setTimeout(land, 700);   // safety net if transitionend never fires
-  });
 }
 
 function closeCard() {
   overlay.classList.remove("open");
   cardEl.classList.remove("reveal");
-  // The fish rejoins the school
-  if (openFishIndex !== null) {
-    swimmers[openFishIndex].el.style.visibility = "";
-    openFishIndex = null;
-  }
   currentCardIndex = null;
-  document.querySelectorAll(".flight").forEach((f) => f.remove());
   if (lastFocused && lastFocused.focus) lastFocused.focus();
 }
 overlay.addEventListener("click", (e) => { if (e.target === overlay) closeCard(); });
