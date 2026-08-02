@@ -160,6 +160,32 @@ body:after{
   .logo{ animation:none; opacity:1; }
   .opt{ animation:none !important; opacity:1 !important; }
 }
+
+/* ---------- MOBILE ----------
+   Stacks the buttons into one even column instead of the desktop's
+   wrapped row — at a phone width they were wrapping onto three
+   ragged, differently-sized lines that together ran taller than the
+   viewport. A smaller logo plus a tighter stage gap brings the whole
+   page comfortably under any phone's visible height with no scroll,
+   and every button shares the same width instead of hugging its own
+   label's length. */
+@media (max-width: 640px){
+  body{ padding:20px; }
+  .stage{ gap:32px; }
+  .logo{ width:min(300px, 85vw); }
+  .options{
+    flex-direction:column;
+    width:100%;
+    max-width:300px;
+    gap:14px;
+  }
+  .opt, .opt-fallback{
+    width:100%;
+    box-sizing:border-box;
+    text-align:center;
+    padding:16px 20px;
+  }
+}
 </style>
 </head>
 <body>
