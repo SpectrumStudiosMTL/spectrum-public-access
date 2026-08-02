@@ -193,11 +193,6 @@ const SETTINGS = {
   //    pop-up over the tank rather than leaving the site.
   submitEmbedUrl: "https://forms.monday.com/forms/embed/712a0b5d93bb6187748b14aade412e28?r=use1",
 
-  // "Feed the Fish" is just a fun button — no donation link behind it.
-  // Clicking it always drops food in and sets the school into a happy
-  // frenzy. (This used to link out to a Zeffy donation page; that's
-  // been removed — this is purely for delight now.)
-
   // Your ambience track. Set to null for no music.
   // On the real site, use a file: music: "audio/ambience.mp3"
   music: EMBEDDED_AUDIO.music,
@@ -231,7 +226,6 @@ const TEXT = {
   en: {
     tagline: "Drag to spin the tank. Hover a fish to meet its creator.",
     create: "Create your fish",
-    donate: "Feed the Fish",
     nextSchool: "Next school of fish",
     prevSchool: "Previous school of fish",
     nextOption: "Next option",
@@ -278,14 +272,12 @@ const TEXT = {
       "Press 🔍 to search for a fish by the artist's name — or leave it blank to browse everyone, using the arrow keys and Enter.",
       "If a creator has more than one fish, arrows beside the picture let you page through all of theirs.",
       "Press \"Create your fish\" to download a blank template and submit your own drawing, or draw right on the page.",
-      "Press \"Feed the Fish\" for a fun surprise — no strings attached.",
       "The 🔊 button toggles sound, and EN/FR switches language.",
     ],
   },
   fr: {
     tagline: "Faites glisser pour faire tourner l'aquarium. Survolez un poisson pour rencontrer son créateur.",
     create: "Crée ton poisson",
-    donate: "Nourrir les poissons",
     nextSchool: "Banc de poissons suivant",
     prevSchool: "Banc de poissons précédent",
     nextOption: "Option suivante",
@@ -332,7 +324,6 @@ const TEXT = {
       "Appuie sur 🔍 pour chercher un poisson par le nom de l'artiste — ou laisse le champ vide pour tous les voir, avec les flèches et Entrée.",
       "Si un créateur a plusieurs poissons, des flèches à côté de l'image permettent de les parcourir tous.",
       "Appuie sur « Crée ton poisson » pour télécharger un modèle vierge et soumettre ton dessin, ou dessine directement sur la page.",
-      "Appuie sur « Nourrir les poissons » pour une petite surprise amusante — sans aucune obligation.",
       "Le bouton 🔊 active ou coupe le son, et EN/FR change la langue.",
     ],
   },
@@ -567,12 +558,6 @@ body.dragging { cursor: grabbing; }
   from { transform: rotate(-7deg) scale(1); }
   to   { transform: rotate(5deg)  scale(1.05); }
 }
-/* Feeding time: the whole school gets excited */
-body.feeding .fish .wiggle { animation: frenzy 0.22s ease-in-out infinite alternate; }
-@keyframes frenzy {
-  from { transform: rotate(-8deg) translateY(-4px); }
-  to   { transform: rotate(8deg)  translateY(2px); }
-}
 .name-tag {
   position: absolute;
   left: 50%;
@@ -635,26 +620,7 @@ body.feeding .fish .wiggle { animation: frenzy 0.22s ease-in-out infinite altern
 .fish.flipped .thought::after  { left: auto; right: 14px; }
 .fish.flipped .thought::before { left: auto; right: 7px; }
 
-/* Fish food — pellets that sink through the tank after a donation */
-.pellet {
-  position: absolute;
-  top: -20px;
-  background: radial-gradient(circle at 35% 30%, #d9a869, #9c6b35);
-  border-radius: 45% 55% 50% 50%;
-  animation: sink linear forwards;
-  pointer-events: none;
-}
-@keyframes sink {
-  0%   { transform: translate(0, 0) rotate(0deg); opacity: 1; }
-  25%  { transform: translate(8px, 22vh) rotate(90deg); }
-  50%  { transform: translate(-6px, 44vh) rotate(180deg); }
-  75%  { transform: translate(8px, 66vh) rotate(260deg); opacity: 1; }
-  100% { transform: translate(0, 82vh) rotate(340deg); opacity: 0; }
-}
-
-/* Info / Feed the Fish / Sound / Language — one flex row, so they
-   always line up correctly no matter how wide "Feed the Fish"
-   renders in a given language. */
+/* Info / Sound / Language — one flex row. */
 .top-controls {
   position: fixed;
   top: 22px;
@@ -668,21 +634,6 @@ body.feeding .fish .wiggle { animation: frenzy 0.22s ease-in-out infinite altern
 /* Only ever shown on mobile — see the media query further down,
    which both reveals this and hides the row it collapses. */
 .menu-toggle-btn { display: none; }
-
-/* Donate button — part of the top-controls row */
-.donate-btn {
-  order: 2;
-  font-family: var(--title-font);
-  font-weight: 700;
-  font-size: 1rem;
-  text-decoration: none;
-  padding: 10px 22px;
-  border: none;
-  border-radius: 999px;
-  cursor: pointer;
-  transition: opacity 0.25s ease, translate 0.25s ease, transform 0.2s ease;
-}
-.donate-btn:hover { transform: translateY(-3px); }
 
 /* SEA FLOOR DECORATIONS */
 .decoration { position: absolute; bottom: 0; pointer-events: none; z-index: 2; }
@@ -1014,7 +965,6 @@ header p  { font-size: clamp(0.85rem, 2vw, 1rem); opacity: 0.9; }
 .menu-toggle-btn:focus-visible,
 .sound-btn:focus-visible,
 .lang-btn:focus-visible,
-.donate-btn:focus-visible,
 .create-btn:focus-visible,
 .card-nav:focus-visible,
 .card button:focus-visible,
@@ -1162,7 +1112,7 @@ header p  { font-size: clamp(0.85rem, 2vw, 1rem); opacity: 0.9; }
 /* All buttons match the SPA logo: same neon yellow, same glow.
    The color comes from --logo-glow, so changing that one token
    re-themes the logo AND every button together. */
-.create-btn, .donate-btn, .sound-btn, .lang-btn, .info-btn, .search-btn, .menu-toggle-btn, .school-arrow, .card-nav, .card button {
+.create-btn, .sound-btn, .lang-btn, .info-btn, .search-btn, .menu-toggle-btn, .school-arrow, .card-nav, .card button {
   background: rgb(var(--logo-glow));
   color: #123a52;
   box-shadow:
@@ -1202,20 +1152,19 @@ header p  { font-size: clamp(0.85rem, 2vw, 1rem); opacity: 0.9; }
    is slow and gentle (the .calm rules), while the fade back IN is
    quick (the base rules), so the interface returns the instant
    the visitor moves. */
-header, .logo, .create-btn, .donate-btn, .sound-btn, .lang-btn, .info-btn, .search-btn, .menu-toggle-btn {
+header, .logo, .create-btn, .sound-btn, .lang-btn, .info-btn, .search-btn, .menu-toggle-btn {
   transition: opacity 0.25s ease, translate 0.25s ease, transform 0.2s ease;
 }
 body.calm header      { opacity: 0; translate: 0 -16px; pointer-events: none; }
 body.calm .logo       { opacity: 0; translate: 0  16px; }
 body.calm .create-btn { opacity: 0; translate: 0  16px; pointer-events: none; }
-body.calm .donate-btn,
 body.calm .sound-btn,
 body.calm .lang-btn,
 body.calm .info-btn,
 body.calm .search-btn,
 body.calm .menu-toggle-btn { opacity: 0; translate: 0 -16px; pointer-events: none; }
 body.calm header, body.calm .logo, body.calm .create-btn,
-body.calm .donate-btn, body.calm .sound-btn, body.calm .lang-btn, body.calm .info-btn, body.calm .search-btn, body.calm .menu-toggle-btn {
+body.calm .sound-btn, body.calm .lang-btn, body.calm .info-btn, body.calm .search-btn, body.calm .menu-toggle-btn {
   transition: opacity 1.6s ease, translate 1.6s ease;
 }
 
@@ -1378,15 +1327,9 @@ body.calm .school-arrow, body.calm .school-dots {
 /* ---------- MOBILE ----------
    Everything above is position:fixed with desktop offsets, which
    doesn't reflow the way normal content does — at phone widths the
-   top-controls row (search/info/Feed the Fish/sound/lang) and the
-   header title occupy nearly the same space and sit on top of each
-   other. "Feed the Fish" is the worst offender: it's the only
-   variable-width text pill in that row (its neighbors are all fixed
-   44px circles), and in French ("Nourrir les poissons") it's long
-   enough to wrap onto two lines, making the overlap worse. Below
-   this width: drop the top-controls row below the header instead of
-   beside it, and collapse "Feed the Fish" to match its icon-only
-   neighbors so the row stays compact regardless of language. */
+   top-controls row and the header title occupy nearly the same
+   space and sit on top of each other. Below this width: drop the
+   top-controls row below the header instead of beside it. */
 @media (max-width: 640px) {
   /* Kept to one line regardless of how long a creator's name is —
      JS measures and shrinks the font-size to fit (see openCard()),
@@ -1436,7 +1379,7 @@ body.calm .school-arrow, body.calm .school-dots {
   }
   .mobile-splash.dismissing { opacity: 0; pointer-events: none; }
 
-  /* Five permanently-visible buttons (search/info/feed/sound/lang)
+  /* Four permanently-visible buttons (search/info/sound/lang)
      ate too much of the tank view on a phone. Collapse them behind
      one menu-toggle button; JS adds/removes .menu-open on click, tap
      elsewhere, or Escape. The toggle itself always stays visible —
@@ -1464,23 +1407,6 @@ body.calm .school-arrow, body.calm .school-dots {
     flex-direction: row; flex-wrap: wrap;
     width: 98px; /* two 44px buttons + one 10px gap between them */
     justify-content: flex-end;
-  }
-
-  /* Text stays in the DOM (so its accessible name/translations are
-     untouched) but is visually replaced by an icon — font-size:0
-     hides it from view without removing it from the accessibility
-     tree, unlike display:none or visibility:hidden. */
-  .donate-btn {
-    order: 2;
-    width: 44px; height: 44px;
-    padding: 0;
-    align-items: center; justify-content: center;
-    font-size: 0;
-  }
-  .donate-btn::before {
-    content: "🐟";
-    font-size: 1.15rem;
-    line-height: 1;
   }
 
   /* Guards against the create-btn/logo colliding on the narrowest
@@ -1546,12 +1472,11 @@ body.calm .school-arrow, body.calm .school-dots {
 @media (prefers-reduced-motion: reduce) {
   .decoration.sways, .fish:hover .wiggle,
   .bubble, .ray,
-  body.feeding .fish .wiggle,
   .mobile-splash-prompt,
   .rotate-overlay-icon,
   .card.reveal #cardArt,
   .card.reveal h2, .card.reveal p, .card.reveal button { animation: none; }
-  .bubble, .pellet { display: none; }
+  .bubble { display: none; }
   .thought { transition: opacity 0.2s ease; transform: none; }
   .fish:hover .thought { transition-delay: 3s; }
 }
@@ -1584,9 +1509,8 @@ body.calm .school-arrow, body.calm .school-dots {
   <p id="tagline">Drag to spin the tank. Hover a fish to meet its creator.</p>
 </header>
 
-<!-- Info / Feed / Sound / Language buttons all live here so they lay
-     out automatically as a row — no manual pixel math needed even
-     though "Feed the Fish" changes width between languages. Visual
+<!-- Info / Sound / Language buttons all live here so they lay out
+     automatically as a row — no manual pixel math needed. Visual
      order is controlled by the `order` CSS property on each button,
      not by the order they're added in JS. -->
 <div class="top-controls" id="topControls"></div>
@@ -2501,38 +2425,6 @@ createOverlay.addEventListener("click", (e) => {
   if (e.target === createOverlay) closeCreate();
 });
 
-/* --- Feed the Fish button ------------------------------------------
-   A plain fun button — no link, no donation page. Clicking it just
-   drops food in and sends the school into a happy feeding frenzy. --- */
-let feedUntil = 0;      // performance.now() timestamp the frenzy ends
-let feedLift = 0;       // how far the school has risen toward the food
-let feedSpin = 1;       // carousel speed multiplier, eases up to 10x
-let feedingState = false;
-
-const donateBtn = document.createElement("button");
-donateBtn.type = "button";
-donateBtn.className = "donate-btn";
-donateBtn.addEventListener("click", feedTheFish);
-document.getElementById("topControls").appendChild(donateBtn);
-
-function feedTheFish() {
-  feedUntil = performance.now() + 5000;   // 5 seconds of frenzy
-  for (let i = 0; i < 22; i++) {
-    setTimeout(() => {
-      const p = document.createElement("div");
-      p.className = "pellet";
-      const size = 5 + Math.random() * 5;
-      p.style.width = p.style.height = size + "px";
-      p.style.left = (8 + Math.random() * 84) + "%";
-      p.style.animationDuration = (3 + Math.random() * 2.5) + "s";
-      // Some pellets sink behind the fish, some in front
-      p.style.zIndex = Math.random() < 0.6 ? 6 : 320;
-      tank.appendChild(p);
-      p.addEventListener("animationend", () => p.remove());
-    }, i * 130);
-  }
-}
-
 /* --- Logo (top right), linked back to the Spectrum Public Access homepage */
 let logoEl = null;
 if (SETTINGS.logo) {
@@ -2551,7 +2443,7 @@ if (SETTINGS.logo) {
 /* --- Info button + "About this project" pop-up -----------------
    A short project blurb plus a plain-language walkthrough of what
    every button on the page does. Always shown — this isn't tied to
-   any optional URL setting the way Create/Donate are. ------------ */
+   any optional URL setting the way Create is. -------------------- */
 const infoBtn = document.createElement("button");
 infoBtn.className = "info-btn";
 infoBtn.textContent = "i";
@@ -2864,7 +2756,6 @@ function applyLanguage() {
   // actually opened it — nothing to update if it isn't loaded yet.
   if (window.FishDrawTool) window.FishDrawTool.setLanguage(lang);
   if (createBtn) createBtn.textContent = t.create;
-  if (donateBtn) donateBtn.textContent = t.donate;
   // Info button + "About this project" pop-up
   infoBtn.title = t.info;
   infoBtn.setAttribute("aria-label", t.info);
@@ -2997,7 +2888,7 @@ function stopDragSound() {
 }
 
 window.addEventListener("pointerdown", (e) => {
-  if (e.target.closest(".create-btn, .donate-btn, .sound-btn, .lang-btn, .info-btn, .search-btn, .menu-toggle-btn, .school-arrow, .school-dots, .card")) return;
+  if (e.target.closest(".create-btn, .sound-btn, .lang-btn, .info-btn, .search-btn, .menu-toggle-btn, .school-arrow, .school-dots, .card")) return;
   isDragging = true;
   wasDragged = false;
   lastPointerX = e.clientX;
@@ -3064,16 +2955,6 @@ function animate(now) {
   const dt = (now - lastTime) / 1000;
   lastTime = now;
 
-  // Feeding time? The carousel whips into a feeding frenzy: the
-  // spin eases up to 20x speed and back down when the food is gone
-  const feeding = now < feedUntil;
-  if (feeding !== feedingState) {
-    feedingState = feeding;
-    document.body.classList.toggle("feeding", feeding);
-  }
-  feedLift += ((feeding ? 45 : 0) - feedLift) * Math.min(1, dt * 2.5);
-  feedSpin += ((feeding ? 20 : 1) - feedSpin) * Math.min(1, dt * 2);
-
   // School transition: ease the leaving school off one side, then
   // ease the arriving school in from the other (500ms each phase)
   if (schoolAnim) {
@@ -3096,7 +2977,7 @@ function animate(now) {
   }
 
   if (!isDragging && !reduceMotion) {
-    rotation += ORBIT.speed * dt * feedSpin;
+    rotation += ORBIT.speed * dt;
   }
   if (!isDragging) {
     rotation += dragVelocity;
@@ -3130,17 +3011,10 @@ function animate(now) {
     const opacity = mapRange(z, -1, 1, ORBIT.farOpacity, 1);
     const blur    = mapRange(z, -1, 1, ORBIT.farBlur, 0);
     const bob = reduceMotion ? 0
-      : Math.sin(now / 1000 + fish.bobOffset)
-        * ORBIT.bobAmount * (feeding ? 2 : 1);
-
-    // Motion blur: a fish's sideways speed on the carousel is
-    // highest at the sides (|z| near 1) and zero at front/back
-    // dead-center. Blur scales with spin speed × that velocity.
-    const motionBlur = reduceMotion ? 0
-      : (feedSpin - 1) * Math.abs(z) * 0.45;
+      : Math.sin(now / 1000 + fish.bobOffset) * ORBIT.bobAmount;
 
     const screenX = cx + x * orbitRadius * fish.radiusJitter + schoolOffset;
-    const screenY = window.innerHeight * (fish.height / 100) + bob - feedLift;
+    const screenY = window.innerHeight * (fish.height / 100) + bob;
 
     // Fish face where they're going; art is drawn facing left, so
     // the flip wrapper mirrors it on the back half of the carousel
@@ -3158,7 +3032,7 @@ function animate(now) {
       `translate(${screenX - renderedSize / 2}px, ${screenY}px) scale(${scale})`;
     fish.el.style.opacity = fish.hovered ? 1 : opacity;
     // Hovered fish un-blur so the name tag and bubble stay crisp
-    const totalBlur = (fish.hovered ? 0 : blur) + motionBlur;
+    const totalBlur = fish.hovered ? 0 : blur;
     fish.el.style.filter =
       totalBlur > 0.15 ? `blur(${totalBlur}px)` : "none";
     fish.el.style.zIndex = fish.hovered
