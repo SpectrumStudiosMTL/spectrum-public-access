@@ -1993,7 +1993,11 @@ const swimmers = FISH.map((fish, i) => {
   el.className = "fish";
 
   const img = document.createElement("img");
-  img.src = fish.image;
+  // src is set lazily by loadSchool() below, not here — with FISH
+  // lists that grow into the hundreds, fetching every image on every
+  // visit regardless of which school is even active gets expensive
+  // fast. Only the starting school and its two neighbors load up
+  // front; the rest load as the visitor actually browses toward them.
   // Placeholder — corrected to the localized, name-aware version by
   // applyLanguage()'s loop below, which runs once right after this.
   img.alt = fish.creator;
@@ -2039,6 +2043,7 @@ const swimmers = FISH.map((fish, i) => {
   // lifts them above their neighbours (see the animate function)
   const state = {
     el,
+    imgEl: img,
     flipEl: flip,
     hovered: false,
     flipped: false,
@@ -2092,6 +2097,30 @@ let schoolOffset = 0;     // px added to every fish's x during transit
 let schoolAnim = null;    // { phase: "out"|"in", dir, next, start }
 let schoolDots = null;
 
+// Fetches one school's fish images (a no-op for any fish already
+// loaded — setting the same .src twice doesn't re-fetch it). Doesn't
+// touch visibility; setSchoolVisibility() handles that separately.
+function loadSchool(idx) {
+  if (idx < 0 || idx >= schoolCount) return;
+  const start = idx * SCHOOL_SIZE;
+  const end = Math.min(start + SCHOOL_SIZE, FISH.length);
+  for (let i = start; i < end; i++) {
+    const img = swimmers[i].imgEl;
+    if (!img.src) img.src = FISH[i].image;
+  }
+}
+
+// Keeps the active school AND both of its neighbors loaded, so
+// whichever way someone pages next, those images are already sitting
+// in the browser cache by the time the switch animation needs them —
+// the fetch happens quietly during the few seconds someone spends
+// looking at the current school, not at the moment they click.
+function warmAdjacentSchools(idx) {
+  loadSchool(idx);
+  loadSchool((idx - 1 + schoolCount) % schoolCount);
+  loadSchool((idx + 1) % schoolCount);
+}
+
 function setSchoolVisibility() {
   swimmers.forEach((f, i) => {
     f.active = Math.floor(i / SCHOOL_SIZE) === schoolIndex;
@@ -2112,6 +2141,7 @@ function changeSchool(dir) {
     schoolIndex = next;
     setSchoolVisibility();
     updateDots();
+    warmAdjacentSchools(schoolIndex);
     return;
   }
   schoolAnim = { phase: "out", dir, next, start: performance.now() };
@@ -2145,6 +2175,7 @@ if (schoolCount > 1) {
   updateDots();
 }
 setSchoolVisibility();
+warmAdjacentSchools(schoolIndex);
 
 /* --- Sound: ambience + fish SFX, one master switch --------------
    Browsers block sound until the visitor interacts with the page,
@@ -2723,6 +2754,7 @@ function locateFish(index, trigger) {
     schoolIndex = targetSchool;
     setSchoolVisibility();
     updateDots();
+    warmAdjacentSchools(schoolIndex);
   }
   openCard(index, trigger, { instant: needsSchoolSwitch });
 }
@@ -3036,6 +3068,7 @@ function animate(now) {
         schoolIndex = schoolAnim.next;
         setSchoolVisibility();
         updateDots();
+        warmAdjacentSchools(schoolIndex);
         schoolAnim.phase = "in";
         schoolAnim.start = now;
       }
