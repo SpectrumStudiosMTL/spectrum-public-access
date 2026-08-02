@@ -243,17 +243,12 @@ body:after{
    YouTube iframe fills the rest of the frame, so the parent page has
    no way to see mouse movement happening over the video itself to
    "rediscover" the button otherwise. Leaving it live means hovering
-   that corner still reveals it even while faded. */
+   that corner still reveals it even while faded.
+   Touch devices never get this class in the first place (see the
+   JS) — Safari's own support for the hover/any-hover media features
+   is unreliable enough that an @media(hover:none) rule here isn't
+   trustworthy, so touch is detected directly in JS instead. */
 .stream-modal.close-idle .stream-modal-close{ opacity:0; }
-/* Touchscreens have no persistent hover to bring a faded button back
-   — a tap on the video itself happens inside the cross-origin iframe,
-   invisible to this page, so there's no reliable "wake" signal at
-   all there the way there is with a mouse. Rather than leave it
-   fading in and never reliably coming back, just never fade it on a
-   device whose primary input can't hover in the first place. */
-@media (hover: none){
-  .stream-modal.close-idle .stream-modal-close{ opacity:1; }
-}
 @media (prefers-reduced-motion: reduce){
   .stream-modal-close{ transition:none; }
 }
@@ -368,8 +363,17 @@ let streamModalTrigger = null; // where focus returns to on close
 // the button itself) brings it back. Movement over the video itself
 // can't be seen from here (cross-origin iframe), which is fine: that
 // IS the idle state this is meant to produce.
+//
+// Skipped entirely on touch devices: there's no persistent hover to
+// bring a faded button back with (a tap on the video itself happens
+// inside the cross-origin iframe, invisible to this page), and
+// Safari's support for the hover/any-hover CSS media features isn't
+// reliable enough to trust an @media(hover:none) rule to detect that
+// case instead — this checks touch capability directly in JS.
+const isTouchDevice = navigator.maxTouchPoints > 0 || "ontouchstart" in window;
 let closeIdleTimer = null;
 function scheduleCloseIdle() {
+  if (isTouchDevice) return;
   clearTimeout(closeIdleTimer);
   closeIdleTimer = setTimeout(() => streamModal.classList.add("close-idle"), 3000);
 }
@@ -387,8 +391,12 @@ streamModalClose.addEventListener("pointerleave", scheduleCloseIdle);
 
 function openStreamModal(embedSrc, trigger) {
   streamModalTrigger = trigger;
-  streamModalIframe.src = embedSrc;
+  // Show the modal BEFORE pointing the iframe at YouTube — assigning
+  // src while it's still display:none (zero-size, unrendered) is a
+  // known way for mobile browsers to deprioritize or skip autoplay
+  // eligibility for it entirely.
   streamModal.classList.add("open");
+  streamModalIframe.src = embedSrc;
   streamModalClose.focus();
   wakeClose();
 }
