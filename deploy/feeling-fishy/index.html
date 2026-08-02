@@ -1615,9 +1615,9 @@ body.calm .school-arrow, body.calm .school-dots {
   <div class="card">
     <h2 id="createTitle"></h2>
     <div class="option-row">
-      <a class="option-btn" id="optDownload" role="button" tabindex="0"><span class="inlay" id="optDownloadLabel"></span></a>
-      <a class="option-btn" id="optDraw" role="button" tabindex="0"><span class="inlay" id="optDrawLabel"></span></a>
-      <a class="option-btn" id="optSubmit" role="button" tabindex="0"><span class="inlay" id="optSubmitLabel"></span></a>
+      <a class="option-btn" id="optDownload" role="button" tabindex="0"><span class="inlay" id="optDownloadLabel"><span class="inlay-text"></span></span></a>
+      <a class="option-btn" id="optDraw" role="button" tabindex="0"><span class="inlay" id="optDrawLabel"><span class="inlay-text"></span></span></a>
+      <a class="option-btn" id="optSubmit" role="button" tabindex="0"><span class="inlay" id="optSubmitLabel"><span class="inlay-text"></span></span></a>
     </div>
     <button id="createClose" onclick="closeCreate()">Close</button>
   </div>
@@ -1628,9 +1628,9 @@ body.calm .school-arrow, body.calm .school-dots {
   <div class="card">
     <h2 id="downloadTitle"></h2>
     <div class="option-row">
-      <a class="option-btn" id="dlPng"><span class="inlay" id="dlPngLabel"></span></a>
-      <a class="option-btn" id="dlPsd" target="_blank" rel="noopener"><span class="inlay" id="dlPsdLabel"></span></a>
-      <a class="option-btn" id="dlKrita" target="_blank" rel="noopener"><span class="inlay" id="dlKritaLabel"></span></a>
+      <a class="option-btn" id="dlPng"><span class="inlay" id="dlPngLabel"><span class="inlay-text"></span></span></a>
+      <a class="option-btn" id="dlPsd" target="_blank" rel="noopener"><span class="inlay" id="dlPsdLabel"><span class="inlay-text"></span></span></a>
+      <a class="option-btn" id="dlKrita" target="_blank" rel="noopener"><span class="inlay" id="dlKritaLabel"><span class="inlay-text"></span></span></a>
     </div>
     <p class="download-note" id="downloadNote"></p>
     <button id="downloadBack">Back</button>
@@ -2778,13 +2778,18 @@ function applyLanguage() {
   document.getElementById("tagline").textContent = t.tagline;
   document.getElementById("cardBack").textContent = t.back;
   document.getElementById("createTitle").textContent = t.createTitle;
-  document.getElementById("optDownloadLabel").textContent = t.download;
-  document.getElementById("optDrawLabel").textContent = t.draw;
-  document.getElementById("optSubmitLabel").textContent = t.submit;
+  // .inlay-text, not the .inlay span itself — an inlay icon (see
+  // SETTINGS.buttonInlays) is an <img> PREPENDED into that same
+  // .inlay span once at load, and setting .textContent directly on
+  // it would wipe that img out (.textContent replaces ALL children)
+  // every time the language toggles, not just overwrite the label.
+  setInlayText("optDownloadLabel", t.download);
+  setInlayText("optDrawLabel", t.draw);
+  setInlayText("optSubmitLabel", t.submit);
   document.getElementById("downloadTitle").textContent = t.downloadTitle;
-  document.getElementById("dlPngLabel").textContent = t.asIs;
-  document.getElementById("dlPsdLabel").textContent = t.psd;
-  document.getElementById("dlKritaLabel").textContent = t.krita;
+  setInlayText("dlPngLabel", t.asIs);
+  setInlayText("dlPsdLabel", t.psd);
+  setInlayText("dlKritaLabel", t.krita);
   document.getElementById("downloadNote").textContent = t.downloadNote;
   document.getElementById("downloadBack").textContent = t.goBack;
   document.getElementById("createClose").textContent = t.close;
@@ -3219,3 +3224,10 @@ overlay.addEventListener("click", (e) => { if (e.target === overlay) closeCard()
 </script>
 </body>
 </html>
+// Sets an option button's label text via its .inlay-text child, not
+// the .inlay span itself — see the comment where this is called.
+function setInlayText(labelId, text) {
+  const el = document.getElementById(labelId);
+  if (el) el.querySelector(".inlay-text").textContent = text;
+}
+
