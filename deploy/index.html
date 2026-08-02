@@ -198,6 +198,7 @@ body:after{
          script below runs. Kept in sync by hand since it's a rare,
          static fallback, not the real navigation. -->
     <noscript>
+      <a class="opt-fallback" href="https://www.youtube.com/live/ow3RDIXTPXk">WATCH THE STREAM</a>
       <a class="opt-fallback" href="/feeling-fishy">FEELING FISHY</a>
       <a class="opt-fallback" href="https://eatswithpete.com">EATS WITH PETE</a>
     </noscript>
@@ -211,13 +212,15 @@ body:after{
    ██████████████████████████████████████████████████████████████
    label    — button text (rendered in caps regardless of case here)
    href     — where it goes; leave null to keep it unlinked/inert
-              for now, like Watch the Stream until that page exists
+              for now, e.g. for a destination whose page doesn't exist yet
    rgb      — "R,G,B" for this button's neon color — the only place
               that color is ever written; every glow/hover effect
               is computed from it, so nothing can drift out of sync
    external — true opens it in a new tab (for links off this domain) */
 const LINKS = [
-  { label: "Watch the Stream", href: null,                        rgb: "255,238,60" },  // SPA logo yellow
+  // Points straight at the YouTube live stream for now — swap this
+  // for the real live-channel-switcher page once that's built.
+  { label: "Watch the Stream", href: "https://www.youtube.com/live/ow3RDIXTPXk", rgb: "255,238,60", external: true },  // SPA logo yellow
   { label: "Feeling Fishy",    href: "/feeling-fishy",             rgb: "61,217,255", external: true },  // Feeling Fishy title glow — new tab too, so this hub page stays put as a home base
   { label: "Eats with Pete",   href: "https://eatswithpete.com",   rgb: "255,107,71", external: true },
 ];
