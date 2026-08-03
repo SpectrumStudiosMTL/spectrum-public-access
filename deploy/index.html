@@ -137,7 +137,14 @@ body:after{
   animation-delay:var(--opt-delay, 0s);
 }
 .opt:active{ transform:scale(.97); }
-.opt:focus-visible{ outline:3px solid var(--cg-white); outline-offset:4px; }
+/* Not :focus-visible — Safari has matched that pseudo-class for a
+   plain programmatic .focus() call before now (see the JS), which
+   left a stuck outline ring around "Watch the Stream" after closing
+   the stream pop-up once, even on a tap/touch visit that never
+   touched a keyboard. body.keyboard-nav is our own explicit signal
+   instead, so this only shows for a real Tab user. */
+.opt:focus{ outline:none; }
+body.keyboard-nav .opt:focus{ outline:3px solid var(--cg-white); outline-offset:4px; }
 .opt:hover{
   text-shadow:0 0 8px rgba(var(--opt-rgb, 255,255,255),.95), 0 0 30px rgba(var(--opt-rgb, 255,255,255),.5);
   box-shadow:0 0 26px rgba(var(--opt-rgb, 255,255,255),.45), inset 0 0 20px rgba(var(--opt-rgb, 255,255,255),.25);
@@ -225,22 +232,27 @@ body:after{
 .stream-modal-frame iframe{
   position:absolute; inset:0; width:100%; height:100%; border:0; z-index:0;
 }
-/* Invisible layer over the whole video, only "armed" (pointer-events:
-   auto) while the close button is faded. A cross-origin YouTube
-   iframe swallows every touch/mouse event that lands on it — the
-   parent page can't see ANY interaction with the video itself, on
-   any device, so there's no way to detect "the visitor is still
-   watching" and wake the button from here directly. This sits above
-   the iframe instead: the first tap/click while faded lands on this
-   layer, revealing the button, and then it steps aside (pointer-
-   events:none) so that same tap doesn't also fumble a play/pause on
-   the real video — same trade-off any native player's own tap-to-
-   reveal-controls makes. */
+/* Invisible layer over the whole video, only present at all while
+   the close button is faded. A cross-origin YouTube iframe swallows
+   every touch/mouse event that lands on it — the parent page can't
+   see ANY interaction with the video itself, on any device, so
+   there's no way to detect "the visitor is still watching" and wake
+   the button from here directly. This sits above the iframe instead:
+   the first tap/click while faded lands on this layer, revealing the
+   button, and then it steps aside so that same tap doesn't also
+   fumble a play/pause on the real video — same trade-off any native
+   player's own tap-to-reveal-controls makes.
+   display:none rather than pointer-events:none when not needed —
+   iOS Safari pauses video it considers occluded by overlapping
+   content, and merely disabling pointer-events on a full-coverage
+   div still leaves it painted/composited on top of the iframe, which
+   is enough to trigger that. Fully removing it from the render tree
+   whenever it isn't actively needed avoids the question entirely. */
 .stream-modal-wake{
+  display:none;
   position:absolute; inset:0; z-index:1;
-  pointer-events:none;
 }
-.stream-modal.close-idle .stream-modal-wake{ pointer-events:auto; }
+.stream-modal.close-idle .stream-modal-wake{ display:block; }
 /* Sits inside the frame's own rounded corners rather than floating
    above it, so it's never clipped by a short viewport on mobile.
    Fades out after a few seconds idle (see the JS) so it doesn't sit
@@ -260,7 +272,11 @@ body:after{
   transition:opacity .3s ease;
 }
 .stream-modal-close:hover{ background:rgba(255,238,60,.2); }
-.stream-modal-close:focus-visible{ outline:3px solid var(--cg-white); outline-offset:3px; }
+/* Same reasoning as .opt:focus above — this button is also focused
+   programmatically (on open), so it uses the same explicit signal
+   rather than :focus-visible. */
+.stream-modal-close:focus{ outline:none; }
+body.keyboard-nav .stream-modal-close:focus{ outline:3px solid var(--cg-white); outline-offset:3px; }
 /* Stays clickable/hoverable at full opacity 0 too (no pointer-events:
    none) — it's a small, predictable corner target, and the wake
    layer above sits below it (z-index 1 vs 2), so it never blocks the
@@ -342,6 +358,17 @@ const LINKS = [
 
 const BASE_DELAY = 2.15; // seconds before the first button starts flickering in
 const STEP_DELAY = 0.3;  // gap between each button after that
+
+// Tracks whether the visitor is currently navigating with a keyboard,
+// so the focus outlines above (body.keyboard-nav ...) only show when
+// they're actually useful — see the CSS for why this exists instead
+// of just using :focus-visible directly.
+window.addEventListener("keydown", (e) => {
+  if (e.key === "Tab") document.body.classList.add("keyboard-nav");
+});
+window.addEventListener("pointerdown", () => {
+  document.body.classList.remove("keyboard-nav");
+});
 
 const optionsNav = document.getElementById("options");
 optionsNav.innerHTML = ""; // clears the noscript fallback now that JS is running
