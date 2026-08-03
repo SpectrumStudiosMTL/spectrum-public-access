@@ -2634,11 +2634,26 @@ function normalizeForSearch(str) {
 
 function renderSearchResults(query) {
   const q = normalizeForSearch(query.trim());
-  const allMatches = FISH.map((_, i) => i)
+  const matchingIndexes = FISH.map((_, i) => i)
     .filter((i) => !q ||
       normalizeForSearch(FISH[i].creator).includes(q) ||
-      normalizeForSearch(FISH[i].name).includes(q))
-    .sort((a, b) => FISH[a].creator.localeCompare(FISH[b].creator));
+      normalizeForSearch(FISH[i].name).includes(q));
+
+  // Collapse to one row per creator (see creatorKey) — a prolific
+  // creator's fish would otherwise repeat their name over and over.
+  // The representative is their first matching fish in FISH order;
+  // the card's existing prev/next arrows already let people page
+  // through the rest once they open it, so no separate browsing UI
+  // is needed here.
+  const seenCreators = new Set();
+  const allMatches = [];
+  matchingIndexes.forEach((i) => {
+    const key = creatorKey(FISH[i]);
+    if (seenCreators.has(key)) return;
+    seenCreators.add(key);
+    allMatches.push(i);
+  });
+  allMatches.sort((a, b) => FISH[a].creator.localeCompare(FISH[b].creator));
   searchMatches = allMatches.slice(0, SEARCH_RESULT_CAP);
 
   searchActive = -1;
@@ -2646,11 +2661,15 @@ function renderSearchResults(query) {
   searchResultsEl.innerHTML = "";
   searchMatches.forEach((fishIndex, row) => {
     const f = FISH[fishIndex];
+    const hasSiblings = creatorFishIndexes(creatorKey(f)).length > 1;
     const li = document.createElement("li");
     li.id = "searchOption-" + row;
     li.className = "search-result";
     li.setAttribute("role", "option");
-    li.textContent = f.name ? `${f.name} — ${TEXT[lang].by} ${f.creator}` : f.creator;
+    // Once a creator has more than one fish, their own fish.name (if
+    // any) belongs to just one of several — showing it here would
+    // misrepresent the group, so just the creator name is shown.
+    li.textContent = !hasSiblings && f.name ? `${f.name} — ${TEXT[lang].by} ${f.creator}` : f.creator;
     li.addEventListener("click", () => selectSearchResult(row));
     // Mouse hover and keyboard arrows share the same "active" state
     li.addEventListener("pointerenter", () => setSearchActive(row));
@@ -3111,11 +3130,21 @@ const overlay = document.getElementById("cardOverlay");
 const cardEl = overlay.querySelector(".card");
 let currentCardIndex = null; // whichever fish the card is showing right now
 
+// What actually identifies "the same creator" for grouping purposes.
+// Two different people can type the same display name (two "Emily"s),
+// so grouping by fish.creator alone would wrongly merge them. Fish
+// added through the submission pipeline carry a creatorId derived
+// from their (never-published) email instead; older hand-entered
+// fish have no creatorId, so those fall back to matching by name.
+function creatorKey(fish) {
+  return fish.creatorId || fish.creator;
+}
+
 // Every fish index sharing this creator, in FISH order — used for the
 // paging arrows so someone can browse straight through one creator's
 // fish without returning to search each time.
-function creatorFishIndexes(creator) {
-  return FISH.map((_, i) => i).filter((i) => FISH[i].creator === creator);
+function creatorFishIndexes(key) {
+  return FISH.map((_, i) => i).filter((i) => creatorKey(FISH[i]) === key);
 }
 
 const cardPrevBtn = document.getElementById("cardPrev");
@@ -3123,7 +3152,7 @@ const cardNextBtn = document.getElementById("cardNext");
 
 function stepCreatorFish(dir) {
   if (currentCardIndex === null) return;
-  const siblings = creatorFishIndexes(FISH[currentCardIndex].creator);
+  const siblings = creatorFishIndexes(creatorKey(FISH[currentCardIndex]));
   const pos = siblings.indexOf(currentCardIndex);
   if (pos === -1 || siblings.length < 2) return;
   const nextIndex = siblings[(pos + dir + siblings.length) % siblings.length];
@@ -3174,7 +3203,7 @@ function openCard(index, trigger, opts = {}) {
   // Paging arrows only show up when this creator has more than one
   // fish in the tank — most creators have exactly one, so most cards
   // show no arrows at all.
-  const hasSiblings = creatorFishIndexes(fish.creator).length > 1;
+  const hasSiblings = creatorFishIndexes(creatorKey(fish)).length > 1;
   cardPrevBtn.classList.toggle("shown", hasSiblings);
   cardNextBtn.classList.toggle("shown", hasSiblings);
 

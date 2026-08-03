@@ -1,9 +1,9 @@
 # Save this file as: .github/workflows/add-fish.yml
 #
 # Fires when the Cloudflare Worker tells GitHub a new PSD/Krita fish
-# has been submitted. Downloads the file, extracts the artwork, adds
-# it to the site, and commits — no human needed unless something
-# about the submission looks wrong (see add_fish.py).
+# has been submitted. Downloads the file, extracts the artwork, and
+# opens a Pull Request with it for review — nothing goes live until
+# a human merges that PR (see add_fish.py).
 
 name: Add submitted fish
 
@@ -21,12 +21,16 @@ on:
       creator:
         description: "Creator name"
         required: true
+      email:
+        description: "Creator email (used to group their fish, never published)"
+        required: true
 
 jobs:
   add-fish:
     runs-on: ubuntu-latest
     permissions:
       contents: write
+      pull-requests: write
     steps:
       - name: Checkout repo
         uses: actions/checkout@v4
@@ -43,15 +47,29 @@ jobs:
         env:
           FISH_FILE_URL: ${{ github.event.client_payload.file_url || inputs.file_url }}
           FISH_CREATOR: ${{ github.event.client_payload.creator || inputs.creator }}
+          FISH_CREATOR_EMAIL: ${{ github.event.client_payload.email || inputs.email }}
           FISH_NAME: ${{ github.event.client_payload.name }}
           FISH_BIO: ${{ github.event.client_payload.bio }}
           MONDAY_API_TOKEN: ${{ secrets.MONDAY_API_TOKEN }}
         run: python deploy/automation/add_fish.py
 
-      - name: Commit and push
+      # Opens a PR instead of publishing straight to main — the image
+      # renders inline in GitHub's diff view, so approving is just a
+      # visual check + Merge. Rejecting is Close, no revert needed.
+      - name: Open a PR for review instead of publishing directly
+        env:
+          GH_TOKEN: ${{ github.token }}
+          CREATOR: ${{ github.event.client_payload.creator || inputs.creator }}
         run: |
           git config user.name "feeling-fishy-bot"
           git config user.email "actions@users.noreply.github.com"
+          BRANCH="fish-submission/${{ github.run_id }}"
+          git checkout -b "$BRANCH"
           git add deploy/feeling-fishy/index.html deploy/feeling-fishy/images/fish/
-          git commit -m "Auto-add fish from ${{ github.event.client_payload.creator || inputs.creator }}"
-          git push
+          git commit -m "Add fish from ${CREATOR}"
+          git push origin "$BRANCH"
+          gh pr create \
+            --title "New fish submission: ${CREATOR}" \
+            --body "Automated submission awaiting review — check the extracted artwork looks right before merging. Merging publishes it live; closing rejects it." \
+            --base main \
+            --head "$BRANCH"
