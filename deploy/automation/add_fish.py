@@ -68,7 +68,7 @@ from fish_pipeline import fail, has_real_transparency, normalize_artwork, write_
 TARGET_LAYER_NAME = "your fish design"
 
 
-def download_submission(url, token, dest):
+def download_submission(url, token):
     # monday's asset public_url is a pre-signed link -- it's already
     # authenticated via the URL itself. Adding an Authorization header
     # on top of that can break the signature and cause an HTTP 400,
@@ -77,7 +77,27 @@ def download_submission(url, token, dest):
     if resp.status_code != 200:
         fail(f"Couldn't download the submitted file (HTTP {resp.status_code}). "
              f"Response body: {resp.text[:500]}")
-    dest.write_bytes(resp.content)
+    return resp.content
+
+
+# Some hosts (GitHub's own attachment URLs, used for manual testing via
+# workflow_dispatch, are a real example) don't put a file extension in
+# the URL at all -- https://github.com/user-attachments/assets/<uuid>.
+# Trusting the URL's suffix alone silently misclassifies those as
+# "unrecognized" even when the actual content is a perfectly good PNG.
+# Sniffing the real file signature is what monday's URLs (which do
+# carry a real extension) would also match, so this replaces the
+# suffix check rather than just patching around it.
+def sniff_extension(data):
+    if data.startswith(b"\x89PNG\r\n\x1a\n"):
+        return ".png"
+    if data.startswith(b"\xff\xd8\xff"):
+        return ".jpg"
+    if data.startswith(b"8BPS"):
+        return ".psd"
+    if data.startswith(b"PK\x03\x04"):
+        return ".kra"
+    return None
 
 
 def find_target_layer(psd):
@@ -144,9 +164,10 @@ def main():
         fail("Missing FISH_FILE_URL, FISH_CREATOR, or FISH_CREATOR_EMAIL -- "
              "check the workflow's client_payload mapping.")
 
-    suffix = Path(file_url.split("?")[0]).suffix.lower()
-    tmp_path = Path(f"/tmp/submission{suffix}")
-    download_submission(file_url, token, tmp_path)
+    data = download_submission(file_url, token)
+    suffix = sniff_extension(data) or Path(file_url.split("?")[0]).suffix.lower()
+    tmp_path = Path(f"/tmp/submission{suffix or '.bin'}")
+    tmp_path.write_bytes(data)
 
     artwork = extract_artwork(tmp_path, suffix)
     normalized = normalize_artwork(artwork)
