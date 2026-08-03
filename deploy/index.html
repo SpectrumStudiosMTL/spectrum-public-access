@@ -377,7 +377,8 @@ LINKS.forEach((link, i) => {
   a.className = "opt";
   a.textContent = link.label;
   a.style.setProperty("--opt-rgb", link.rgb);
-  a.style.setProperty("--opt-delay", (BASE_DELAY + i * STEP_DELAY).toFixed(2) + "s");
+  const delay = BASE_DELAY + i * STEP_DELAY;
+  a.style.setProperty("--opt-delay", delay.toFixed(2) + "s");
   if (link.href) a.href = link.href;
   if (link.external) {
     a.target = "_blank";
@@ -394,6 +395,16 @@ LINKS.forEach((link, i) => {
     });
   }
   optionsNav.appendChild(a);
+  // Safety net: the flicker-in animation (steps(1,end) across several
+  // keyframes) has been observed getting stuck at an intermediate
+  // keyframe on Chrome for iOS — animationPlayState still reports
+  // "running", but the value never advances to the final 100% stop,
+  // leaving the button looking permanently dim. Rather than chase
+  // whatever causes that stall, just force the correct end state once
+  // the animation should be done, regardless of whether it actually
+  // finished on its own.
+  const ANIMATION_DURATION = 0.7;
+  setTimeout(() => { a.style.opacity = "1"; }, (delay + ANIMATION_DURATION) * 1000);
 });
 
 /* ---------- STREAM POP-UP ---------- */
