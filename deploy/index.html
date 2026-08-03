@@ -253,17 +253,19 @@ body.keyboard-nav .opt:focus{ outline:3px solid var(--cg-white); outline-offset:
   position:absolute; inset:0; z-index:1;
 }
 .stream-modal.close-idle .stream-modal-wake{ display:block; }
-/* Sits inside the frame's own rounded corners rather than floating
-   above it, so it's never clipped by a short viewport on mobile.
-   Fades out after a few seconds idle (see the JS) so it doesn't sit
+/* Sit inside the frame's own rounded corners rather than floating
+   above it, so they're never clipped by a short viewport on mobile.
+   Fade out after a few seconds idle (see the JS) so they don't sit
    on top of the video the whole time it's open — same idea as a
-   video player's own auto-hiding controls. Shared by the close
-   button (top-right) and the mute toggle (top-left, added after
-   YouTube's own in-player mute icon turned out to be unreachable at
-   this size on at least one real phone — this calls the wrapped
-   player directly instead of relying on it at all). */
-.stream-modal-close, .stream-modal-mute{
-  position:absolute; top:10px; z-index:2;
+   video player's own auto-hiding controls. This whole set (mute,
+   play/pause, fullscreen) replaces YouTube's own controls entirely
+   (controls=0 on the src) — its native mute icon turned out to be
+   unreachable at this size on at least one real phone, and this is
+   the channel's own content on its own site, so there's no need for
+   YouTube's control bar/branding here at all; these call the wrapped
+   player directly instead. */
+.stream-modal-close, .stream-modal-mute, .stream-modal-playpause, .stream-modal-fullscreen{
+  position:absolute; z-index:2;
   width:36px; height:36px;
   border-radius:50%;
   border:2px solid var(--cg-white);
@@ -275,23 +277,32 @@ body.keyboard-nav .opt:focus{ outline:3px solid var(--cg-white); outline-offset:
   opacity:1;
   transition:opacity .3s ease;
 }
-.stream-modal-close{ right:10px; }
-.stream-modal-mute{ left:10px; }
-.stream-modal-close:hover, .stream-modal-mute:hover{ background:rgba(255,238,60,.2); }
+.stream-modal-close{ top:10px; right:10px; }
+.stream-modal-mute{ top:10px; left:10px; }
+.stream-modal-playpause{ bottom:10px; left:10px; }
+.stream-modal-fullscreen{ bottom:10px; right:10px; }
+.stream-modal-close:hover, .stream-modal-mute:hover,
+.stream-modal-playpause:hover, .stream-modal-fullscreen:hover{ background:rgba(255,238,60,.2); }
 /* Same reasoning as .opt:focus above — these are also focused/
    toggled programmatically, so they use the same explicit signal
    rather than :focus-visible. */
-.stream-modal-close:focus, .stream-modal-mute:focus{ outline:none; }
+.stream-modal-close:focus, .stream-modal-mute:focus,
+.stream-modal-playpause:focus, .stream-modal-fullscreen:focus{ outline:none; }
 body.keyboard-nav .stream-modal-close:focus,
-body.keyboard-nav .stream-modal-mute:focus{ outline:3px solid var(--cg-white); outline-offset:3px; }
+body.keyboard-nav .stream-modal-mute:focus,
+body.keyboard-nav .stream-modal-playpause:focus,
+body.keyboard-nav .stream-modal-fullscreen:focus{ outline:3px solid var(--cg-white); outline-offset:3px; }
 /* Stay clickable/hoverable at full opacity 0 too (no pointer-events:
    none) — they're small, predictable corner targets, and the wake
    layer above sits below them (z-index 1 vs 2), so it never blocks
    the buttons themselves. */
 .stream-modal.close-idle .stream-modal-close,
-.stream-modal.close-idle .stream-modal-mute{ opacity:0; }
+.stream-modal.close-idle .stream-modal-mute,
+.stream-modal.close-idle .stream-modal-playpause,
+.stream-modal.close-idle .stream-modal-fullscreen{ opacity:0; }
 @media (prefers-reduced-motion: reduce){
-  .stream-modal-close, .stream-modal-mute{ transition:none; }
+  .stream-modal-close, .stream-modal-mute,
+  .stream-modal-playpause, .stream-modal-fullscreen{ transition:none; }
 }
 </style>
 </head>
@@ -322,6 +333,8 @@ body.keyboard-nav .stream-modal-mute:focus{ outline:3px solid var(--cg-white); o
       <div class="stream-modal-wake" id="streamModalWake"></div>
       <button class="stream-modal-mute" id="streamModalMute" type="button" aria-label="Unmute">🔇</button>
       <button class="stream-modal-close" id="streamModalClose" type="button" aria-label="Close">&times;</button>
+      <button class="stream-modal-playpause" id="streamModalPlayPause" type="button" aria-label="Pause">⏸</button>
+      <button class="stream-modal-fullscreen" id="streamModalFullscreen" type="button" aria-label="Fullscreen">⛶</button>
     </div>
   </div>
 </div>
@@ -356,12 +369,14 @@ const LINKS = [
   // re-testing on a real phone. mute=1 + playsinline=1 are both there
   // for mobile autoplay (same reason the background video elsewhere
   // on this site is muted+playsinline) — visitors can unmute from
-  // the player's own speaker icon. enablejsapi=1 lets the JS below
-  // wrap this iframe with YouTube's IFrame Player API afterward, so
-  // we have some visibility into its actual playback/mute state —
-  // it doesn't change what loads or how autoplay behaves.
+  // the mute button below instead of YouTube's own. enablejsapi=1
+  // lets the JS below wrap this iframe with YouTube's IFrame Player
+  // API, so we have playback visibility and can drive it directly.
+  // controls=0 hides YouTube's own control bar/branding entirely —
+  // the mute/play-pause/fullscreen buttons below replace it, since
+  // this is the channel's own content on its own site.
   { label: "Watch the Stream", href: "https://www.youtube.com/live/ow3RDIXTPXk", rgb: "255,238,60", external: true,
-    popup: true, popupEmbed: "https://www.youtube.com/embed/ow3RDIXTPXk?si=NgFK3XYpDQOLObrl&autoplay=1&mute=1&playsinline=1&enablejsapi=1" },  // SPA logo yellow
+    popup: true, popupEmbed: "https://www.youtube.com/embed/ow3RDIXTPXk?si=NgFK3XYpDQOLObrl&autoplay=1&mute=1&playsinline=1&enablejsapi=1&controls=0" },  // SPA logo yellow
   { label: "Feeling Fishy",    href: "/feeling-fishy",             rgb: "61,217,255", external: true },  // Feeling Fishy title glow — new tab too, so this hub page stays put as a home base
   { label: "Eats with Pete",   href: "https://eatswithpete.com",   rgb: "255,107,71", external: true },
 ];
@@ -430,6 +445,8 @@ const streamModal = document.getElementById("streamModal");
 const streamModalIframe = document.getElementById("streamModalIframe");
 const streamModalClose = document.getElementById("streamModalClose");
 const streamModalMute = document.getElementById("streamModalMute");
+const streamModalPlayPause = document.getElementById("streamModalPlayPause");
+const streamModalFullscreen = document.getElementById("streamModalFullscreen");
 let streamModalTrigger = null; // where focus returns to on close
 
 /* YouTube IFrame Player API — wraps the EXISTING iframe (its src
@@ -472,7 +489,10 @@ function wrapStreamIframe() {
     if (!streamModal.classList.contains("open")) return;
     ytPlayer = new YT.Player(streamModalIframe, {
       events: {
-        onStateChange: (e) => { streamPlayerDebug.state = e.data; },
+        onStateChange: (e) => {
+          streamPlayerDebug.state = e.data;
+          updatePlayPauseIcon();
+        },
         onError: (e) => { streamPlayerDebug.lastError = e.data; },
       },
     });
@@ -510,6 +530,38 @@ setInterval(() => {
   } catch (e) { /* not ready yet */ }
 }, 500);
 
+/* Play/pause toggle — replaces YouTube's own (controls=0 above). Icon
+   reflects the player's actual state (updated from onStateChange, not
+   just on click), so it stays correct if playback changes for some
+   other reason, e.g. buffering. */
+function updatePlayPauseIcon() {
+  const playing = streamPlayerDebug.state === 1 || streamPlayerDebug.state === 3; // PLAYING or BUFFERING
+  streamModalPlayPause.textContent = playing ? "⏸" : "▶";
+  const label = playing ? "Pause" : "Play";
+  streamModalPlayPause.title = label;
+  streamModalPlayPause.setAttribute("aria-label", label);
+}
+streamModalPlayPause.addEventListener("click", (e) => {
+  e.stopPropagation();
+  if (!ytPlayer) return;
+  if (streamPlayerDebug.state === 1 || streamPlayerDebug.state === 3) ytPlayer.pauseVideo();
+  else ytPlayer.playVideo();
+});
+
+/* Fullscreen — also replaces YouTube's own (controls=0 above).
+   Targets the iframe itself (not a wrapping div) so fullscreen shows
+   just the video, edge to edge. Support for fullscreening an
+   arbitrary element (rather than a <video> specifically) is a fairly
+   recent addition in Safari on iOS — falls back to silently doing
+   nothing on a version that doesn't have it, rather than erroring. */
+streamModalFullscreen.addEventListener("click", (e) => {
+  e.stopPropagation();
+  const request = streamModalIframe.requestFullscreen || streamModalIframe.webkitRequestFullscreen;
+  if (!request) return;
+  const result = request.call(streamModalIframe);
+  if (result && result.catch) result.catch(() => {});
+});
+
 // Fades the close button after a few idle seconds so it isn't
 // permanently sitting on top of the video — anything that happens on
 // the parent page (moving over the backdrop, a key press, hovering
@@ -543,6 +595,10 @@ streamModalClose.addEventListener("pointerenter", wakeClose);
 streamModalClose.addEventListener("pointerleave", scheduleCloseIdle);
 streamModalMute.addEventListener("pointerenter", wakeClose);
 streamModalMute.addEventListener("pointerleave", scheduleCloseIdle);
+streamModalPlayPause.addEventListener("pointerenter", wakeClose);
+streamModalPlayPause.addEventListener("pointerleave", scheduleCloseIdle);
+streamModalFullscreen.addEventListener("pointerenter", wakeClose);
+streamModalFullscreen.addEventListener("pointerleave", scheduleCloseIdle);
 
 function openStreamModal(embedSrc, trigger) {
   streamModalTrigger = trigger;
@@ -568,12 +624,16 @@ function closeStreamModal() {
   streamPlayerDebug.muted = null;
   streamPlayerDebug.volume = null;
   streamPlayerDebug.lastError = null;
-  // The src it'll get on next open starts muted again — reset this
-  // button to match rather than leaving it showing 🔊 from last time.
+  // The src it'll get on next open starts muted and playing again —
+  // reset these to match rather than leaving stale icons from last
+  // time.
   streamMuted = true;
   streamModalMute.textContent = "🔇";
   streamModalMute.title = "Unmute";
   streamModalMute.setAttribute("aria-label", "Unmute");
+  streamModalPlayPause.textContent = "⏸";
+  streamModalPlayPause.title = "Pause";
+  streamModalPlayPause.setAttribute("aria-label", "Pause");
   if (streamModalTrigger && streamModalTrigger.focus) streamModalTrigger.focus();
 }
 streamModalClose.addEventListener("click", closeStreamModal);
