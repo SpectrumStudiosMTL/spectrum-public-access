@@ -1,47 +1,60 @@
 #!/usr/bin/env python3
 """
-add_fish.py — the script GitHub Actions runs for every automated
-(PSD/Krita) fish submission.
+add_fish.py -- the script GitHub Actions runs for every automated
+fish submission (fired by the monday.com webhook).
 
 It expects these environment variables (set by the workflow from the
-monday.com webhook data):
+webhook data):
 
-    FISH_FILE_URL     — direct download URL for the submitted .psd
-    FISH_CREATOR      — the submitter's name, from the form field
-    FISH_CREATOR_EMAIL — the submitter's email, from the form field.
-                       Never written to index.html or any published
-                       file — only a short one-way hash of it is, as
-                       creatorId, so fish can be grouped by the real
-                       person who made them (two different people
-                       can share a display name) without publishing
-                       their address. The email itself belongs to
-                       monday.com's own submissions record, which is
-                       the system of record for grant reporting.
-    FISH_NAME         — (optional) the fish's own name, blank if not asked
-    FISH_BIO          — (optional) a short bio, blank if not asked
-    MONDAY_API_TOKEN  — needed because monday.com file URLs require
-                       this token in the request header to download
+    FISH_FILE_URL      -- direct download URL for the submitted file
+    FISH_CREATOR       -- the submitter's name, from the form field
+    FISH_CREATOR_EMAIL -- the submitter's email, from the form field.
+                        Never written to index.html or any published
+                        file -- only a short one-way hash of it is, as
+                        creatorId, so fish can be grouped by the real
+                        person who made them (two different people
+                        can share a display name) without publishing
+                        their address. The email itself belongs to
+                        monday.com's own submissions record, which is
+                        the system of record for grant reporting.
+    FISH_NAME          -- (optional) the fish's own name, blank if not asked
+    FISH_BIO           -- (optional) a short bio, blank if not asked
+    MONDAY_API_TOKEN   -- needed because monday.com file URLs require
+                        this token in the request header to download
 
-It does five things:
+Only submissions where the artwork can be isolated with certainty are
+handled automatically:
+    .psd                 -- the "your fish design" layer, composited
+    .png with real alpha -- used as-is, already isolated by whoever made it
+
+Everything else fails on purpose: a flat scan/photo, a .kra (Krita
+stores each layer's actual pixel data in its own undocumented tiled
+binary format -- there's no library for it the way psd-tools covers
+PSD, and this template's guide layers are visible at partial opacity,
+so even Krita's own flattened preview isn't clean), or a PNG/JPEG
+with no real transparency. That's the intended outcome, not a bug --
+it's the signal that a human needs to run add_fish_manual.py on this
+one instead of letting automation guess at an extraction it can't be
+sure of.
+
+It does four things:
     1. Downloads the submitted file
-    2. Extracts the "YOUR FISH DESIGN" layer (same logic proven
-       against the Kat test file)
+    2. Works out which of the two automatable cases it is and isolates
+       the artwork
     3. Crops + resizes it and saves it as the next fishN.webp
     4. Inserts a new EMBEDDED_IMAGES entry and FISH array entry into
        feeling-fishy/index.html
-    5. Leaves the changed files staged — the workflow opens a PR with
-       them instead of publishing straight away, so a human confirms
-       the extracted artwork looks right before it goes live
 
-If ANY step looks wrong (layer missing, empty, barely any content),
-it exits with a non-zero code and a clear message instead of
-guessing — the workflow treats that as "leave this one for manual
-review" rather than publishing something broken.
+Leaves the changed files staged -- the workflow opens a PR with them
+instead of publishing straight away, so a human confirms the
+extracted artwork looks right before it goes live.
+
+If ANY step looks wrong, it exits with a non-zero code and a clear
+message instead of guessing -- the workflow treats that as "leave
+this one for manual review" rather than publishing something broken.
 """
 
-import hashlib
 import os
-import re
 import sys
 from pathlib import Path
 
@@ -49,35 +62,14 @@ import requests
 from psd_tools import PSDImage
 from PIL import Image
 
-REPO_ROOT = Path(__file__).resolve().parents[1]
-SITE_DIR = REPO_ROOT / "feeling-fishy"
-INDEX_HTML = SITE_DIR / "index.html"
-FISH_DIR = SITE_DIR / "images" / "fish"
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from fish_pipeline import fail, has_real_transparency, normalize_artwork, write_fish
+
 TARGET_LAYER_NAME = "your fish design"
-MAX_DIM = 700
-
-# Same cyclic variety used for the original 72 fish, so new ones
-# don't all swim at an identical size/height.
-HEIGHTS = [28, 48, 20, 58, 38, 18, 32, 46, 60, 25, 40, 54, 22, 36, 50, 64]
-SIZES   = [150, 140, 150, 145, 130, 130, 140, 115, 135, 125, 130, 120, 140, 125, 130, 115]
-
-
-def fail(message, code=1):
-    print(f"::error::{message}")
-    sys.exit(code)
-
-
-# Groups a person's fish together (see creatorKey() in index.html)
-# without ever publishing their actual email address. Truncated to
-# 12 hex chars — plenty to avoid collisions for a project this size
-# while keeping the FISH array entries short.
-def creator_id_from_email(email):
-    normalized = email.strip().lower()
-    return hashlib.sha256(normalized.encode("utf-8")).hexdigest()[:12]
 
 
 def download_submission(url, token, dest):
-    # monday's asset public_url is a pre-signed link — it's already
+    # monday's asset public_url is a pre-signed link -- it's already
     # authenticated via the URL itself. Adding an Authorization header
     # on top of that can break the signature and cause an HTTP 400,
     # so this deliberately does NOT send one.
@@ -102,8 +94,8 @@ def find_target_layer(psd):
     return matches
 
 
-def extract_artwork(psd_path):
-    psd = PSDImage.open(psd_path)
+def extract_from_psd(path):
+    psd = PSDImage.open(path)
     matches = find_target_layer(psd)
     if not matches:
         fail(f'No layer named "{TARGET_LAYER_NAME}" found. '
@@ -112,61 +104,32 @@ def extract_artwork(psd_path):
     rendered = matches[0].composite()
     if rendered is None:
         fail("The fish layer has no decodable pixel data.")
-
-    rendered = rendered.convert("RGBA")
-    bbox = rendered.getbbox()
-    if bbox is None:
-        fail("The fish layer is fully transparent — nothing was drawn.")
-
-    cropped = rendered.crop(bbox)
-    opaque = sum(1 for p in cropped.getdata() if p[3] > 10)
-    total = cropped.width * cropped.height
-    if total == 0 or opaque / total < 0.01:
-        fail("Almost no visible content on the fish layer — needs a human look.")
-
-    w, h = cropped.size
-    scale = MAX_DIM / max(w, h)
-    if scale < 1:
-        cropped = cropped.resize((int(w * scale), int(h * scale)), Image.LANCZOS)
-
-    return cropped
+    return rendered.convert("RGBA")
 
 
-def next_fish_number():
-    content = INDEX_HTML.read_text(encoding="utf-8")
-    numbers = [int(n) for n in re.findall(r"EMBEDDED_IMAGES\.fish(\d+)", content)]
-    if not numbers:
-        fail("Couldn't find any existing fish entries to number from — "
-             "index.html may have moved or changed structure.")
-    return max(numbers) + 1
+def extract_from_flat_image(path, suffix):
+    if suffix in (".jpg", ".jpeg"):
+        fail("JPEGs can't carry transparency, so there's no reliable way to "
+             "separate the fish from its background automatically. Cut it "
+             "out by hand and run it through add_fish_manual.py instead.")
+
+    image = Image.open(path)
+    if not has_real_transparency(image):
+        fail("This PNG has no real transparency -- it looks like a flat scan "
+             "or photo, not pre-isolated artwork. Cut out the background by "
+             "hand and run it through add_fish_manual.py instead.")
+    return image.convert("RGBA")
 
 
-def add_embedded_image_entry(content, n):
-    marker = "  fish0: \"images/fish/fish0.webp\","
-    if marker not in content:
-        # fall back: insert right before the closing brace of EMBEDDED_IMAGES
-        idx = content.index("const EMBEDDED_IMAGES = {")
-        close = content.index("};", idx)
-        new_line = f'  fish{n}: "images/fish/fish{n}.webp",\n'
-        return content[:close] + new_line + content[close:]
-    new_line = f'{marker}\n  fish{n}: "images/fish/fish{n}.webp",'
-    return content.replace(marker, new_line, 1)
-
-
-def add_fish_array_entry(content, n, creator, creator_id, name, bio):
-    h = HEIGHTS[n % len(HEIGHTS)]
-    s = SIZES[n % len(SIZES)]
-    creator_esc = creator.replace('"', '\\"')
-    name_esc = (name or "").replace('"', '\\"')
-    bio_esc = (bio or "").replace('"', '\\"')
-    new_entry = (
-        f'  {{ name: "{name_esc}", creator: "{creator_esc}", creatorId: "{creator_id}", bio: "{bio_esc}", '
-        f'image: EMBEDDED_IMAGES.fish{n}, sound: EMBEDDED_AUDIO.chime, '
-        f'height: {h}, size: {s} }},\n'
-    )
-    idx = content.index("const FISH = [")
-    close = content.index("\n];", idx) + 1  # right before "];"
-    return content[:close] + new_entry + content[close:]
+def extract_artwork(path, suffix):
+    if suffix == ".psd":
+        return extract_from_psd(path)
+    if suffix in (".png", ".jpg", ".jpeg"):
+        return extract_from_flat_image(path, suffix)
+    fail(f'Unrecognized or unsupported file type "{suffix}". Only .psd and '
+         f'transparent .png are handled automatically -- for .kra, export '
+         f'the "YOUR FISH DESIGN" layer alone as a transparent PNG from '
+         f'Krita, then run it through add_fish_manual.py.')
 
 
 def main():
@@ -178,26 +141,18 @@ def main():
     token = os.environ.get("MONDAY_API_TOKEN")
 
     if not file_url or not creator or not creator_email:
-        fail("Missing FISH_FILE_URL, FISH_CREATOR, or FISH_CREATOR_EMAIL — "
+        fail("Missing FISH_FILE_URL, FISH_CREATOR, or FISH_CREATOR_EMAIL -- "
              "check the workflow's client_payload mapping.")
 
-    tmp_path = Path("/tmp/submission.psd")
+    suffix = Path(file_url.split("?")[0]).suffix.lower()
+    tmp_path = Path(f"/tmp/submission{suffix}")
     download_submission(file_url, token, tmp_path)
 
-    artwork = extract_artwork(tmp_path)
+    artwork = extract_artwork(tmp_path, suffix)
+    normalized = normalize_artwork(artwork)
+    n = write_fish(normalized, creator, creator_email, name, bio)
 
-    n = next_fish_number()
-    FISH_DIR.mkdir(parents=True, exist_ok=True)
-    out_path = FISH_DIR / f"fish{n}.webp"
-    artwork.save(out_path, "WEBP", quality=82)
-
-    creator_id = creator_id_from_email(creator_email)
-    content = INDEX_HTML.read_text(encoding="utf-8")
-    content = add_embedded_image_entry(content, n)
-    content = add_fish_array_entry(content, n, creator, creator_id, name, bio)
-    INDEX_HTML.write_text(content, encoding="utf-8")
-
-    print(f"Added fish{n}.webp for {creator} — ready to commit.")
+    print(f"Added fish{n}.webp for {creator} -- ready to commit.")
 
 
 if __name__ == "__main__":
