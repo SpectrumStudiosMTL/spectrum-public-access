@@ -232,27 +232,29 @@ body.keyboard-nav .opt:focus{ outline:3px solid var(--cg-white); outline-offset:
 .stream-modal-frame iframe{
   position:absolute; inset:0; width:100%; height:100%; border:0; z-index:0;
 }
-/* Invisible layer over the whole video, only present at all while
-   the close button is faded. A cross-origin YouTube iframe swallows
-   every touch/mouse event that lands on it — the parent page can't
-   see ANY interaction with the video itself, on any device, so
-   there's no way to detect "the visitor is still watching" and wake
-   the button from here directly. This sits above the iframe instead:
-   the first tap/click while faded lands on this layer, revealing the
-   button, and then it steps aside so that same tap doesn't also
-   fumble a play/pause on the real video — same trade-off any native
-   player's own tap-to-reveal-controls makes.
-   display:none rather than pointer-events:none when not needed —
-   iOS Safari pauses video it considers occluded by overlapping
-   content, and merely disabling pointer-events on a full-coverage
-   div still leaves it painted/composited on top of the iframe, which
-   is enough to trigger that. Fully removing it from the render tree
-   whenever it isn't actively needed avoids the question entirely. */
+/* Invisible layer over the whole video, permanently intercepting
+   every tap/click there. It used to step aside (display:none) once
+   the corner buttons were revealed, so a tap could reach the real
+   YouTube iframe underneath — that was needed back when YouTube's
+   OWN controls (mute, play/pause, fullscreen) were still the way to
+   interact with the video. Now that controls=0 above replaces all of
+   that with the buttons in this frame, direct interaction with the
+   iframe is never actually needed — keeping this layer permanently
+   in the way means no tap ever reaches YouTube's own player at all,
+   which also stops its hover/tap-triggered title+channel overlay
+   from ever appearing (the whole reason this changed).
+   Trade-off worth knowing about: this reintroduces a permanently-
+   composited layer over the iframe, which was specifically avoided
+   before as a plausible (never fully confirmed) cause of audio
+   cutting out on iOS — Safari has been known to pause video it
+   considers occluded by overlapping content. If that resurfaces, the
+   custom play/mute buttons here can recover it immediately either
+   way, unlike before when YouTube's own controls were hard to reach
+   at all — worth keeping an eye on regardless. */
 .stream-modal-wake{
-  display:none;
+  display:block;
   position:absolute; inset:0; z-index:1;
 }
-.stream-modal.close-idle .stream-modal-wake{ display:block; }
 /* Sit inside the frame's own rounded corners rather than floating
    above it, so they're never clipped by a short viewport on mobile.
    Fade out after a few seconds idle (see the JS) so they don't sit
