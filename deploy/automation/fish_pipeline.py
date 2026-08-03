@@ -83,6 +83,21 @@ def next_fish_number():
     if not numbers:
         fail("Couldn't find any existing fish entries to number from -- "
              "index.html may have moved or changed structure.")
+
+    # Also check for files already sitting in images/fish/ that aren't
+    # referenced in index.html anymore (an old submission whose entry
+    # got removed but whose file didn't, for example). Numbering off
+    # of index.html alone can hand out an already-taken filename and
+    # silently overwrite it -- this happened for real with an orphaned
+    # fish72.webp from an old "Kat" test submission.
+    if FISH_DIR.exists():
+        existing_files = [
+            int(m.group(1))
+            for f in FISH_DIR.glob("fish*.webp")
+            if (m := re.match(r"fish(\d+)\.webp$", f.name))
+        ]
+        numbers += existing_files
+
     return max(numbers) + 1
 
 
