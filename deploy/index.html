@@ -257,9 +257,13 @@ body.keyboard-nav .opt:focus{ outline:3px solid var(--cg-white); outline-offset:
    above it, so it's never clipped by a short viewport on mobile.
    Fades out after a few seconds idle (see the JS) so it doesn't sit
    on top of the video the whole time it's open — same idea as a
-   video player's own auto-hiding controls. */
-.stream-modal-close{
-  position:absolute; top:10px; right:10px; z-index:2;
+   video player's own auto-hiding controls. Shared by the close
+   button (top-right) and the mute toggle (top-left, added after
+   YouTube's own in-player mute icon turned out to be unreachable at
+   this size on at least one real phone — this calls the wrapped
+   player directly instead of relying on it at all). */
+.stream-modal-close, .stream-modal-mute{
+  position:absolute; top:10px; z-index:2;
   width:36px; height:36px;
   border-radius:50%;
   border:2px solid var(--cg-white);
@@ -271,19 +275,23 @@ body.keyboard-nav .opt:focus{ outline:3px solid var(--cg-white); outline-offset:
   opacity:1;
   transition:opacity .3s ease;
 }
-.stream-modal-close:hover{ background:rgba(255,238,60,.2); }
-/* Same reasoning as .opt:focus above — this button is also focused
-   programmatically (on open), so it uses the same explicit signal
+.stream-modal-close{ right:10px; }
+.stream-modal-mute{ left:10px; }
+.stream-modal-close:hover, .stream-modal-mute:hover{ background:rgba(255,238,60,.2); }
+/* Same reasoning as .opt:focus above — these are also focused/
+   toggled programmatically, so they use the same explicit signal
    rather than :focus-visible. */
-.stream-modal-close:focus{ outline:none; }
-body.keyboard-nav .stream-modal-close:focus{ outline:3px solid var(--cg-white); outline-offset:3px; }
-/* Stays clickable/hoverable at full opacity 0 too (no pointer-events:
-   none) — it's a small, predictable corner target, and the wake
-   layer above sits below it (z-index 1 vs 2), so it never blocks the
-   button itself. */
-.stream-modal.close-idle .stream-modal-close{ opacity:0; }
+.stream-modal-close:focus, .stream-modal-mute:focus{ outline:none; }
+body.keyboard-nav .stream-modal-close:focus,
+body.keyboard-nav .stream-modal-mute:focus{ outline:3px solid var(--cg-white); outline-offset:3px; }
+/* Stay clickable/hoverable at full opacity 0 too (no pointer-events:
+   none) — they're small, predictable corner targets, and the wake
+   layer above sits below them (z-index 1 vs 2), so it never blocks
+   the buttons themselves. */
+.stream-modal.close-idle .stream-modal-close,
+.stream-modal.close-idle .stream-modal-mute{ opacity:0; }
 @media (prefers-reduced-motion: reduce){
-  .stream-modal-close{ transition:none; }
+  .stream-modal-close, .stream-modal-mute{ transition:none; }
 }
 </style>
 </head>
@@ -312,6 +320,7 @@ body.keyboard-nav .stream-modal-close:focus{ outline:3px solid var(--cg-white); 
         allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
         referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
       <div class="stream-modal-wake" id="streamModalWake"></div>
+      <button class="stream-modal-mute" id="streamModalMute" type="button" aria-label="Unmute">🔇</button>
       <button class="stream-modal-close" id="streamModalClose" type="button" aria-label="Close">&times;</button>
     </div>
   </div>
@@ -420,16 +429,17 @@ LINKS.forEach((link, i) => {
 const streamModal = document.getElementById("streamModal");
 const streamModalIframe = document.getElementById("streamModalIframe");
 const streamModalClose = document.getElementById("streamModalClose");
+const streamModalMute = document.getElementById("streamModalMute");
 let streamModalTrigger = null; // where focus returns to on close
 
 /* YouTube IFrame Player API — wraps the EXISTING iframe (its src
-   already has enablejsapi=1 baked in above) purely to get playback
-   state/error visibility. Doesn't create a different iframe or
-   change what src is used — the working si=... URL that fixed
-   Error 153 stays exactly as it was tested. Loaded proactively at
-   page load (not on first open) so YT.Player is already available
-   by the time the modal opens, rather than racing to load it after
-   autoplay has already started. */
+   already has enablejsapi=1 baked in above) to get playback state/
+   error visibility, and to drive the mute button below directly.
+   Doesn't create a different iframe or change what src is used — the
+   working si=... URL that fixed Error 153 stays exactly as it was
+   tested. Loaded proactively at page load (not on first open) so
+   YT.Player is already available by the time the modal opens, rather
+   than racing to load it after autoplay has already started. */
 const YT_STATE_LABELS = { "-1": "UNSTARTED", 0: "ENDED", 1: "PLAYING", 2: "PAUSED", 3: "BUFFERING", 5: "CUED" };
 let ytApiPromise = null;
 function loadYouTubeApi() {
@@ -455,7 +465,7 @@ let ytPlayer = null;
 // getVolume() throw if called at the wrong moment in the player's
 // lifecycle, and this is the one place already handling that.
 const streamPlayerDebug = { state: null, muted: null, volume: null, lastError: null };
-function wrapStreamIframeForDebug() {
+function wrapStreamIframe() {
   loadYouTubeApi().then(() => {
     // The modal may have been closed (iframe src cleared) before the
     // API finished loading — don't wrap a blank iframe.
@@ -468,6 +478,30 @@ function wrapStreamIframeForDebug() {
     });
   });
 }
+
+/* Mute toggle — the src above already starts muted (required for
+   autoplay to work at all on mobile), so visitors need a way to turn
+   sound on. YouTube's own in-player mute icon turned out to be
+   unreachable at this pop-up's small size on at least one real phone
+   (only reachable through fullscreen), so this drives the wrapped
+   player directly instead of depending on it. Tracks mute state in
+   plain JS rather than asking the player with isMuted() — that
+   throws if called before the player's truly ready, and this button
+   already knows its own state without needing to ask. */
+let streamMuted = true; // matches mute=1 in the src above
+function setStreamMuted(muted) {
+  if (!ytPlayer) return;
+  streamMuted = muted;
+  if (muted) ytPlayer.mute(); else ytPlayer.unMute();
+  streamModalMute.textContent = muted ? "🔇" : "🔊";
+  const label = muted ? "Unmute" : "Mute";
+  streamModalMute.title = label;
+  streamModalMute.setAttribute("aria-label", label);
+}
+streamModalMute.addEventListener("click", (e) => {
+  e.stopPropagation();
+  setStreamMuted(!streamMuted);
+});
 setInterval(() => {
   if (!ytPlayer || !ytPlayer.isMuted) return;
   try {
@@ -502,10 +536,13 @@ streamModal.addEventListener("pointermove", wakeClose);
 // layer — click only fires once the whole gesture has resolved.
 streamModal.addEventListener("click", wakeClose);
 streamModal.addEventListener("keydown", wakeClose);
-// Pauses the countdown while the cursor is resting directly on the
-// button, rather than letting it fade out from under the pointer.
+// Pauses the countdown while the cursor is resting directly on
+// either button, rather than letting it fade out from under the
+// pointer.
 streamModalClose.addEventListener("pointerenter", wakeClose);
 streamModalClose.addEventListener("pointerleave", scheduleCloseIdle);
+streamModalMute.addEventListener("pointerenter", wakeClose);
+streamModalMute.addEventListener("pointerleave", scheduleCloseIdle);
 
 function openStreamModal(embedSrc, trigger) {
   streamModalTrigger = trigger;
@@ -517,7 +554,7 @@ function openStreamModal(embedSrc, trigger) {
   streamModalIframe.src = embedSrc;
   streamModalClose.focus();
   wakeClose();
-  wrapStreamIframeForDebug();
+  wrapStreamIframe();
 }
 function closeStreamModal() {
   streamModal.classList.remove("open", "close-idle");
@@ -531,6 +568,12 @@ function closeStreamModal() {
   streamPlayerDebug.muted = null;
   streamPlayerDebug.volume = null;
   streamPlayerDebug.lastError = null;
+  // The src it'll get on next open starts muted again — reset this
+  // button to match rather than leaving it showing 🔊 from last time.
+  streamMuted = true;
+  streamModalMute.textContent = "🔇";
+  streamModalMute.title = "Unmute";
+  streamModalMute.setAttribute("aria-label", "Unmute");
   if (streamModalTrigger && streamModalTrigger.focus) streamModalTrigger.focus();
 }
 streamModalClose.addEventListener("click", closeStreamModal);
