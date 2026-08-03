@@ -455,6 +455,51 @@ document.querySelector(".stream-modal-backdrop").addEventListener("click", close
 window.addEventListener("keydown", (e) => {
   if (e.key === "Escape" && streamModal.classList.contains("open")) closeStreamModal();
 });
+
+/* ---------- DEBUG PANEL ----------
+   Only appears with ?debug=1 in the URL — a plain on-screen readout
+   of what "Watch the Stream" is actually computing on a device we
+   can't attach real devtools to, so a phone can just be photographed
+   instead of needing to describe what something looks like. Doesn't
+   cover the video's own mute/play state — that's cross-origin, not
+   readable from here without switching to YouTube's IFrame Player
+   API. Remove this whole block once the issues are tracked down. */
+if (new URLSearchParams(location.search).has("debug")) {
+  const panel = document.createElement("pre");
+  panel.style.cssText =
+    "position:fixed; inset:auto 0 0 0; z-index:9999; margin:0; " +
+    "max-height:45vh; overflow:auto; padding:10px; " +
+    "background:rgba(0,0,0,.92); color:#7fff7f; " +
+    "font:11px/1.5 monospace; white-space:pre-wrap; pointer-events:none;";
+  document.body.appendChild(panel);
+  const watchBtn = optionsNav.children[0];
+  function updateDebugPanel() {
+    const cs = getComputedStyle(watchBtn);
+    const lines = [
+      "bodyClass: " + JSON.stringify(document.body.className),
+      "--opt-rgb (inline): " + watchBtn.style.getPropertyValue("--opt-rgb"),
+      "--opt-rgb (computed): " + cs.getPropertyValue("--opt-rgb"),
+      "color: " + cs.color,
+      "borderColor: " + cs.borderColor,
+      "opacity: " + cs.opacity,
+      "outline: " + cs.outline,
+      "outlineColor: " + cs.outlineColor,
+      "filter: " + cs.filter,
+      "mixBlendMode: " + cs.mixBlendMode,
+      "textShadow: " + cs.textShadow,
+      "animationName: " + cs.animationName,
+      "animationPlayState: " + cs.animationPlayState,
+      "tapHighlightColor: " + cs.webkitTapHighlightColor,
+      "streamModal.open: " + streamModal.classList.contains("open"),
+      "streamModal.close-idle: " + streamModal.classList.contains("close-idle"),
+      "iframe.src: " + (streamModalIframe.src || "(empty)"),
+      "document.hidden: " + document.hidden,
+    ];
+    panel.textContent = lines.join("\n");
+  }
+  updateDebugPanel();
+  setInterval(updateDebugPanel, 500);
+}
 </script>
 
 </body>
