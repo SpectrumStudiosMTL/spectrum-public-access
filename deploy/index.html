@@ -400,11 +400,19 @@ LINKS.forEach((link, i) => {
   // keyframe on Chrome for iOS — animationPlayState still reports
   // "running", but the value never advances to the final 100% stop,
   // leaving the button looking permanently dim. Rather than chase
-  // whatever causes that stall, just force the correct end state once
-  // the animation should be done, regardless of whether it actually
+  // whatever causes that stall, force the correct end state once the
+  // animation should be done, regardless of whether it actually
   // finished on its own.
+  // Killing the animation first is required, not optional — a still-
+  // "running" CSS animation outranks a plain inline style in the
+  // cascade, so just setting opacity here (an earlier attempt at this
+  // fix) was being silently overridden right back to the animation's
+  // stuck value the instant it ran.
   const ANIMATION_DURATION = 0.7;
-  setTimeout(() => { a.style.opacity = "1"; }, (delay + ANIMATION_DURATION) * 1000);
+  setTimeout(() => {
+    a.style.animation = "none";
+    a.style.opacity = "1";
+  }, (delay + ANIMATION_DURATION) * 1000);
 });
 
 /* ---------- STREAM POP-UP ---------- */
