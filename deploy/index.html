@@ -343,15 +343,16 @@ const LINKS = [
   // /embed/VIDEO_ID URLs without it hit YouTube's Error 153 for this
   // stream even with embedding allowed, but the official share link
   // works, so this matches that exactly rather than a param-stripped
-  // version of it. mute=1 + playsinline=1 are both there for mobile
-  // autoplay (same reason the background video elsewhere on this
-  // site is muted+playsinline) — visitors can unmute from the
-  // player's own speaker icon. Even with both set, some mobile
-  // browsers (iOS Low Power Mode in particular) still block it
-  // outright — YouTube's player falls back to its own tap-to-play
-  // thumbnail in that case, same as any other embedded video.
+  // version of it — don't drop or reorder these params without
+  // re-testing on a real phone. mute=1 + playsinline=1 are both there
+  // for mobile autoplay (same reason the background video elsewhere
+  // on this site is muted+playsinline) — visitors can unmute from
+  // the player's own speaker icon. enablejsapi=1 lets the JS below
+  // wrap this iframe with YouTube's IFrame Player API afterward, so
+  // we have some visibility into its actual playback/mute state —
+  // it doesn't change what loads or how autoplay behaves.
   { label: "Watch the Stream", href: "https://www.youtube.com/live/ow3RDIXTPXk", rgb: "255,238,60", external: true,
-    popup: true, popupEmbed: "https://www.youtube.com/embed/ow3RDIXTPXk?si=NgFK3XYpDQOLObrl&autoplay=1&mute=1&playsinline=1" },  // SPA logo yellow
+    popup: true, popupEmbed: "https://www.youtube.com/embed/ow3RDIXTPXk?si=NgFK3XYpDQOLObrl&autoplay=1&mute=1&playsinline=1&enablejsapi=1" },  // SPA logo yellow
   { label: "Feeling Fishy",    href: "/feeling-fishy",             rgb: "61,217,255", external: true },  // Feeling Fishy title glow — new tab too, so this hub page stays put as a home base
   { label: "Eats with Pete",   href: "https://eatswithpete.com",   rgb: "255,107,71", external: true },
 ];
@@ -421,6 +422,60 @@ const streamModalIframe = document.getElementById("streamModalIframe");
 const streamModalClose = document.getElementById("streamModalClose");
 let streamModalTrigger = null; // where focus returns to on close
 
+/* YouTube IFrame Player API — wraps the EXISTING iframe (its src
+   already has enablejsapi=1 baked in above) purely to get playback
+   state/error visibility. Doesn't create a different iframe or
+   change what src is used — the working si=... URL that fixed
+   Error 153 stays exactly as it was tested. Loaded proactively at
+   page load (not on first open) so YT.Player is already available
+   by the time the modal opens, rather than racing to load it after
+   autoplay has already started. */
+const YT_STATE_LABELS = { "-1": "UNSTARTED", 0: "ENDED", 1: "PLAYING", 2: "PAUSED", 3: "BUFFERING", 5: "CUED" };
+let ytApiPromise = null;
+function loadYouTubeApi() {
+  if (window.YT && window.YT.Player) return Promise.resolve();
+  if (ytApiPromise) return ytApiPromise;
+  ytApiPromise = new Promise((resolve) => {
+    const prevReady = window.onYouTubeIframeAPIReady;
+    window.onYouTubeIframeAPIReady = () => {
+      if (prevReady) prevReady();
+      resolve();
+    };
+    const script = document.createElement("script");
+    script.src = "https://www.youtube.com/iframe_api";
+    document.head.appendChild(script);
+  });
+  return ytApiPromise;
+}
+loadYouTubeApi();
+
+let ytPlayer = null;
+// Read by the debug panel further down — kept as a plain object
+// (rather than querying ytPlayer directly there) since isMuted()/
+// getVolume() throw if called at the wrong moment in the player's
+// lifecycle, and this is the one place already handling that.
+const streamPlayerDebug = { state: null, muted: null, volume: null, lastError: null };
+function wrapStreamIframeForDebug() {
+  loadYouTubeApi().then(() => {
+    // The modal may have been closed (iframe src cleared) before the
+    // API finished loading — don't wrap a blank iframe.
+    if (!streamModal.classList.contains("open")) return;
+    ytPlayer = new YT.Player(streamModalIframe, {
+      events: {
+        onStateChange: (e) => { streamPlayerDebug.state = e.data; },
+        onError: (e) => { streamPlayerDebug.lastError = e.data; },
+      },
+    });
+  });
+}
+setInterval(() => {
+  if (!ytPlayer || !ytPlayer.isMuted) return;
+  try {
+    streamPlayerDebug.muted = ytPlayer.isMuted();
+    streamPlayerDebug.volume = ytPlayer.getVolume();
+  } catch (e) { /* not ready yet */ }
+}, 500);
+
 // Fades the close button after a few idle seconds so it isn't
 // permanently sitting on top of the video — anything that happens on
 // the parent page (moving over the backdrop, a key press, hovering
@@ -462,11 +517,20 @@ function openStreamModal(embedSrc, trigger) {
   streamModalIframe.src = embedSrc;
   streamModalClose.focus();
   wakeClose();
+  wrapStreamIframeForDebug();
 }
 function closeStreamModal() {
   streamModal.classList.remove("open", "close-idle");
   clearTimeout(closeIdleTimer);
   streamModalIframe.src = ""; // stops playback rather than just hiding it
+  // The wrapped player's underlying iframe is gone now — drop the
+  // reference and reset its debug state rather than leaving stale
+  // values on screen, so the next open starts from a clean wrap.
+  ytPlayer = null;
+  streamPlayerDebug.state = null;
+  streamPlayerDebug.muted = null;
+  streamPlayerDebug.volume = null;
+  streamPlayerDebug.lastError = null;
   if (streamModalTrigger && streamModalTrigger.focus) streamModalTrigger.focus();
 }
 streamModalClose.addEventListener("click", closeStreamModal);
@@ -494,24 +558,22 @@ if (new URLSearchParams(location.search).has("debug")) {
   const watchBtn = optionsNav.children[0];
   function updateDebugPanel() {
     const cs = getComputedStyle(watchBtn);
+    const stateCode = streamPlayerDebug.state;
     const lines = [
-      "bodyClass: " + JSON.stringify(document.body.className),
-      "--opt-rgb (inline): " + watchBtn.style.getPropertyValue("--opt-rgb"),
-      "--opt-rgb (computed): " + cs.getPropertyValue("--opt-rgb"),
-      "color: " + cs.color,
-      "borderColor: " + cs.borderColor,
+      "-- Watch the Stream button --",
       "opacity: " + cs.opacity,
-      "outline: " + cs.outline,
-      "outlineColor: " + cs.outlineColor,
-      "filter: " + cs.filter,
-      "mixBlendMode: " + cs.mixBlendMode,
-      "textShadow: " + cs.textShadow,
       "animationName: " + cs.animationName,
-      "animationPlayState: " + cs.animationPlayState,
-      "tapHighlightColor: " + cs.webkitTapHighlightColor,
+      "bodyClass: " + JSON.stringify(document.body.className),
+      "",
+      "-- stream pop-up --",
       "streamModal.open: " + streamModal.classList.contains("open"),
       "streamModal.close-idle: " + streamModal.classList.contains("close-idle"),
       "iframe.src: " + (streamModalIframe.src || "(empty)"),
+      "ytPlayer wrapped: " + !!ytPlayer,
+      "player state: " + stateCode + (stateCode != null ? " (" + (YT_STATE_LABELS[stateCode] || "?") + ")" : ""),
+      "player muted: " + streamPlayerDebug.muted,
+      "player volume: " + streamPlayerDebug.volume,
+      "player lastError: " + streamPlayerDebug.lastError,
       "document.hidden: " + document.hidden,
     ];
     panel.textContent = lines.join("\n");
