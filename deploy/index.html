@@ -233,79 +233,52 @@ body.keyboard-nav .opt:focus{ outline:3px solid var(--cg-white); outline-offset:
   position:absolute; inset:0; width:100%; height:100%; border:0; z-index:0;
 }
 /* Invisible layer over the whole video, permanently intercepting
-   every tap/click there. It used to step aside (display:none) once
-   the corner buttons were revealed, so a tap could reach the real
-   YouTube iframe underneath — that was needed back when YouTube's
-   OWN controls (mute, play/pause, fullscreen) were still the way to
-   interact with the video. Now that controls=0 above replaces all of
-   that with the buttons in this frame, direct interaction with the
-   iframe is never actually needed — keeping this layer permanently
-   in the way means no tap ever reaches YouTube's own player at all,
-   which also stops its hover/tap-triggered title+channel overlay
-   from ever appearing (the whole reason this changed).
-   Trade-off worth knowing about: this reintroduces a permanently-
-   composited layer over the iframe, which was specifically avoided
-   before as a plausible (never fully confirmed) cause of audio
-   cutting out on iOS — Safari has been known to pause video it
-   considers occluded by overlapping content. If that resurfaces, the
-   custom play/mute buttons here can recover it immediately either
-   way, unlike before when YouTube's own controls were hard to reach
-   at all — worth keeping an eye on regardless. */
+   every tap/click there so none reach the real YouTube iframe
+   underneath — that's what keeps YouTube's own hover/tap-triggered
+   title+channel overlay from ever appearing, now that the buttons
+   below replace its controls entirely.
+   Worth knowing: iOS Safari has been known to pause video it
+   considers occluded by overlapping content — never confirmed as an
+   actual cause of anything here, but if playback ever stalls
+   unexpectedly, this permanently-composited layer is the first thing
+   worth ruling out. Recoverable either way through the play/mute
+   buttons below regardless. */
 .stream-modal-wake{
-  display:block;
   position:absolute; inset:0; z-index:1;
 }
-/* Sit inside the frame's own rounded corners rather than floating
-   above it, so they're never clipped by a short viewport on mobile.
-   Fade out after a few seconds idle (see the JS) so they don't sit
-   on top of the video the whole time it's open — same idea as a
-   video player's own auto-hiding controls. This whole set (mute,
-   play/pause, fullscreen) replaces YouTube's own controls entirely
-   (controls=0 on the src) — its native mute icon turned out to be
-   unreachable at this size on at least one real phone, and this is
-   the channel's own content on its own site, so there's no need for
-   YouTube's control bar/branding here at all; these call the wrapped
-   player directly instead. */
+/* One row below the frame instead of floating over the video — not
+   much screen to spare on a phone, so better spent on the video than
+   on buttons sitting over it. Replaces YouTube's own control bar
+   entirely (controls=0 on the src) — its native mute icon turned out
+   to be unreachable at this size on at least one real phone, and
+   this is the channel's own content on its own site, so there's no
+   need for YouTube's controls/branding here at all; these call the
+   wrapped player directly instead. */
+.stream-modal-controls{
+  display:flex; justify-content:center; gap:12px;
+  margin-top:14px;
+}
 .stream-modal-close, .stream-modal-mute, .stream-modal-playpause, .stream-modal-fullscreen{
-  position:absolute; z-index:2;
-  width:36px; height:36px;
+  width:40px; height:40px;
   border-radius:50%;
   border:2px solid var(--cg-white);
   background:rgba(5,6,9,.7);
   color:var(--cg-white);
-  font-size:22px; line-height:1;
+  font-size:20px; line-height:1;
   cursor:pointer;
   display:flex; align-items:center; justify-content:center;
-  opacity:1;
-  transition:opacity .3s ease;
 }
-.stream-modal-close{ top:10px; right:10px; }
-.stream-modal-mute{ top:10px; left:10px; }
-.stream-modal-playpause{ bottom:10px; left:10px; }
-.stream-modal-fullscreen{ bottom:10px; right:10px; }
 .stream-modal-close:hover, .stream-modal-mute:hover,
 .stream-modal-playpause:hover, .stream-modal-fullscreen:hover{ background:rgba(255,238,60,.2); }
-/* Same reasoning as .opt:focus above — these are also focused/
-   toggled programmatically, so they use the same explicit signal
-   rather than :focus-visible. */
+/* Same reasoning as .opt:focus above — these are also toggled
+   programmatically, so they use the same explicit signal rather than
+   :focus-visible. */
 .stream-modal-close:focus, .stream-modal-mute:focus,
 .stream-modal-playpause:focus, .stream-modal-fullscreen:focus{ outline:none; }
 body.keyboard-nav .stream-modal-close:focus,
 body.keyboard-nav .stream-modal-mute:focus,
 body.keyboard-nav .stream-modal-playpause:focus,
 body.keyboard-nav .stream-modal-fullscreen:focus{ outline:3px solid var(--cg-white); outline-offset:3px; }
-/* Stay clickable/hoverable at full opacity 0 too (no pointer-events:
-   none) — they're small, predictable corner targets, and the wake
-   layer above sits below them (z-index 1 vs 2), so it never blocks
-   the buttons themselves. */
-.stream-modal.close-idle .stream-modal-close,
-.stream-modal.close-idle .stream-modal-mute,
-.stream-modal.close-idle .stream-modal-playpause,
-.stream-modal.close-idle .stream-modal-fullscreen{ opacity:0; }
-@media (prefers-reduced-motion: reduce){
-  .stream-modal-close, .stream-modal-mute,
-  .stream-modal-playpause, .stream-modal-fullscreen{ transition:none; }
-}
 </style>
 </head>
 <body>
@@ -333,10 +306,12 @@ body.keyboard-nav .stream-modal-fullscreen:focus{ outline:3px solid var(--cg-whi
         allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
         referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
       <div class="stream-modal-wake" id="streamModalWake"></div>
+    </div>
+    <div class="stream-modal-controls">
       <button class="stream-modal-mute" id="streamModalMute" type="button" aria-label="Unmute">🔇</button>
-      <button class="stream-modal-close" id="streamModalClose" type="button" aria-label="Close">&times;</button>
       <button class="stream-modal-playpause" id="streamModalPlayPause" type="button" aria-label="Pause">⏸</button>
       <button class="stream-modal-fullscreen" id="streamModalFullscreen" type="button" aria-label="Fullscreen">⛶</button>
+      <button class="stream-modal-close" id="streamModalClose" type="button" aria-label="Close">&times;</button>
     </div>
   </div>
 </div>
@@ -564,44 +539,6 @@ streamModalFullscreen.addEventListener("click", (e) => {
   if (result && result.catch) result.catch(() => {});
 });
 
-// Fades the close button after a few idle seconds so it isn't
-// permanently sitting on top of the video — anything that happens on
-// the parent page (moving over the backdrop, a key press, hovering
-// the button itself, or a tap/click on the wake layer covering the
-// video — see .stream-modal-wake in the CSS) brings it back. There's
-// no way to detect real activity on the video itself from here (it's
-// a cross-origin iframe), on any device — the wake layer works
-// around that by catching the interaction before it ever reaches the
-// iframe, rather than trying to detect one that already happened.
-let closeIdleTimer = null;
-function scheduleCloseIdle() {
-  clearTimeout(closeIdleTimer);
-  closeIdleTimer = setTimeout(() => streamModal.classList.add("close-idle"), 3000);
-}
-function wakeClose() {
-  streamModal.classList.remove("close-idle");
-  scheduleCloseIdle();
-}
-streamModal.addEventListener("pointermove", wakeClose);
-// click rather than pointerdown: flipping the wake layer's
-// pointer-events mid-gesture (between pointerdown and the click that
-// follows) risks the browser re-targeting that same tap's click at
-// the iframe underneath instead of consistently hitting the wake
-// layer — click only fires once the whole gesture has resolved.
-streamModal.addEventListener("click", wakeClose);
-streamModal.addEventListener("keydown", wakeClose);
-// Pauses the countdown while the cursor is resting directly on
-// either button, rather than letting it fade out from under the
-// pointer.
-streamModalClose.addEventListener("pointerenter", wakeClose);
-streamModalClose.addEventListener("pointerleave", scheduleCloseIdle);
-streamModalMute.addEventListener("pointerenter", wakeClose);
-streamModalMute.addEventListener("pointerleave", scheduleCloseIdle);
-streamModalPlayPause.addEventListener("pointerenter", wakeClose);
-streamModalPlayPause.addEventListener("pointerleave", scheduleCloseIdle);
-streamModalFullscreen.addEventListener("pointerenter", wakeClose);
-streamModalFullscreen.addEventListener("pointerleave", scheduleCloseIdle);
-
 function openStreamModal(embedSrc, trigger) {
   streamModalTrigger = trigger;
   // Show the modal BEFORE pointing the iframe at YouTube — assigning
@@ -611,12 +548,10 @@ function openStreamModal(embedSrc, trigger) {
   streamModal.classList.add("open");
   streamModalIframe.src = embedSrc;
   streamModalClose.focus();
-  wakeClose();
   wrapStreamIframe();
 }
 function closeStreamModal() {
-  streamModal.classList.remove("open", "close-idle");
-  clearTimeout(closeIdleTimer);
+  streamModal.classList.remove("open");
   streamModalIframe.src = ""; // stops playback rather than just hiding it
   // The wrapped player's underlying iframe is gone now — drop the
   // reference and reset its debug state rather than leaving stale
@@ -695,7 +630,6 @@ if (new URLSearchParams(location.search).has("debug")) {
       "",
       "-- stream pop-up --",
       "streamModal.open: " + streamModal.classList.contains("open"),
-      "streamModal.close-idle: " + streamModal.classList.contains("close-idle"),
       "iframe.src: " + (streamModalIframe.src || "(empty)"),
       "ytPlayer wrapped: " + !!ytPlayer,
       "player state: " + stateCode + (stateCode != null ? " (" + (YT_STATE_LABELS[stateCode] || "?") + ")" : ""),
