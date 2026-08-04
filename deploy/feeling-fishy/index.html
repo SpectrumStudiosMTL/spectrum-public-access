@@ -176,8 +176,8 @@ const SETTINGS = {
   // or logo art you have the rights to use.
   // Example: buttonInlays: { png: "images/inlay-print.png" },
   buttonInlays: {
-    download: null,   // "Download the fish template" button
-    submit: null,     // "Submit your fish" button
+    download: null,   // "TEMPLATE" button
+    submit: null,     // "SUBMIT" button
     png: EMBEDDED_IMAGES.inlayPng,      // "Ready to print" format button
     psd: null,                          // Photoshop format button
     krita: EMBEDDED_IMAGES.inlayKrita,  // Krita format button
@@ -238,9 +238,9 @@ const TEXT = {
     createNotePng: "Upload a PNG",
     createNotePaper: "Draw it on paper",
     createNote: "We have you covered.",
-    download: "Download the fish template",
-    draw: "Draw it yourself",
-    submit: "Submit your fish",
+    download: "TEMPLATE",
+    draw: "DRAW",
+    submit: "SUBMIT",
     downloadTitle: "Choose your template",
     asIs: "Ready to print (PNG)",
     psd: "Photoshop (PSD)",
@@ -297,9 +297,9 @@ const TEXT = {
     createNotePng: "Téléverse un PNG",
     createNotePaper: "Dessine-le sur papier",
     createNote: "On s'occupe de toi.",
-    download: "Télécharger le modèle de poisson",
-    draw: "Dessine-le toi-même",
-    submit: "Soumettre ton poisson",
+    download: "MODÈLE",
+    draw: "DESSINER",
+    submit: "SOUMETTRE",
     downloadTitle: "Choisis ton modèle",
     asIs: "Prêt à imprimer (PNG)",
     psd: "Photoshop (PSD)",
@@ -781,6 +781,17 @@ header p  { font-size: clamp(0.85rem, 2vw, 1rem); opacity: 0.9; }
   max-height: 55%;
   object-fit: contain;
   flex-shrink: 0;
+}
+/* Just the three top-level TEMPLATE/DRAW/SUBMIT buttons, in the same
+   neon blue as the "Feeling Fishy" title — not the template-format
+   picker's PNG/PSD/KRITA buttons, which keep the original yellow. */
+#createOverlay .card .option-btn .inlay { background: rgb(var(--title-glow)); }
+#createOverlay .card .option-btn {
+  box-shadow:
+    inset 2px 2px 0 rgba(255,255,255,0.12),
+    inset -2px -2px 0 rgba(0,0,0,0.6),
+    0 5px 0 rgba(0,0,0,0.4),
+    0 0 14px rgba(var(--title-glow), 0.3);
 }
 /* The clear plastic cover's sheen */
 .card .option-btn::after {
