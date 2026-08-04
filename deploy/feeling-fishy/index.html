@@ -472,6 +472,13 @@ const SCHOOL_SIZE = 25;
 </script>
 
 <style>
+/* Sixtyfour — the same fallback the main Spectrum Public Access site
+   uses for its logo-styled text (its actual "Alarm Clock" typeface
+   is local-only, no .ttf embedded, so this is what visitors really
+   see there). Used here for the info toggle to borrow that brand
+   voice for one small element rather than importing it site-wide. */
+@import url('https://fonts.googleapis.com/css2?family=Sixtyfour&display=swap');
+
 :root {
   --water-top:    #6ecfe0;
   --water-mid:    #1d7ea8;
@@ -809,14 +816,16 @@ header p  { font-size: clamp(0.85rem, 2vw, 1rem); opacity: 0.9; }
   align-items: center;
   gap: 6px;
   margin: 2px 0 0;
-  padding: 6px 14px;
+  padding: 7px 16px;
   border-radius: 999px;
   border: 1px solid rgba(255,255,255,0.32);
   background: rgba(255,255,255,0.08);
   color: var(--text);
-  font-family: var(--title-font);
-  font-size: 0.82rem;
-  font-weight: 600;
+  font-family: 'Sixtyfour', monospace;
+  font-size: 0.7rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  font-weight: 400;
   cursor: pointer;
   transition: background 0.15s ease;
 }
@@ -1626,7 +1635,7 @@ body.calm .school-arrow, body.calm .school-dots {
   <div class="card">
     <h2 id="createTitle"></h2>
     <button class="info-toggle" id="createInfoToggle" type="button" aria-expanded="false" aria-controls="createNotePanel">
-      <span aria-hidden="true">❓</span> <span id="createInfoToggleLabel"></span>
+      <span id="createInfoToggleLabel"></span>
     </button>
     <div class="info-panel" id="createNotePanel" aria-hidden="true">
       <p id="createNote"></p>
