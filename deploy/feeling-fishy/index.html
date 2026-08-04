@@ -176,8 +176,9 @@ const SETTINGS = {
   // or logo art you have the rights to use.
   // Example: buttonInlays: { png: "images/inlay-print.png" },
   buttonInlays: {
-    download: null,   // "TEMPLATE" button
-    submit: null,     // "SUBMIT" button
+    create: null,     // "DESIGN A FISH" button
+    download: null,   // "DRAW AT HOME" button
+    submit: null,     // "SUBMIT A FISH" button
     png: EMBEDDED_IMAGES.inlayPng,      // "Ready to print" format button
     psd: null,                          // Photoshop format button
     krita: EMBEDDED_IMAGES.inlayKrita,  // Krita format button
@@ -234,13 +235,17 @@ const TEXT = {
     prevOption: "Previous option",
     createTitle: "Add your fish to the tank!",
     createInfoToggle: "How does it work?",
-    createNoteDraw: "Draw it here",
-    createNotePng: "Upload a PNG",
-    createNotePaper: "Draw it on paper",
-    createNote: "We have you covered.",
-    download: "TEMPLATE",
-    draw: "DRAW",
-    submit: "SUBMIT",
+    optCreate: "DESIGN A FISH",
+    createChooseTitle: "How do you want to make it?",
+    download: "DRAW AT HOME",
+    draw: "DRAW HERE",
+    submit: "SUBMIT A FISH",
+    howItWorksTitle: "How does it work?",
+    walkMake: "Draw it right here, or download a template and make it your own way.",
+    walkSend: "Send it in — it only takes a minute.",
+    walkReview: "A real person checks every fish before it joins the tank.",
+    walkSwim: "Once it's approved, your fish swims for everyone to see!",
+    walkthroughPlaceholder: "Scene {n} of 4 — illustration coming soon",
     downloadTitle: "Choose your template",
     asIs: "Ready to print (PNG)",
     psd: "Photoshop (PSD)",
@@ -297,13 +302,17 @@ const TEXT = {
     prevOption: "Option précédente",
     createTitle: "Ajoute ton poisson à l'aquarium !",
     createInfoToggle: "Comment ça marche ?",
-    createNoteDraw: "Dessine-le ici",
-    createNotePng: "Téléverse un PNG",
-    createNotePaper: "Dessine-le sur papier",
-    createNote: "On s'occupe de toi.",
-    download: "MODÈLE",
-    draw: "DESSINER",
-    submit: "SOUMETTRE",
+    optCreate: "CONÇOIS UN POISSON",
+    createChooseTitle: "Comment veux-tu le fabriquer ?",
+    download: "DESSINE CHEZ TOI",
+    draw: "DESSINE ICI",
+    submit: "SOUMETS UN POISSON",
+    howItWorksTitle: "Comment ça marche ?",
+    walkMake: "Dessine-le ici, ou télécharge un modèle et fais-le à ta façon.",
+    walkSend: "Envoie-le — ça ne prend qu'une minute.",
+    walkReview: "Une vraie personne vérifie chaque poisson avant qu'il rejoigne l'aquarium.",
+    walkSwim: "Une fois approuvé, ton poisson nage pour que tout le monde le voie !",
+    walkthroughPlaceholder: "Scène {n} sur 4 — illustration à venir",
     downloadTitle: "Choisis ton modèle",
     asIs: "Prêt à imprimer (PNG)",
     psd: "Photoshop (PSD)",
@@ -790,16 +799,20 @@ header p  { font-size: clamp(0.85rem, 2vw, 1rem); opacity: 0.9; }
   object-fit: contain;
   flex-shrink: 0;
 }
-/* Just the three top-level TEMPLATE/DRAW/SUBMIT buttons, in the same
-   neon blue as the "Feeling Fishy" title — not the template-format
-   picker's PNG/PSD/KRITA buttons, which keep the original yellow.
-   Hovering (or focusing via keyboard) fades to that original yellow,
-   so the two brand colors trade places instead of a hard cut. */
-#createOverlay .card .option-btn .inlay {
+/* The top-level DESIGN A FISH/SUBMIT A FISH buttons and the
+   create-choose sub-menu's DRAW HERE/DRAW AT HOME buttons, in the
+   same neon blue as the "Feeling Fishy" title — not the
+   template-format picker's PNG/PSD/KRITA buttons, which keep the
+   original yellow. Hovering (or focusing via keyboard) fades to that
+   original yellow, so the two brand colors trade places instead of a
+   hard cut. */
+#createOverlay .card .option-btn .inlay,
+#createChooseOverlay .card .option-btn .inlay {
   background: rgb(var(--title-glow));
   transition: background 0.2s ease;
 }
-#createOverlay .card .option-btn {
+#createOverlay .card .option-btn,
+#createChooseOverlay .card .option-btn {
   box-shadow:
     inset 2px 2px 0 rgba(255,255,255,0.12),
     inset -2px -2px 0 rgba(0,0,0,0.6),
@@ -807,11 +820,15 @@ header p  { font-size: clamp(0.85rem, 2vw, 1rem); opacity: 0.9; }
     0 0 14px rgba(var(--title-glow), 0.3);
 }
 #createOverlay .card .option-btn:hover .inlay,
-#createOverlay .card .option-btn:focus-visible .inlay {
+#createOverlay .card .option-btn:focus-visible .inlay,
+#createChooseOverlay .card .option-btn:hover .inlay,
+#createChooseOverlay .card .option-btn:focus-visible .inlay {
   background: rgb(var(--logo-glow));
 }
 #createOverlay .card .option-btn:hover,
-#createOverlay .card .option-btn:focus-visible {
+#createOverlay .card .option-btn:focus-visible,
+#createChooseOverlay .card .option-btn:hover,
+#createChooseOverlay .card .option-btn:focus-visible {
   box-shadow:
     inset 2px 2px 0 rgba(255,255,255,0.12),
     inset -2px -2px 0 rgba(0,0,0,0.6),
@@ -922,7 +939,7 @@ header p  { font-size: clamp(0.85rem, 2vw, 1rem); opacity: 0.9; }
    touching .option-row itself, since that class is shared with
    layouts (like the mobile carousel) that already tune it on their
    own terms. */
-#createClose, #downloadBack { margin-top: 20px; }
+#createClose, #createChooseBack, #downloadBack { margin-top: 20px; }
 
 /* "Submit your fish" card — wider, to give the monday.com form
    room to breathe. The iframe scales with the card instead of
@@ -967,6 +984,98 @@ header p  { font-size: clamp(0.85rem, 2vw, 1rem); opacity: 0.9; }
 @media (max-width: 1050px) {
   .card.draw-card { overflow-y: auto; }
 }
+
+/* "How does it work?" walkthrough — sized close to the full viewport
+   like .draw-card, since a 4:5 illustration needs real room. Height
+   comes from the image's own aspect-ratio, capped by max-height so a
+   short viewport shrinks it instead of overflowing the card. */
+.card.walkthrough-card {
+  max-width: 96vw; width: min(480px, 92vw); max-height: 92vh;
+  padding: 20px 16px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.walkthrough {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+}
+.walkthrough .card-nav { background: rgba(255,255,255,0.12); color: var(--text); }
+.walkthrough .card-nav:hover { background: rgba(255,255,255,0.24); }
+.walkthrough-scene {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.walkthrough-image {
+  position: relative;
+  width: 100%;
+  max-width: 400px;
+  aspect-ratio: 4 / 5;
+  max-height: 60vh;
+  border-radius: 16px;
+  background: repeating-linear-gradient(
+    135deg,
+    rgba(255,255,255,0.06) 0px, rgba(255,255,255,0.06) 14px,
+    rgba(255,255,255,0.1) 14px, rgba(255,255,255,0.1) 28px
+  );
+  border: 2px dashed rgba(255,255,255,0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+.walkthrough-placeholder-label {
+  font-family: var(--title-font);
+  font-weight: 700;
+  font-size: 1rem;
+  text-align: center;
+  padding: 0 20px;
+  opacity: 0.75;
+}
+/* Real art, once dropped in at images/walkthrough/, covers the
+   placeholder entirely — the <img>'s onerror (see the HTML) keeps it
+   display:none until a file actually exists at that path. */
+.walkthrough-image img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.walkthrough-caption {
+  margin-top: 14px;
+  font-size: 1.05rem;
+  line-height: 1.5;
+  text-align: center;
+  max-width: 44ch;
+}
+/* #walkthroughDots reuses .option-dots' markup shape, but that
+   class's actual dot styling only exists inside the mobile carousel's
+   media query — the walkthrough needs it at every screen size, so
+   it's redefined here rather than widening that mobile-scoped rule
+   and risking touching the carousel it was built for. */
+#walkthroughDots {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin: 16px 0 4px;
+}
+#walkthroughDots button {
+  width: 10px; height: 10px; padding: 0; border: none; border-radius: 50%;
+  cursor: pointer;
+  background: rgba(255,255,255,0.35);
+}
+#walkthroughDots button.active {
+  background: rgb(var(--logo-glow));
+  box-shadow: 0 0 8px rgba(var(--logo-glow), 0.8);
+}
+#howItWorksBack { margin-top: 12px; }
 
 .iframe-wrap {
   width: 100%;
@@ -1620,7 +1729,7 @@ body.calm .school-arrow, body.calm .school-dots {
      desktop-only 20px added to Close/Back above would just stack an
      extra, uncounted-for gap on top of that tightly-tuned mobile
      spacing. */
-  #createClose, #downloadBack { margin-top: 0; }
+  #createClose, #createChooseBack, #downloadBack { margin-top: 0; }
   .option-carousel .option-btn {
     /* flex:0 0 auto overrides the base flex:1 (flex-basis:0%), which
        would otherwise stretch the lone visible button to fill the
@@ -1717,31 +1826,65 @@ body.calm .school-arrow, body.calm .school-dots {
   </div>
 </div>
 
-<!-- The "Create your fish" pop-up: download the template, draw it
-     right on the page, or submit a finished fish through the
-     monday.com form -->
+<!-- The "Create your fish" pop-up: two top-level intents -- make one
+     (draw here or download a template), or submit a finished one
+     through the monday.com form. -->
 <div class="card-overlay" id="createOverlay">
   <div class="card">
     <h2 id="createTitle"></h2>
-    <button class="info-toggle" id="createInfoToggle" type="button" aria-expanded="false" aria-controls="createNotePanel">
+    <button class="info-toggle" id="createInfoToggle" type="button" aria-expanded="false" aria-controls="howItWorksOverlay">
       <span id="createInfoToggleLabel"></span>
     </button>
-    <div class="info-panel" id="createNotePanel" aria-hidden="true">
-      <div class="info-box">
-        <ul class="info-list">
-          <li id="createNoteDraw"></li>
-          <li id="createNotePng"></li>
-          <li id="createNotePaper"></li>
-        </ul>
-        <p id="createNote"></p>
-      </div>
-    </div>
     <div class="option-row">
-      <a class="option-btn" id="optDownload" role="button" tabindex="0"><span class="inlay" id="optDownloadLabel"><span class="inlay-text"></span></span></a>
-      <a class="option-btn" id="optDraw" role="button" tabindex="0"><span class="inlay" id="optDrawLabel"><span class="inlay-text"></span></span></a>
+      <a class="option-btn" id="optCreate" role="button" tabindex="0"><span class="inlay" id="optCreateLabel"><span class="inlay-text"></span></span></a>
       <a class="option-btn" id="optSubmit" role="button" tabindex="0"><span class="inlay" id="optSubmitLabel"><span class="inlay-text"></span></span></a>
     </div>
     <button id="createClose" onclick="closeCreate()">Close</button>
+  </div>
+</div>
+
+<!-- "Create a fish" sub-menu: the two ways to actually make the
+     artwork -- draw it here, or download a template to work on
+     elsewhere. Splitting this out from the top-level menu means a
+     brand-new visitor sees two choices (create vs. submit) instead
+     of three, with the format question only appearing once they've
+     already decided they want to create. -->
+<div class="card-overlay" id="createChooseOverlay">
+  <div class="card">
+    <h2 id="createChooseTitle"></h2>
+    <div class="option-row">
+      <a class="option-btn" id="optDraw" role="button" tabindex="0"><span class="inlay" id="optDrawLabel"><span class="inlay-text"></span></span></a>
+      <a class="option-btn" id="optDownload" role="button" tabindex="0"><span class="inlay" id="optDownloadLabel"><span class="inlay-text"></span></span></a>
+    </div>
+    <button id="createChooseBack">Back</button>
+  </div>
+</div>
+
+<!-- "How does it work?" walkthrough: a 4-scene illustrated carousel
+     (Make / Send / Review / Swim), one template-fish character
+     throughout. Illustrations are dropped in as real files later --
+     images/walkthrough/{1-make,2-send,3-review,4-swim}.png -- each
+     <img> below fails silently (onerror hides it) until then, so the
+     CSS placeholder underneath shows in the meantime. Sized close to
+     the full viewport (see .walkthrough-card) rather than the
+     ~560-650px the other menu cards use, since a 4:5 illustration
+     needs real room to not feel cramped. -->
+<div class="card-overlay" id="howItWorksOverlay" role="dialog" aria-modal="true" aria-labelledby="howItWorksTitle">
+  <div class="card walkthrough-card">
+    <h2 id="howItWorksTitle"></h2>
+    <div class="walkthrough">
+      <button class="card-nav prev shown" id="walkthroughPrev" type="button" aria-label=""><span aria-hidden="true">‹</span></button>
+      <div class="walkthrough-scene">
+        <div class="walkthrough-image" id="walkthroughImage" data-scene="0">
+          <span class="walkthrough-placeholder-label" id="walkthroughPlaceholderLabel"></span>
+          <img id="walkthroughImg" alt="" onerror="this.style.display='none'">
+        </div>
+        <p class="walkthrough-caption" id="walkthroughCaption"></p>
+      </div>
+      <button class="card-nav next shown" id="walkthroughNext" type="button" aria-label=""><span aria-hidden="true">›</span></button>
+    </div>
+    <div class="option-dots" id="walkthroughDots"></div>
+    <button id="howItWorksBack">Back</button>
   </div>
 </div>
 
@@ -2388,24 +2531,61 @@ if (SETTINGS.music || hasAnySfx) {
 /* --- "Create your fish" button + pop-up ------------------------ */
 let createBtn = null;
 const createOverlay = document.getElementById("createOverlay");
+const createChooseOverlay = document.getElementById("createChooseOverlay");
+const howItWorksOverlay = document.getElementById("howItWorksOverlay");
 
-// The "how long does this take?" note starts collapsed — the heading
-// above it is already visually hidden on mobile to save space, so an
-// always-open paragraph here would undo that. Tap to reveal instead.
+// "How does it work?" opens the illustrated walkthrough overlay
+// (see the "How it works" walkthrough section further down) instead
+// of toggling an inline panel — a 4:5 illustration needs real room,
+// more than a collapsible strip in this card could ever give it.
 const createInfoToggle = document.getElementById("createInfoToggle");
-const createNotePanel = document.getElementById("createNotePanel");
-function collapseCreateInfo() {
-  createNotePanel.classList.remove("open");
-  createNotePanel.setAttribute("aria-hidden", "true");
-  createInfoToggle.setAttribute("aria-expanded", "false");
-}
 createInfoToggle.addEventListener("click", () => {
-  const open = createNotePanel.classList.toggle("open");
-  createNotePanel.setAttribute("aria-hidden", String(!open));
-  createInfoToggle.setAttribute("aria-expanded", String(open));
+  createOverlay.classList.remove("open");
+  resetWalkthrough();
+  howItWorksOverlay.classList.add("open");
+  focusOverlayHeading(howItWorksOverlay);
 });
 
-// On mobile, an option-row's three buttons page one at a time
+/* --- "How does it work?" walkthrough ---------------------------- */
+// One scene per real step (make / send / review / swim), the same
+// template-fish character throughout instead of a new mascot. Real
+// illustrations drop in later as images/walkthrough/<file> below —
+// until those files exist, each <img>'s onerror (see the HTML) hides
+// it and the CSS placeholder underneath shows a scene number instead
+// of a broken-image icon. Swapping in real art later is just adding
+// files at those paths -- no code changes needed.
+const WALKTHROUGH_SCENES = [
+  { file: "1-make.png", captionKey: "walkMake" },
+  { file: "2-send.png", captionKey: "walkSend" },
+  { file: "3-review.png", captionKey: "walkReview" },
+  { file: "4-swim.png", captionKey: "walkSwim" },
+];
+let walkthroughIndex = 0;
+const walkthroughImg = document.getElementById("walkthroughImg");
+const walkthroughCaption = document.getElementById("walkthroughCaption");
+const walkthroughPlaceholderLabel = document.getElementById("walkthroughPlaceholderLabel");
+const walkthroughDots = document.getElementById("walkthroughDots");
+WALKTHROUGH_SCENES.forEach((_, i) => {
+  const dot = document.createElement("button");
+  dot.type = "button";
+  dot.addEventListener("click", () => showWalkthroughScene(i));
+  walkthroughDots.appendChild(dot);
+});
+function showWalkthroughScene(i) {
+  walkthroughIndex = (i + WALKTHROUGH_SCENES.length) % WALKTHROUGH_SCENES.length;
+  const scene = WALKTHROUGH_SCENES[walkthroughIndex];
+  walkthroughImg.style.display = "block";   // undo any earlier onerror hide
+  walkthroughImg.src = "images/walkthrough/" + scene.file;
+  walkthroughCaption.textContent = TEXT[lang][scene.captionKey];
+  walkthroughPlaceholderLabel.textContent =
+    TEXT[lang].walkthroughPlaceholder.replace("{n}", walkthroughIndex + 1);
+  [...walkthroughDots.children].forEach((d, j) => d.classList.toggle("active", j === walkthroughIndex));
+}
+function resetWalkthrough() { showWalkthroughScene(0); }
+document.getElementById("walkthroughPrev").addEventListener("click", () => showWalkthroughScene(walkthroughIndex - 1));
+document.getElementById("walkthroughNext").addEventListener("click", () => showWalkthroughScene(walkthroughIndex + 1));
+
+// On mobile, an option-row's buttons page one at a time
 // instead of stacking (see buildOptionCarousel() below) — this jumps
 // it back to the first option whenever its menu is (re)opened, so it
 // never reopens sitting on whichever one was last viewed. A no-op
@@ -2434,14 +2614,22 @@ if (SETTINGS.templateUrl || SETTINGS.submitEmbedUrl) {
     e.stopPropagation();
     playPluck();
     resetOptionCarousel(createOverlay);
-    collapseCreateInfo();
     openOverlay(createOverlay, createBtn);
   });
   document.body.appendChild(createBtn);
 
+  // "Create a fish" opens the draw/download sub-menu
+  const optCreate = document.getElementById("optCreate");
+  const optSubmit = document.getElementById("optSubmit");
+  optCreate.addEventListener("click", () => {
+    createOverlay.classList.remove("open");
+    resetOptionCarousel(createChooseOverlay);
+    createChooseOverlay.classList.add("open");
+    focusOverlayHeading(createChooseOverlay);
+  });
+
   // Wire the options; hide any whose URL isn't set
   const optDownload = document.getElementById("optDownload");
-  const optSubmit = document.getElementById("optSubmit");
   const downloadOverlay = document.getElementById("downloadOverlay");
 
   // Same collapsed-by-default info panel as the create menu — see
@@ -2462,7 +2650,7 @@ if (SETTINGS.templateUrl || SETTINGS.submitEmbedUrl) {
   // "Download the fish template" opens the format submenu
   if (SETTINGS.templateUrl || SETTINGS.templatePsd || SETTINGS.templateKrita) {
     optDownload.addEventListener("click", () => {
-      createOverlay.classList.remove("open");
+      createChooseOverlay.classList.remove("open");
       resetOptionCarousel(downloadOverlay);
       collapseDownloadInfo();
       downloadOverlay.classList.add("open");
@@ -2498,7 +2686,7 @@ if (SETTINGS.templateUrl || SETTINGS.submitEmbedUrl) {
     return drawToolLoading;
   }
   optDraw.addEventListener("click", () => {
-    createOverlay.classList.remove("open");
+    createChooseOverlay.classList.remove("open");
     drawOverlay.classList.add("open");
     focusOverlayHeading(drawOverlay);
     // Third argument: what the draw tool's own "Submit My Fish"
@@ -2514,7 +2702,7 @@ if (SETTINGS.templateUrl || SETTINGS.submitEmbedUrl) {
   // page via JS, not to a real URL), so role="button" alone doesn't
   // grant them the native keyboard activation a real <button> gets —
   // Enter/Space need to be wired to trigger the same click handler.
-  [optDownload, optDraw, optSubmit].forEach((btn) => {
+  [optCreate, optDownload, optDraw, optSubmit].forEach((btn) => {
     btn.addEventListener("keydown", (e) => {
       if (e.key !== "Enter" && e.key !== " ") return;
       e.preventDefault();
@@ -2555,7 +2743,6 @@ if (SETTINGS.templateUrl || SETTINGS.submitEmbedUrl) {
   document.getElementById("submitBack").addEventListener("click", () => {
     submitOverlay.classList.remove("open");
     resetOptionCarousel(createOverlay);
-    collapseCreateInfo();
     createOverlay.classList.add("open");
     focusOverlayHeading(createOverlay);
   });
@@ -2565,13 +2752,13 @@ if (SETTINGS.templateUrl || SETTINGS.submitEmbedUrl) {
     if (lastFocused && lastFocused.focus) lastFocused.focus();
   });
 
-  // Back returns to the create menu; backdrop click closes fully
+  // Back returns to the create/download sub-menu, not the top level;
+  // backdrop click closes fully
   document.getElementById("drawBack").addEventListener("click", () => {
     drawOverlay.classList.remove("open");
-    resetOptionCarousel(createOverlay);
-    collapseCreateInfo();
-    createOverlay.classList.add("open");
-    focusOverlayHeading(createOverlay);
+    resetOptionCarousel(createChooseOverlay);
+    createChooseOverlay.classList.add("open");
+    focusOverlayHeading(createChooseOverlay);
   });
   drawOverlay.addEventListener("click", (e) => {
     if (e.target !== drawOverlay) return;
@@ -2592,13 +2779,12 @@ if (SETTINGS.templateUrl || SETTINGS.submitEmbedUrl) {
   if (SETTINGS.templateKrita) dlKrita.href = SETTINGS.templateKrita;
   else dlKrita.style.display = "none";
 
-  // Back returns to the create menu
+  // Back returns to the create/download sub-menu, not the top level
   document.getElementById("downloadBack").addEventListener("click", () => {
     downloadOverlay.classList.remove("open");
-    resetOptionCarousel(createOverlay);
-    collapseCreateInfo();
-    createOverlay.classList.add("open");
-    focusOverlayHeading(createOverlay);
+    resetOptionCarousel(createChooseOverlay);
+    createChooseOverlay.classList.add("open");
+    focusOverlayHeading(createChooseOverlay);
   });
   // Clicking the dark backdrop closes the submenu
   downloadOverlay.addEventListener("click", (e) => {
@@ -2607,11 +2793,36 @@ if (SETTINGS.templateUrl || SETTINGS.submitEmbedUrl) {
     if (lastFocused && lastFocused.focus) lastFocused.focus();
   });
 
+  // "Create a fish" sub-menu's own Back returns to the top level
+  document.getElementById("createChooseBack").addEventListener("click", () => {
+    createChooseOverlay.classList.remove("open");
+    resetOptionCarousel(createOverlay);
+    createOverlay.classList.add("open");
+    focusOverlayHeading(createOverlay);
+  });
+  createChooseOverlay.addEventListener("click", (e) => {
+    if (e.target !== createChooseOverlay) return;
+    createChooseOverlay.classList.remove("open");
+    if (lastFocused && lastFocused.focus) lastFocused.focus();
+  });
+
+  // Walkthrough's own Back returns to the top level
+  document.getElementById("howItWorksBack").addEventListener("click", () => {
+    howItWorksOverlay.classList.remove("open");
+    createOverlay.classList.add("open");
+    focusOverlayHeading(createOverlay);
+  });
+  howItWorksOverlay.addEventListener("click", (e) => {
+    if (e.target !== howItWorksOverlay) return;
+    howItWorksOverlay.classList.remove("open");
+    if (lastFocused && lastFocused.focus) lastFocused.focus();
+  });
+
   // Your inlay artwork: an <img> placed above the text label
   // inside each button's window (real alt text, not a CSS
   // background — keeps this accessible to screen readers).
   const inlayTargets = {
-    download: "optDownload", submit: "optSubmit",
+    create: "optCreate", download: "optDownload", submit: "optSubmit",
     png: "dlPng", psd: "dlPsd", krita: "dlKrita",
   };
   for (const [key, id] of Object.entries(inlayTargets)) {
@@ -2625,8 +2836,12 @@ if (SETTINGS.templateUrl || SETTINGS.submitEmbedUrl) {
   }
 
   // Every button in the menus plays the same click sound
-  [optDownload, optDraw, optSubmit, dlPng, dlPsd, dlKrita,
+  [optCreate, optDownload, optDraw, optSubmit, dlPng, dlPsd, dlKrita,
    document.getElementById("createClose"),
+   document.getElementById("createChooseBack"),
+   document.getElementById("howItWorksBack"),
+   document.getElementById("walkthroughPrev"),
+   document.getElementById("walkthroughNext"),
    document.getElementById("downloadBack"),
    document.getElementById("drawBack"),
    document.getElementById("submitBack")]
@@ -2684,6 +2899,7 @@ if (SETTINGS.templateUrl || SETTINGS.submitEmbedUrl) {
       row.showCarouselOption = show;
     }
     buildOptionCarousel(createOverlay);
+    buildOptionCarousel(createChooseOverlay);
     buildOptionCarousel(downloadOverlay);
   }
 }
@@ -3032,18 +3248,24 @@ function applyLanguage() {
   document.getElementById("cardBack").textContent = t.back;
   document.getElementById("createTitle").textContent = t.createTitle;
   document.getElementById("createInfoToggleLabel").textContent = t.createInfoToggle;
-  document.getElementById("createNoteDraw").textContent = t.createNoteDraw;
-  document.getElementById("createNotePng").textContent = t.createNotePng;
-  document.getElementById("createNotePaper").textContent = t.createNotePaper;
-  document.getElementById("createNote").textContent = t.createNote;
   // .inlay-text, not the .inlay span itself — an inlay icon (see
   // SETTINGS.buttonInlays) is an <img> PREPENDED into that same
   // .inlay span once at load, and setting .textContent directly on
   // it would wipe that img out (.textContent replaces ALL children)
   // every time the language toggles, not just overwrite the label.
-  setInlayText("optDownloadLabel", t.download);
-  setInlayText("optDrawLabel", t.draw);
+  setInlayText("optCreateLabel", t.optCreate);
   setInlayText("optSubmitLabel", t.submit);
+  document.getElementById("createChooseTitle").textContent = t.createChooseTitle;
+  setInlayText("optDrawLabel", t.draw);
+  setInlayText("optDownloadLabel", t.download);
+  document.getElementById("createChooseBack").textContent = t.goBack;
+  document.getElementById("howItWorksTitle").textContent = t.howItWorksTitle;
+  document.getElementById("howItWorksBack").textContent = t.goBack;
+  document.getElementById("walkthroughPrev").setAttribute("aria-label", t.prevOption);
+  document.getElementById("walkthroughNext").setAttribute("aria-label", t.nextOption);
+  // Re-render whichever scene is currently showing so its caption
+  // updates immediately if the language changes mid-walkthrough.
+  if (typeof showWalkthroughScene === "function") showWalkthroughScene(walkthroughIndex);
   document.getElementById("downloadTitle").textContent = t.downloadTitle;
   setInlayText("dlPngLabel", t.asIs);
   setInlayText("dlPsdLabel", t.psd);
