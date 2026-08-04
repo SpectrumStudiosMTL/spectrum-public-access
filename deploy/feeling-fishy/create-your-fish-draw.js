@@ -59,9 +59,6 @@
       clearLayer: "Clear layer",
       download: "Download PNG",
       submit: "Submit My Fish",
-      inputLabel: "Input:",
-      pressureLabel: "Pressure:",
-      activeLayerLabel: "Active layer:",
       tourBtnTitle: "How it works",
       tourSkip: "Skip tour",
       tourBack: "Back",
@@ -107,9 +104,6 @@
       clearLayer: "Effacer le calque",
       download: "T\u00e9l\u00e9charger le PNG",
       submit: "Soumettre mon poisson",
-      inputLabel: "Entr\u00e9e :",
-      pressureLabel: "Pression :",
-      activeLayerLabel: "Calque actif :",
       tourBtnTitle: "Comment \u00e7a marche",
       tourSkip: "Passer la visite",
       tourBack: "Retour",
@@ -202,11 +196,6 @@
               <button class="tool primary dyf-download-btn" type="button"></button>
               <button class="tool secondary dyf-submit-btn" type="button"></button>
             </div>
-          </div>
-          <div class="diagnostics">
-            <span class="dyf-input-diag"> <b class="dyf-input-val">\u2014</b></span>
-            <span class="dyf-pressure-diag"> <b class="dyf-pressure-val">\u2014</b><span class="pressure-bar"><span class="pressure-fill dyf-pressure-fill"></span></span></span>
-            <span class="dyf-activelayer-diag"> <b class="dyf-activelayer-val"></b></span>
           </div>
         </div>
         <div class="side-panel dyf-layer-sidebar">
@@ -317,7 +306,6 @@
       s.activeLayer = i;
       s.layers.forEach((l, idx) => { l.canvas.style.pointerEvents = (idx === s.activeLayer && !l.locked) ? "auto" : "none"; });
       s.layers.forEach((l, idx) => l.btn.classList.toggle("active", idx === s.activeLayer));
-      applyActiveLayerLabel();
     }
     s.setActiveLayer = setActiveLayer;
     setActiveLayer(s.activeLayer);
@@ -559,17 +547,6 @@
       updateThumb(s.activeLayer);
     });
 
-    const inputValEl = q(".dyf-input-val");
-    const pressureValEl = q(".dyf-pressure-val");
-    const pressureFillEl = q(".dyf-pressure-fill");
-    function updateDiagnostics(pointerType, pressure) {
-      if (pointerType) inputValEl.textContent = pointerType;
-      if (pressure !== undefined) {
-        pressureValEl.textContent = pressure.toFixed(2);
-        pressureFillEl.style.width = (pressure * 100) + "%";
-      }
-    }
-
     let drawing = false, activePointerId = null, lastX = 0, lastY = 0;
 
     function canvasPoint(e, canvas) {
@@ -588,7 +565,6 @@
         if (l.locked) return;
         if (activePointerId !== null) return;
         activePointerId = e.pointerId;
-        updateDiagnostics(e.pointerType, e.pressure);
         drawing = true;
         pushUndo();
         const ctx = s.layers[s.activeLayer].ctx;
@@ -609,7 +585,6 @@
         canvas.setPointerCapture(e.pointerId);
       });
       canvas.addEventListener("pointermove", (e) => {
-        updateDiagnostics(e.pointerType, e.pressure);
         if (!drawing || e.pointerId !== activePointerId) return;
         const ctx = s.layers[s.activeLayer].ctx;
         const p = canvasPoint(e, s.layers[s.activeLayer].canvas);
@@ -701,11 +676,6 @@
     });
     window.addEventListener("resize", () => { if (s.tourDim.classList.contains("open")) placeTourStep(); });
 
-    function applyActiveLayerLabel() {
-      const l = s.layers[s.activeLayer];
-      q(".dyf-activelayer-val").textContent = STRINGS[currentLang].layerNames[l.key];
-    }
-    s.applyActiveLayerLabel = applyActiveLayerLabel;
   }
 
   function applyStrings(lang) {
@@ -724,9 +694,6 @@
     q(".dyf-clear-btn").textContent = s.clearLayer;
     q(".dyf-download-btn").textContent = s.download;
     q(".dyf-submit-btn").textContent = s.submit;
-    q(".dyf-input-diag").childNodes[0].textContent = s.inputLabel + " ";
-    q(".dyf-pressure-diag").childNodes[0].textContent = s.pressureLabel + " ";
-    q(".dyf-activelayer-diag").childNodes[0].textContent = s.activeLayerLabel + " ";
     const tourBtn = q(".dyf-tour-btn");
     tourBtn.title = s.tourBtnTitle;
     tourBtn.setAttribute("aria-label", s.tourBtnTitle);
@@ -741,7 +708,6 @@
       });
       const lockTag = q(".dyf-lock-tag");
       if (lockTag) lockTag.textContent = s.locked;
-      state.applyActiveLayerLabel && state.applyActiveLayerLabel();
       state.updateFillCleanAvailability && state.updateFillCleanAvailability();
     }
     // If the tour is open mid-step, refresh its text and reposition

@@ -15,7 +15,6 @@
   --dyf-dim: #bcd6e6;
   --dyf-gold: #ffe14d;      /* SPA logo yellow / neon glow */
   --dyf-teal: #3fd8c4;
-  --dyf-pink: #ef6fa8;
   --dyf-bezel: #17191d;     /* dark machine plastic */
 
   position: relative;
@@ -172,14 +171,6 @@
 }
 .dyf-root label.small { font-size: 0.76rem; color: var(--dyf-dim); display: flex; align-items: center; gap: 6px; }
 .dyf-root input[type="range"] { width: 80px; }
-.dyf-root .diagnostics {
-  width: 100%; max-width: 900px; margin-top: 6px;
-  font-size: 0.72rem; color: var(--dyf-dim);
-  display: flex; gap: 20px; flex-wrap: wrap; justify-content: center;
-}
-.dyf-root .diagnostics b { color: var(--dyf-teal); }
-.dyf-root .pressure-bar { width: 70px; height: 6px; border-radius: 3px; background: rgba(255,255,255,0.15); overflow: hidden; display: inline-block; vertical-align: middle; margin-left: 5px; }
-.dyf-root .pressure-fill { height: 100%; background: var(--dyf-pink); width: 0%; transition: width 0.05s linear; }
 
 @media (max-width: 1050px) {
   .dyf-root { overflow: auto; }
@@ -236,6 +227,18 @@
     padding-bottom: 4px; /* keeps cards clear of the scrollbar */
   }
   .dyf-root .dyf-template-strip .pick-btn { flex: 0 0 128px; scroll-snap-align: start; }
+
+  /* Fish Template can't actually be drawn on (it's locked, purely a
+     reference guide), so it doesn't need to compete for space here —
+     hiding it leaves just the 2 editable layers. Desktop keeps all 3
+     visible since space isn't tight there. */
+  .dyf-root .dyf-layer-sidebar .pick-btn.locked { display: none; }
+
+  /* The shared 128px card width above is sized for the template
+     carousel — applied to layer cards too it left visible empty
+     padding around each thumbnail. Shrinking to fit its own content
+     instead of a fixed slot removes that wasted space. */
+  .dyf-root .dyf-layer-sidebar .pick-btn { flex: 0 0 auto; padding: 6px 10px; }
 }
 
 /* ==================================================================
