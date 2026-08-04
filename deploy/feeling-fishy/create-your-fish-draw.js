@@ -1,6 +1,11 @@
 /* ==================================================================
    CREATE YOUR FISH — draw-in-browser tool
-   Exposes window.FishDrawTool = { mount(container, lang), setLanguage(lang) }
+   Exposes window.FishDrawTool = {
+     mount(container, lang, onSubmit), setLanguage(lang)
+   }
+   onSubmit is called (no arguments) after "Submit My Fish" has
+   downloaded the flattened PNG — the host page decides what "submit"
+   actually means (e.g. switching to its own upload screen).
 
    Not loaded on page load — index.html only injects this file (and
    its stylesheet) the first time someone opens the "Draw it myself"
@@ -134,6 +139,7 @@
   let mounted = false;
   let currentLang = "en";
   let root = null;
+  let onSubmit = null; // host page's callback for "Submit My Fish", set via mount()
   const state = {}; // populated on mount: DOM refs, layers, tour, etc.
 
   function markup() {
@@ -473,13 +479,23 @@
       a.click();
     });
 
-    // SUBMIT — STUB. On the real site, the .psd/.kra route in the
-    // "Create your fish" pop-up submits through the monday.com form.
-    // Plan: wire this into that same automation, handing off the
-    // flattened PNG instead of asking for a manual download/upload.
+    // SUBMIT. There's no way to hand this canvas straight to the
+    // monday.com form -- it's a cross-origin iframe, and browsers
+    // don't let a script fill in someone else's file input for real
+    // (a legitimate security boundary, not a gap to work around).
+    // So this downloads the PNG exactly like "Download PNG" does,
+    // then asks the host page to switch straight to the submit
+    // screen -- no more hunting for a second menu to attach it in.
     submitBtn.addEventListener("click", () => {
-      flattenCanvas(); // TODO: pass this to the real submission endpoint once it exists
-      showToast(STRINGS[currentLang].submitStub, 6000);
+      const a = document.createElement("a");
+      a.download = "my-fish.png";
+      a.href = flattenCanvas().toDataURL("image/png");
+      a.click();
+      if (onSubmit) {
+        onSubmit();
+      } else {
+        showToast(STRINGS[currentLang].submitStub, 6000);
+      }
     });
 
     function pushUndo() {
@@ -683,8 +699,9 @@
     if (state.tourDim && state.tourDim.classList.contains("open")) state.placeTourStep();
   }
 
-  function mount(container, lang) {
+  function mount(container, lang, onSubmitCallback) {
     currentLang = lang || "en";
+    onSubmit = onSubmitCallback || null;
     if (mounted) { applyStrings(currentLang); return; }
     root = container;
     root.classList.add("dyf-root");

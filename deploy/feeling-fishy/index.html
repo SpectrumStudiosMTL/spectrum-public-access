@@ -232,6 +232,7 @@ const TEXT = {
     nextOption: "Next option",
     prevOption: "Previous option",
     createTitle: "Add your fish to the tank!",
+    createNote: "Draw it here or upload a PSD/PNG for the fastest review — usually within a day. A printed or scanned drawing needs a person to prep it by hand first, so that one takes a few extra days.",
     download: "Download the fish template",
     draw: "Draw it yourself",
     submit: "Submit your fish",
@@ -239,7 +240,7 @@ const TEXT = {
     asIs: "Ready to print (PNG)",
     psd: "Photoshop (PSD)",
     krita: "Krita (KRA)",
-    downloadNote: "💻 Submit a PSD or Krita file and your fish joins the tank right away. 🖨️ Submit a printed or scanned drawing and our team will add it by hand — that can take a few days.",
+    downloadNote: "💻 A PSD or transparent PNG usually joins the tank within a day. 🎨 Krita (.KRA) needs its fish layer exported as a PNG first — ask us if you're not sure how. 🖨️ A printed or scanned drawing is prepped by hand, which can take a few extra days.",
     goBack: "Back",
     close: "Close",
     by: "by",
@@ -262,6 +263,7 @@ const TEXT = {
     back: "Close",
     drawTitle: "Draw your fish",
     submitTitle: "Submit your fish",
+    submitNote: "Attach your fish file below — a name and email are all we need alongside it.",
     submitFrameTitle: "Feeling Fishy submission form",
     info: "About this project",
     infoTitle: "Feeling Fishy",
@@ -285,6 +287,7 @@ const TEXT = {
     nextOption: "Option suivante",
     prevOption: "Option précédente",
     createTitle: "Ajoute ton poisson à l'aquarium !",
+    createNote: "Dessine-le ici ou téléverse un PSD/PNG pour la revue la plus rapide — habituellement en une journée. Un dessin imprimé ou numérisé doit d'abord être préparé à la main par une personne, ce qui prend quelques jours de plus.",
     download: "Télécharger le modèle de poisson",
     draw: "Dessine-le toi-même",
     submit: "Soumettre ton poisson",
@@ -292,7 +295,7 @@ const TEXT = {
     asIs: "Prêt à imprimer (PNG)",
     psd: "Photoshop (PSD)",
     krita: "Krita (KRA)",
-    downloadNote: "💻 Soumets un fichier PSD ou Krita et ton poisson rejoint l'aquarium tout de suite. 🖨️ Soumets un dessin imprimé ou numérisé et notre équipe l'ajoutera à la main — ça peut prendre quelques jours.",
+    downloadNote: "💻 Un PSD ou un PNG transparent rejoint généralement l'aquarium en une journée. 🎨 Un fichier Krita (.KRA) doit d'abord avoir son calque exporté en PNG — demande-nous si tu n'es pas certain·e comment faire. 🖨️ Un dessin imprimé ou numérisé est préparé à la main, ce qui peut prendre quelques jours de plus.",
     goBack: "Retour",
     close: "Fermer",
     by: "par",
@@ -315,6 +318,7 @@ const TEXT = {
     back: "Fermer",
     drawTitle: "Dessine ton poisson",
     submitTitle: "Soumets ton poisson",
+    submitNote: "Joins ton fichier de poisson ci-dessous — un nom et un courriel suffisent en plus.",
     submitFrameTitle: "Formulaire de soumission Feeling Fishy",
     info: "À propos de ce projet",
     infoTitle: "Feeling Fishy",
@@ -1568,6 +1572,7 @@ body.calm .school-arrow, body.calm .school-dots {
 <div class="card-overlay" id="createOverlay">
   <div class="card">
     <h2 id="createTitle"></h2>
+    <p class="download-note" id="createNote"></p>
     <div class="option-row">
       <a class="option-btn" id="optDownload" role="button" tabindex="0"><span class="inlay" id="optDownloadLabel"><span class="inlay-text"></span></span></a>
       <a class="option-btn" id="optDraw" role="button" tabindex="0"><span class="inlay" id="optDrawLabel"><span class="inlay-text"></span></span></a>
@@ -1612,6 +1617,7 @@ body.calm .school-arrow, body.calm .school-dots {
 <div class="card-overlay" id="submitOverlay" role="dialog" aria-modal="true" aria-labelledby="submitTitle">
   <div class="card submit-card">
     <h2 id="submitTitle"></h2>
+    <p class="download-note" id="submitNote"></p>
     <div class="iframe-wrap">
       <iframe id="submitFrame"></iframe>
     </div>
@@ -2276,7 +2282,7 @@ if (SETTINGS.templateUrl || SETTINGS.submitEmbedUrl) {
       document.head.appendChild(css);
 
       const script = document.createElement("script");
-      script.src = "create-your-fish-draw.js?v=4";
+      script.src = "create-your-fish-draw.js?v=5";
       script.onload = resolve;
       script.onerror = reject;
       document.body.appendChild(script);
@@ -2287,7 +2293,13 @@ if (SETTINGS.templateUrl || SETTINGS.submitEmbedUrl) {
     createOverlay.classList.remove("open");
     drawOverlay.classList.add("open");
     focusOverlayHeading(drawOverlay);
-    loadDrawTool().then(() => window.FishDrawTool.mount(drawToolMount, lang));
+    // Third argument: what the draw tool's own "Submit My Fish"
+    // button calls after it downloads the PNG. It can't hand the
+    // file to the monday.com form directly (that's a cross-origin
+    // iframe — no script can fill in someone else's file input), so
+    // this just gets someone straight to the right screen to attach
+    // it themselves, instead of leaving them to hunt for it.
+    loadDrawTool().then(() => window.FishDrawTool.mount(drawToolMount, lang, () => openSubmitScreen(drawOverlay)));
   });
 
   // These three are <a> tags with no href (they navigate within the
@@ -2307,19 +2319,28 @@ if (SETTINGS.templateUrl || SETTINGS.submitEmbedUrl) {
   let submitFrameLoaded = false; // iframe.src reads back as a real URL even
                                   // when src="", so a plain boolean flag is
                                   // used here instead of checking .src itself
+  // Shared by the "Submit your fish" button and the draw tool's own
+  // "Submit My Fish" button, so there's exactly one way this screen
+  // ever opens.
+  function openSubmitScreen(fromOverlay) {
+    // No-op if this site was never given a real submission form (the
+    // draw tool's own "Submit My Fish" button can reach this even
+    // when SETTINGS.submitEmbedUrl isn't set, unlike the main
+    // "Submit your fish" option, which just hides itself below).
+    if (!SETTINGS.submitEmbedUrl) return;
+    // Only point the iframe at the real form the first time it's
+    // opened — no network request to monday.com until someone
+    // actually asks to submit a fish.
+    if (!submitFrameLoaded) {
+      submitFrame.src = SETTINGS.submitEmbedUrl;
+      submitFrameLoaded = true;
+    }
+    fromOverlay.classList.remove("open");
+    submitOverlay.classList.add("open");
+    focusOverlayHeading(submitOverlay);
+  }
   if (SETTINGS.submitEmbedUrl) {
-    optSubmit.addEventListener("click", () => {
-      // Only point the iframe at the real form the first time it's
-      // opened — no network request to monday.com until someone
-      // actually asks to submit a fish.
-      if (!submitFrameLoaded) {
-        submitFrame.src = SETTINGS.submitEmbedUrl;
-        submitFrameLoaded = true;
-      }
-      createOverlay.classList.remove("open");
-      submitOverlay.classList.add("open");
-      focusOverlayHeading(submitOverlay);
-    });
+    optSubmit.addEventListener("click", () => openSubmitScreen(createOverlay));
   } else optSubmit.style.display = "none";
 
   // Back returns to the create menu; backdrop click closes fully
@@ -2799,6 +2820,7 @@ function applyLanguage() {
   document.getElementById("tagline").textContent = t.tagline;
   document.getElementById("cardBack").textContent = t.back;
   document.getElementById("createTitle").textContent = t.createTitle;
+  document.getElementById("createNote").textContent = t.createNote;
   // .inlay-text, not the .inlay span itself — an inlay icon (see
   // SETTINGS.buttonInlays) is an <img> PREPENDED into that same
   // .inlay span once at load, and setting .textContent directly on
@@ -2817,6 +2839,7 @@ function applyLanguage() {
   document.getElementById("drawTitle").textContent = t.drawTitle;
   document.getElementById("drawBack").textContent = t.goBack;
   document.getElementById("submitTitle").textContent = t.submitTitle;
+  document.getElementById("submitNote").textContent = t.submitNote;
   document.getElementById("submitFrame").title = t.submitFrameTitle;
   document.getElementById("submitBack").textContent = t.goBack;
   // The draw tool loads its own strings lazily, only once someone has
