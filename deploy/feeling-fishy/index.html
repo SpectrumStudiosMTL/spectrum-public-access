@@ -233,7 +233,7 @@ const TEXT = {
     nextOption: "Next option",
     prevOption: "Previous option",
     createTitle: "Add your fish to the tank!",
-    createInfoToggle: "How long does this take?",
+    createInfoToggle: "How does it work?",
     createNote: "Draw it here or upload a PSD/PNG for the fastest review — usually within a day. A printed or scanned drawing needs a person to prep it by hand first, so that one takes a few extra days.",
     download: "Download the fish template",
     draw: "Draw it yourself",
@@ -289,7 +289,7 @@ const TEXT = {
     nextOption: "Option suivante",
     prevOption: "Option précédente",
     createTitle: "Ajoute ton poisson à l'aquarium !",
-    createInfoToggle: "Combien de temps ça prend ?",
+    createInfoToggle: "Comment ça marche ?",
     createNote: "Dessine-le ici ou téléverse un PSD/PNG pour la revue la plus rapide — habituellement en une journée. Un dessin imprimé ou numérisé doit d'abord être préparé à la main par une personne, ce qui prend quelques jours de plus.",
     download: "Télécharger le modèle de poisson",
     draw: "Dessine-le toi-même",
@@ -791,9 +791,19 @@ header p  { font-size: clamp(0.85rem, 2vw, 1rem); opacity: 0.9; }
     0 0 8px rgba(var(--logo-glow), 0.2);
 }
 .card button { font-family: var(--title-font); font-size: 1rem; }
-/* Collapsed by default so it costs nothing on mobile, where the
-   heading above it is already visually hidden to save space — tap
-   to reveal, rather than a paragraph everyone scrolls past. */
+/* The create menu's own heading is redundant with the "Create your
+   fish" button that opens it, so it's hidden here the same way
+   .draw-card's heading already is on mobile -- stays in the DOM (so
+   focusOverlayHeading() still has something to focus, and screen
+   readers still get a name for the dialog), just not shown. */
+#createOverlay .card > h2 {
+  position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+  overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0;
+}
+
+/* Collapsed by default so it costs nothing on mobile, and doesn't
+   just become a paragraph everyone scrolls past on desktop either —
+   tap to reveal instead. */
 .info-toggle {
   display: inline-flex;
   align-items: center;
@@ -1501,7 +1511,7 @@ body.calm .school-arrow, body.calm .school-dots {
      (same technique already used for .draw-card h2) so
      aria-labelledby still names the dialog for screen readers. */
   #createOverlay .card, #downloadOverlay .card { padding: 22px 18px; }
-  #createOverlay .card > h2, #downloadOverlay .card > h2 {
+  #downloadOverlay .card > h2 {
     position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
     overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0;
   }
@@ -1616,7 +1626,7 @@ body.calm .school-arrow, body.calm .school-dots {
   <div class="card">
     <h2 id="createTitle"></h2>
     <button class="info-toggle" id="createInfoToggle" type="button" aria-expanded="false" aria-controls="createNotePanel">
-      <span aria-hidden="true">⏱</span> <span id="createInfoToggleLabel"></span>
+      <span aria-hidden="true">❓</span> <span id="createInfoToggleLabel"></span>
     </button>
     <div class="info-panel" id="createNotePanel" aria-hidden="true">
       <p id="createNote"></p>
