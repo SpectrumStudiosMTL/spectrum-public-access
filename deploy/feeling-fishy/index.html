@@ -928,6 +928,21 @@ header p  { font-size: clamp(0.85rem, 2vw, 1rem); opacity: 0.9; }
    room to breathe. The iframe scales with the card instead of
    staying a fixed 650×500, so it still fits on a phone screen. */
 .card.submit-card { max-width: 700px; }
+/* The monday.com form already shows its own title inside the iframe
+   (can't be turned off on their end), so ours was pure duplication —
+   removed the same way #createOverlay's heading is: stays in the DOM
+   since aria-labelledby="submitTitle" on the dialog still needs it to
+   name the dialog for screen readers, just not shown, freeing up the
+   vertical space for the form itself. */
+.card.submit-card h2 {
+  position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+  overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0;
+}
+/* Same reasoning, one step further: no text at all on this screen
+   now, just the form and the Back button. Unlike the heading above,
+   this note isn't wired to anything screen readers need, so it's
+   simply hidden rather than kept in the DOM for accessibility. */
+.card.submit-card #submitNote { display: none; }
 
 /* "Draw it yourself" card — the draw tool needs real workspace, not
    just a couple of buttons, so this one is sized close to the full
