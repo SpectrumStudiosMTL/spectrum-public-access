@@ -1718,11 +1718,38 @@ body.calm .school-arrow, body.calm .school-dots {
      template" a phone has no spare room for — but stays in the DOM
      (same technique already used for .draw-card h2) so
      aria-labelledby still names the dialog for screen readers. */
-  #createOverlay .card, #downloadOverlay .card { padding: 22px 18px; }
-  #downloadOverlay .card > h2 {
+  /* Locked to the same size across all three screens (measured from
+     the tallest, createOverlay/downloadOverlay -- createChooseOverlay
+     has no info-toggle button, so its own content is naturally
+     shorter) rather than each auto-sizing to its own content, which
+     made the box visibly resize/jump when moving between them.
+     min-height, not height -- guarantees the floor without risking
+     clipping if a translation ever runs longer. Centered instead of
+     top-aligned so the shorter screen's content sits in the middle
+     of the extra room instead of leaving a visible gap at the bottom. */
+  #createOverlay .card, #createChooseOverlay .card, #downloadOverlay .card {
+    padding: 22px 18px;
+    min-height: 386px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    /* flex containers default align-items to stretch, which was
+       quietly forcing every direct child -- the info-toggle pill,
+       Close/Back -- to fill the full card width edge to edge instead
+       of sizing to its own content. center keeps them their natural
+       compact size. */
+    align-items: center;
+  }
+  #createChooseOverlay .card > h2, #downloadOverlay .card > h2 {
     position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
     overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0;
   }
+  /* The toggle and the carousel below it had no real gap between
+     them -- the toggle's own margin is just enough to clear the card
+     edge above it, and the carousel only carries a BOTTOM margin, so
+     there was nothing separating the two. Matches the ~26px gap
+     already used between the dots and the Close/Back button below. */
+  .info-toggle { margin-bottom: 26px; }
   .option-carousel {
     display: flex;
     align-items: center;
@@ -1748,6 +1775,13 @@ body.calm .school-arrow, body.calm .school-dots {
     aspect-ratio: 1 / 1;
   }
   .option-carousel .option-btn.carousel-hidden { display: none; }
+  /* nowrap so an over-long label (a font-fallback on some devices --
+     e.g. Baloo 2 failing to load and landing on the much wider Comic
+     Sans MS -- can push a two-word label like "DESIGN A FISH" past
+     one line) overflows measurably instead of silently wrapping,
+     which is what the shrink-to-fit JS in buildOptionCarousel()
+     measures against (same technique already used for #cardName). */
+  .option-carousel .inlay-text { white-space: nowrap; }
 
   /* One dot per option, echoing the school-dots pattern elsewhere on
      the page — the lit dot is the one currently shown. */
@@ -2938,6 +2972,22 @@ if (SETTINGS.templateUrl || SETTINGS.submitEmbedUrl) {
         index = (i + items.length) % items.length;
         items.forEach((el, j) => el.classList.toggle("carousel-hidden", j !== index));
         [...dots.children].forEach((d, j) => d.classList.toggle("active", j === index));
+        // Shrink an over-long label to fit one line rather than let it
+        // wrap — see the .inlay-text nowrap comment in the CSS for why
+        // this can happen even for labels that fit fine with the
+        // intended font. Re-measured on every show() (not just once)
+        // since resetOptionCarousel() can reuse a button whose label
+        // text changes with the language toggle.
+        const label = items[index].querySelector(".inlay-text");
+        if (label) {
+          label.style.fontSize = "";
+          const available = label.clientWidth;
+          const natural = label.scrollWidth;
+          if (natural > available && available > 0) {
+            const currentPx = parseFloat(getComputedStyle(label).fontSize);
+            label.style.fontSize = (currentPx * available / natural) + "px";
+          }
+        }
       }
       prevBtn.addEventListener("click", () => { playPluck(); show(index - 1); });
       nextBtn.addEventListener("click", () => { playPluck(); show(index + 1); });
