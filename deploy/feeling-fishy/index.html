@@ -245,7 +245,11 @@ const TEXT = {
     asIs: "Ready to print (PNG)",
     psd: "Photoshop (PSD)",
     krita: "Krita (KRA)",
-    downloadNote: "💻 A PSD or transparent PNG usually joins the tank within a day. 🎨 Krita (.KRA) needs its fish layer exported as a PNG first — ask us if you're not sure how. 🖨️ A printed or scanned drawing is prepped by hand, which can take a few extra days.",
+    downloadInfoToggle: "How does it work?",
+    downloadNoteFast: "PSD or PNG — fastest",
+    downloadNoteKrita: "Krita — export the layer first",
+    downloadNoteScan: "Printed or scanned — prepped by hand",
+    downloadNote: "We have you covered.",
     goBack: "Back",
     close: "Close",
     by: "by",
@@ -304,7 +308,11 @@ const TEXT = {
     asIs: "Prêt à imprimer (PNG)",
     psd: "Photoshop (PSD)",
     krita: "Krita (KRA)",
-    downloadNote: "💻 Un PSD ou un PNG transparent rejoint généralement l'aquarium en une journée. 🎨 Un fichier Krita (.KRA) doit d'abord avoir son calque exporté en PNG — demande-nous si tu n'es pas certain·e comment faire. 🖨️ Un dessin imprimé ou numérisé est préparé à la main, ce qui peut prendre quelques jours de plus.",
+    downloadInfoToggle: "Comment ça marche ?",
+    downloadNoteFast: "PSD ou PNG — le plus rapide",
+    downloadNoteKrita: "Krita — exporte d'abord le calque",
+    downloadNoteScan: "Imprimé ou numérisé — préparé à la main",
+    downloadNote: "On s'occupe de toi.",
     goBack: "Retour",
     close: "Fermer",
     by: "par",
@@ -784,14 +792,31 @@ header p  { font-size: clamp(0.85rem, 2vw, 1rem); opacity: 0.9; }
 }
 /* Just the three top-level TEMPLATE/DRAW/SUBMIT buttons, in the same
    neon blue as the "Feeling Fishy" title — not the template-format
-   picker's PNG/PSD/KRITA buttons, which keep the original yellow. */
-#createOverlay .card .option-btn .inlay { background: rgb(var(--title-glow)); }
+   picker's PNG/PSD/KRITA buttons, which keep the original yellow.
+   Hovering (or focusing via keyboard) fades to that original yellow,
+   so the two brand colors trade places instead of a hard cut. */
+#createOverlay .card .option-btn .inlay {
+  background: rgb(var(--title-glow));
+  transition: background 0.2s ease;
+}
 #createOverlay .card .option-btn {
   box-shadow:
     inset 2px 2px 0 rgba(255,255,255,0.12),
     inset -2px -2px 0 rgba(0,0,0,0.6),
     0 5px 0 rgba(0,0,0,0.4),
     0 0 14px rgba(var(--title-glow), 0.3);
+}
+#createOverlay .card .option-btn:hover .inlay,
+#createOverlay .card .option-btn:focus-visible .inlay {
+  background: rgb(var(--logo-glow));
+}
+#createOverlay .card .option-btn:hover,
+#createOverlay .card .option-btn:focus-visible {
+  box-shadow:
+    inset 2px 2px 0 rgba(255,255,255,0.12),
+    inset -2px -2px 0 rgba(0,0,0,0.6),
+    0 5px 0 rgba(0,0,0,0.4),
+    0 0 18px rgba(var(--logo-glow), 0.45);
 }
 /* The clear plastic cover's sheen */
 .card .option-btn::after {
@@ -889,6 +914,15 @@ header p  { font-size: clamp(0.85rem, 2vw, 1rem); opacity: 0.9; }
   opacity: 0.85;
   margin: 4px 0 20px;
 }
+
+/* The gap above the option row (from the info panel) and the gap
+   below it (to Close/Back) were two different values -- 20px above,
+   10px below -- purely because one came from .option-row's own
+   margin and the other from nothing. Matching it here rather than
+   touching .option-row itself, since that class is shared with
+   layouts (like the mobile carousel) that already tune it on their
+   own terms. */
+#createClose, #downloadBack { margin-top: 20px; }
 
 /* "Submit your fish" card — wider, to give the monday.com form
    room to breathe. The iframe scales with the card instead of
@@ -1566,6 +1600,12 @@ body.calm .school-arrow, body.calm .school-dots {
     margin: 0 0 22px;
   }
   .option-carousel .option-row { margin: 0; }
+  /* The carousel wrapper and dots already carry their own bottom
+     margins (see .option-carousel and .option-dots below) -- the
+     desktop-only 20px added to Close/Back above would just stack an
+     extra, uncounted-for gap on top of that tightly-tuned mobile
+     spacing. */
+  #createClose, #downloadBack { margin-top: 0; }
   .option-carousel .option-btn {
     /* flex:0 0 auto overrides the base flex:1 (flex-basis:0%), which
        would otherwise stretch the lone visible button to fill the
@@ -1694,12 +1734,24 @@ body.calm .school-arrow, body.calm .school-dots {
 <div class="card-overlay" id="downloadOverlay">
   <div class="card">
     <h2 id="downloadTitle"></h2>
+    <button class="info-toggle" id="downloadInfoToggle" type="button" aria-expanded="false" aria-controls="downloadNotePanel">
+      <span id="downloadInfoToggleLabel"></span>
+    </button>
+    <div class="info-panel" id="downloadNotePanel" aria-hidden="true">
+      <div class="info-box">
+        <ul class="info-list">
+          <li id="downloadNoteFast"></li>
+          <li id="downloadNoteKrita"></li>
+          <li id="downloadNoteScan"></li>
+        </ul>
+        <p id="downloadNote"></p>
+      </div>
+    </div>
     <div class="option-row">
       <a class="option-btn" id="dlPng"><span class="inlay" id="dlPngLabel"><span class="inlay-text"></span></span></a>
       <a class="option-btn" id="dlPsd" target="_blank" rel="noopener"><span class="inlay" id="dlPsdLabel"><span class="inlay-text"></span></span></a>
       <a class="option-btn" id="dlKrita" target="_blank" rel="noopener"><span class="inlay" id="dlKritaLabel"><span class="inlay-text"></span></span></a>
     </div>
-    <p class="download-note" id="downloadNote"></p>
     <button id="downloadBack">Back</button>
   </div>
 </div>
@@ -2377,11 +2429,27 @@ if (SETTINGS.templateUrl || SETTINGS.submitEmbedUrl) {
   const optSubmit = document.getElementById("optSubmit");
   const downloadOverlay = document.getElementById("downloadOverlay");
 
+  // Same collapsed-by-default info panel as the create menu — see
+  // collapseCreateInfo() above.
+  const downloadInfoToggle = document.getElementById("downloadInfoToggle");
+  const downloadNotePanel = document.getElementById("downloadNotePanel");
+  function collapseDownloadInfo() {
+    downloadNotePanel.classList.remove("open");
+    downloadNotePanel.setAttribute("aria-hidden", "true");
+    downloadInfoToggle.setAttribute("aria-expanded", "false");
+  }
+  downloadInfoToggle.addEventListener("click", () => {
+    const open = downloadNotePanel.classList.toggle("open");
+    downloadNotePanel.setAttribute("aria-hidden", String(!open));
+    downloadInfoToggle.setAttribute("aria-expanded", String(open));
+  });
+
   // "Download the fish template" opens the format submenu
   if (SETTINGS.templateUrl || SETTINGS.templatePsd || SETTINGS.templateKrita) {
     optDownload.addEventListener("click", () => {
       createOverlay.classList.remove("open");
       resetOptionCarousel(downloadOverlay);
+      collapseDownloadInfo();
       downloadOverlay.classList.add("open");
       focusOverlayHeading(downloadOverlay);
     });
@@ -2965,6 +3033,10 @@ function applyLanguage() {
   setInlayText("dlPngLabel", t.asIs);
   setInlayText("dlPsdLabel", t.psd);
   setInlayText("dlKritaLabel", t.krita);
+  document.getElementById("downloadInfoToggleLabel").textContent = t.downloadInfoToggle;
+  document.getElementById("downloadNoteFast").textContent = t.downloadNoteFast;
+  document.getElementById("downloadNoteKrita").textContent = t.downloadNoteKrita;
+  document.getElementById("downloadNoteScan").textContent = t.downloadNoteScan;
   document.getElementById("downloadNote").textContent = t.downloadNote;
   document.getElementById("downloadBack").textContent = t.goBack;
   document.getElementById("createClose").textContent = t.close;
