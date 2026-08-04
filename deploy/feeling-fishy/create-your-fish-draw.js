@@ -168,6 +168,7 @@
       <div class="workspace">
         <div class="side-panel dyf-template-sidebar">
           <span class="row-label dyf-template-label"></span>
+          <div class="pick-strip dyf-template-strip"></div>
         </div>
         <div class="center-column">
           <div class="stage dyf-stage">
@@ -252,6 +253,7 @@
     s.activeTemplate = null;
 
     s.templateSidebar = q(".dyf-template-sidebar");
+    s.templateStrip = q(".dyf-template-strip");
     s.layerSidebar = q(".dyf-layer-sidebar");
 
     function loadImg(src) {
@@ -360,7 +362,7 @@
       btn.appendChild(thumb);
       btn.appendChild(label);
       btn.addEventListener("click", () => chooseTemplate(t));
-      s.templateSidebar.appendChild(btn);
+      s.templateStrip.appendChild(btn);
       t.pickerBtn = btn;
       t.nameEl = label;
       if (t.blank) {

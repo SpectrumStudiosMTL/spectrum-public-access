@@ -64,6 +64,12 @@
   padding: 7px; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 5px;
   width: 100%;
 }
+/* Wraps just the template buttons (not their "TEMPLATE" label) so the
+   label can stay put while only this strip becomes a horizontally
+   scrollable carousel on mobile — see the media query below. On
+   desktop it just mirrors .side-panel's own column stack, so nothing
+   changes there. */
+.dyf-root .pick-strip { display: flex; flex-direction: column; gap: 8px; width: 100%; }
 .dyf-root .pick-btn.active { background: var(--dyf-teal); color: #04231c; border-color: var(--dyf-teal); }
 .dyf-root .pick-btn.locked { opacity: 0.55; cursor: not-allowed; }
 .dyf-root .pick-thumb {
@@ -177,7 +183,16 @@
 
 @media (max-width: 1050px) {
   .dyf-root { overflow: auto; }
-  .dyf-root .workspace { flex-direction: column; align-items: center; }
+  /* .workspace has no width rule, and under .dyf-root's
+     align-items:center it's not stretched — so it was sizing itself
+     to its own max-content width (the tool panel's row of buttons and
+     swatches laid out on one unwrapped line) instead of the actual
+     available space, then overflowing .dyf-root's real width and
+     relying on overflow:auto above to hide the consequences instead
+     of wrapping. Pinning it to 100% here gives the whole chain below
+     (.center-column, .stage, .panel, all already width:100%) an
+     unambiguous box to size against, so flex-wrap can do its job. */
+  .dyf-root .workspace { flex-direction: column; align-items: center; width: 100%; }
   .dyf-root .side-panel { flex-direction: row; flex-wrap: wrap; width: auto; justify-content: center; }
 
   /* .pick-btn's width:100% is sized for the desktop single-column
@@ -187,15 +202,40 @@
      fixed basis instead lets them actually wrap into a compact grid. */
   .dyf-root .pick-btn { width: auto; flex: 0 1 128px; }
 
-  /* Layers is the one panel people need mid-drawing (switching
-     between Base Color and Accent Colors is core to actually using
-     the tool), so it shouldn't sit behind the entire control panel
-     and diagnostics row. Reordered — not moved in the DOM, so
-     desktop's 3-column layout is untouched — to sit directly above
-     the canvas: Template -> Layers -> Canvas. */
-  .dyf-root .dyf-template-sidebar { order: 1; }
+  /* Canvas + its own tool panel lead on mobile — reordered (not moved
+     in the DOM, so desktop's 3-column layout is untouched) so people
+     land on the thing they actually came to do instead of scrolling
+     past pickers first. Layers follows right after since it's still
+     needed mid-drawing; Template (now a compact scrollable strip, see
+     below) comes last since it's normally a one-time pick. */
+  /* .stage and .panel both size themselves at width:100%, but
+     .center-column (their containing block) has no explicit width of
+     its own — under align-items:center that leaves the percentage
+     indefinite, and it was resolving against a wider ancestor than
+     the actual card, overflowing it. Pinning this to 100% here gives
+     both children an unambiguous box to size against. */
+  .dyf-root .center-column { width: 100%; order: 1; }
   .dyf-root .dyf-layer-sidebar { order: 2; }
-  .dyf-root .center-column { order: 3; }
+  .dyf-root .dyf-template-sidebar { order: 3; width: 100%; }
+
+  /* Matches the tool panel's own width instead of the desktop-tuned
+     vh-based cap, which left a lot of unused width on a narrow, tall
+     viewport. aspect-ratio still derives the height from that width,
+     so it just gets proportionally bigger too — not full-viewport
+     tall, since 900:620 is itself a wide ratio. */
+  .dyf-root .stage { width: 100%; max-width: 900px; }
+
+  /* Template becomes a horizontally-scrollable strip instead of a
+     wrapped grid, so the picker holds a fixed one-row height no
+     matter how many templates exist. Only .pick-strip scrolls — the
+     "TEMPLATE" label above it (a sibling, not a child) stays put. */
+  .dyf-root .dyf-template-strip {
+    flex-direction: row; flex-wrap: nowrap;
+    overflow-x: auto; -webkit-overflow-scrolling: touch;
+    scroll-snap-type: x proximity;
+    padding-bottom: 4px; /* keeps cards clear of the scrollbar */
+  }
+  .dyf-root .dyf-template-strip .pick-btn { flex: 0 0 128px; scroll-snap-align: start; }
 }
 
 /* ==================================================================
