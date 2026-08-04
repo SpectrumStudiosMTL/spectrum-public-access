@@ -1044,6 +1044,22 @@ header p  { font-size: clamp(0.85rem, 2vw, 1rem); opacity: 0.9; }
   flex-direction: column;
   align-items: center;
 }
+/* A real paper card instead of the striped "placeholder" look --
+   the diagonal stripes were built to read as "under construction,"
+   which stopped fitting the moment real linework had something to
+   sit on. Warm off-white base + a fractal-noise SVG filter for grain
+   (generated in-CSS, no image asset needed) reads as an intentional
+   sketchbook page, and doubles as a real frame for the
+   still-unfilled template-walkthrough scenes instead of just empty
+   space. The blue line art was already chosen for the dark-background
+   version and turned out to read like blue ink/pencil on paper here
+   too, so it didn't need recoloring for this swap.
+
+   Real photographed paper texture (images/paper-texture.webp),
+   swapped in for an earlier SVG fractal-noise version -- the real
+   photo reads more natural. Downsized from the original 3888x2592/
+   1MB source to a 900x900/35KB square, since the box only ever
+   displays it at ~400x500 CSS px. */
 .walkthrough-image {
   position: relative;
   width: 100%;
@@ -1051,12 +1067,12 @@ header p  { font-size: clamp(0.85rem, 2vw, 1rem); opacity: 0.9; }
   aspect-ratio: 4 / 5;
   max-height: 60vh;
   border-radius: 16px;
-  background: repeating-linear-gradient(
-    135deg,
-    rgba(255,255,255,0.06) 0px, rgba(255,255,255,0.06) 14px,
-    rgba(255,255,255,0.1) 14px, rgba(255,255,255,0.1) 28px
-  );
-  border: 2px dashed rgba(255,255,255,0.3);
+  background-color: #f3ecda;
+  background-image: url("images/paper-texture.webp");
+  background-size: cover;
+  background-position: center;
+  box-shadow: inset 0 0 40px rgba(120, 95, 55, 0.18), 0 6px 16px rgba(0,0,0,0.3);
+  border: 1px solid rgba(120, 95, 55, 0.35);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1068,11 +1084,14 @@ header p  { font-size: clamp(0.85rem, 2vw, 1rem); opacity: 0.9; }
   font-size: 1rem;
   text-align: center;
   padding: 0 20px;
-  opacity: 0.75;
+  color: #5a4a30;
+  opacity: 0.8;
 }
 /* Real art, once dropped in at images/walkthrough/, covers the
-   placeholder entirely — the <img>'s onerror (see the HTML) keeps it
-   display:none until a file actually exists at that path. */
+   placeholder entirely — its onload/onerror (see initWalkthrough() in
+   the JS) keeps it display:none until a file actually exists at that
+   path, so the "illustration coming soon" label doesn't show through
+   underneath once one does. */
 .walkthrough-image img {
   position: absolute;
   inset: 0;
@@ -1928,8 +1947,8 @@ body.calm .school-arrow, body.calm .school-dots {
 
 <!-- "How does it work?" walkthrough: a 4-scene illustrated carousel
      (Make / Send / Review / Swim), one template-fish character
-     throughout. Illustrations are dropped in as real files later --
-     images/walkthrough/{1-make,2-send,3-review,4-swim}.png -- each
+     throughout. Illustrations are dropped in as real files --
+     images/walkthrough/{1-make,2-send,3-review,4-swim}.webp -- each
      <img> below fails silently (onerror hides it) until then, so the
      CSS placeholder underneath shows in the meantime. Sized close to
      the full viewport (see .walkthrough-card) rather than the
@@ -1943,7 +1962,7 @@ body.calm .school-arrow, body.calm .school-dots {
       <div class="walkthrough-scene">
         <div class="walkthrough-image" id="walkthroughImage" data-scene="0">
           <span class="walkthrough-placeholder-label" id="walkthroughPlaceholderLabel"></span>
-          <img id="walkthroughImg" alt="" onerror="this.style.display='none'">
+          <img id="walkthroughImg" alt="">
         </div>
         <p class="walkthrough-caption" id="walkthroughCaption"></p>
       </div>
@@ -1984,7 +2003,7 @@ body.calm .school-arrow, body.calm .school-dots {
       <div class="walkthrough-scene">
         <div class="walkthrough-image" id="templateWalkthroughImage">
           <span class="walkthrough-placeholder-label" id="templateWalkthroughPlaceholderLabel"></span>
-          <img id="templateWalkthroughImg" alt="" onerror="this.style.display='none'">
+          <img id="templateWalkthroughImg" alt="">
         </div>
         <p class="walkthrough-caption" id="templateWalkthroughCaption"></p>
       </div>
@@ -2636,9 +2655,10 @@ createInfoToggle.addEventListener("click", () => {
    template-picker's own version — same carousel behavior, different
    element-id prefix and scene data. Real illustrations drop in later
    as images/walkthrough/<file> — until those files exist, each
-   <img>'s onerror (see the HTML) hides it and the CSS placeholder
-   underneath shows a scene number instead of a broken-image icon.
-   Swapping in real art later is just adding files at those paths, no
+   <img>'s onerror hides it and shows the placeholder label (a scene
+   number, "illustration coming soon") instead of a broken-image icon;
+   onload does the reverse the moment a real file is found. Swapping
+   in real art later is just adding files at those paths, no
    code changes needed. */
 function initWalkthrough(idPrefix, scenes) {
   let index = 0;
@@ -2655,7 +2675,14 @@ function initWalkthrough(idPrefix, scenes) {
   function show(i) {
     index = (i + scenes.length) % scenes.length;
     const scene = scenes[index];
-    img.style.display = "block";   // undo any earlier onerror hide
+    // The placeholder label is a true fallback now, not a permanent
+    // overlay -- shown only if the real image fails to load, hidden
+    // the moment it loads successfully, instead of sitting underneath
+    // (and showing through) real artwork once one exists.
+    placeholderLabel.style.display = "";
+    img.style.display = "none";
+    img.onload = () => { placeholderLabel.style.display = "none"; img.style.display = "block"; };
+    img.onerror = () => { placeholderLabel.style.display = ""; img.style.display = "none"; };
     img.src = "images/walkthrough/" + scene.file;
     caption.textContent = TEXT[lang][scene.captionKey];
     placeholderLabel.textContent = TEXT[lang].walkthroughPlaceholder
@@ -2670,20 +2697,20 @@ function initWalkthrough(idPrefix, scenes) {
 // One scene per real step (make / send / review / swim), the same
 // template-fish character throughout instead of a new mascot.
 const mainWalkthrough = initWalkthrough("walkthrough", [
-  { file: "1-make.png", captionKey: "walkMake" },
-  { file: "2-send.png", captionKey: "walkSend" },
-  { file: "3-review.png", captionKey: "walkReview" },
-  { file: "4-swim.png", captionKey: "walkSwim" },
+  { file: "1-make.webp", captionKey: "walkMake" },
+  { file: "2-send.webp", captionKey: "walkSend" },
+  { file: "3-review.webp", captionKey: "walkReview" },
+  { file: "4-swim.webp", captionKey: "walkSwim" },
 ]);
 
 // Template-specific: what to actually do with a template once it's
 // filled in (paper vs. digital), plus the file-size note -- the one
 // thing the general walkthrough above doesn't cover.
 const templateWalkthrough = initWalkthrough("templateWalkthrough", [
-  { file: "template-1-freedom.png", captionKey: "walkTemplateFreedom" },
-  { file: "template-2-paper.png", captionKey: "walkTemplatePaper" },
-  { file: "template-3-digital.png", captionKey: "walkTemplateDigital" },
-  { file: "template-4-size.png", captionKey: "walkTemplateSize" },
+  { file: "template-1-freedom.webp", captionKey: "walkTemplateFreedom" },
+  { file: "template-2-paper.webp", captionKey: "walkTemplatePaper" },
+  { file: "template-3-digital.webp", captionKey: "walkTemplateDigital" },
+  { file: "template-4-size.webp", captionKey: "walkTemplateSize" },
 ]);
 
 // On mobile, an option-row's buttons page one at a time
