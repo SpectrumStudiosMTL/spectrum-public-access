@@ -37,6 +37,8 @@
 const EMBEDDED_IMAGES = {
   inlayCreate: "images/inlay-create.webp",   // placeholder -- swap out later
   inlaySubmit: "images/inlay-submit.webp",   // placeholder -- swap out later
+  inlayDrawHere: "images/inlay-draw-here.webp",       // placeholder -- swap out later
+  inlayDrawAtHome: "images/inlay-draw-at-home.webp",  // placeholder -- swap out later
   inlayPng: "images/inlay-print.webp",
   inlayKrita: "images/inlay-krita.webp",
   logo: "images/logo-2.webp",
@@ -179,7 +181,8 @@ const SETTINGS = {
   // Example: buttonInlays: { png: "images/inlay-print.png" },
   buttonInlays: {
     create: EMBEDDED_IMAGES.inlayCreate,  // "DESIGN A FISH" button -- placeholder
-    download: null,   // "DRAW AT HOME" button
+    draw: EMBEDDED_IMAGES.inlayDrawHere,  // "DRAW HERE" button -- placeholder
+    download: EMBEDDED_IMAGES.inlayDrawAtHome,  // "DRAW AT HOME" button -- placeholder
     submit: EMBEDDED_IMAGES.inlaySubmit,  // "SUBMIT A FISH" button -- placeholder
     png: EMBEDDED_IMAGES.inlayPng,      // "Ready to print" format button
     psd: null,                          // Photoshop format button
@@ -817,7 +820,8 @@ header p  { font-size: clamp(0.85rem, 2vw, 1rem); opacity: 0.9; }
    different heights between the buttons. object-fit: contain still
    letterboxes each image within that fixed box at its correct
    proportions. */
-#createOverlay .card .option-btn .inlay img {
+#createOverlay .card .option-btn .inlay img,
+#createChooseOverlay .card .option-btn .inlay img {
   width: 100%;
   height: 90px;
   object-fit: contain;
@@ -2924,7 +2928,7 @@ if (SETTINGS.templateUrl || SETTINGS.submitEmbedUrl) {
   // inside each button's window (real alt text, not a CSS
   // background — keeps this accessible to screen readers).
   const inlayTargets = {
-    create: "optCreate", download: "optDownload", submit: "optSubmit",
+    create: "optCreate", draw: "optDraw", download: "optDownload", submit: "optSubmit",
     png: "dlPng", psd: "dlPsd", krita: "dlKrita",
   };
   for (const [key, id] of Object.entries(inlayTargets)) {
