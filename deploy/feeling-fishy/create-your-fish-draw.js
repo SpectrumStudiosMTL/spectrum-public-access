@@ -23,9 +23,10 @@
     { key: "shark", slug: "shark" },
     { key: "whale", slug: "whale" },
     { key: "stingray", slug: "stingray" },
-    { key: "octopus", slug: "octopus" },
+    { key: "blank", blank: true },
   ];
   TEMPLATES.forEach((t) => {
+    if (t.blank) return; // no art files to build paths for — see build()
     t.lineArt = ASSET_PATH + t.slug + "-lineart.png";
     t.autofillMask = ASSET_PATH + t.slug + "-autofill.png";
     t.cleanMask = ASSET_PATH + t.slug + "-clean.png";
@@ -44,7 +45,7 @@
       title: "Draw your fish",
       templateLabel: "Template",
       layersLabel: "Layers",
-      templateNames: { fish1: "Fish 1", shark: "Shark", whale: "Whale", stingray: "Stingray", octopus: "Octopus" },
+      templateNames: { fish1: "Fish", shark: "Shark", whale: "Whale", stingray: "Stingray", blank: "Open Canvas" },
       layerNames: { accentColors: "Accent Colors", baseColor: "Base Color", fishTemplate: "Fish Template" },
       locked: "locked",
       colorLabel: "Color",
@@ -67,10 +68,11 @@
       tourNext: "Next",
       tourDone: "Done",
       pickTemplateAlert: "Pick a template first.",
+      blankNoMask: "Not available on the open canvas — there's no outline to fill or clip to.",
       submitStub: "Your fish is ready! Automatic submission isn\u2019t connected yet \u2014 for now, please use \u201CDownload PNG\u201D and submit it through the existing form.",
       tourSteps: [
         { sel: ".dyf-template-sidebar", title: "1. Pick a template",
-          text: "Start here \u2014 choose a fish shape to draw on. This loads its outline onto the locked Fish Template layer." },
+          text: "Start here \u2014 choose a fish shape to draw on, or pick Open Canvas to start from scratch. This loads its outline (if any) onto the locked Fish Template layer." },
         { sel: ".dyf-stage", title: "2. Your canvas",
           text: "Draw directly on the template with a mouse, a finger, or a pressure-sensitive pen." },
         { sel: ".dyf-row-color", title: "3. Choose a color",
@@ -91,7 +93,7 @@
       title: "Dessine ton poisson",
       templateLabel: "Mod\u00e8le",
       layersLabel: "Calques",
-      templateNames: { fish1: "Poisson 1", shark: "Requin", whale: "Baleine", stingray: "Raie", octopus: "Pieuvre" },
+      templateNames: { fish1: "Poisson", shark: "Requin", whale: "Baleine", stingray: "Raie", blank: "Toile libre" },
       layerNames: { accentColors: "Couleurs d'accent", baseColor: "Couleur de base", fishTemplate: "Mod\u00e8le de poisson" },
       locked: "verrouill\u00e9",
       colorLabel: "Couleur",
@@ -114,10 +116,11 @@
       tourNext: "Suivant",
       tourDone: "Termin\u00e9",
       pickTemplateAlert: "Choisis d'abord un mod\u00e8le.",
+      blankNoMask: "Non disponible sur la toile libre \u2014 il n'y a pas de contour \u00e0 remplir ou \u00e0 d\u00e9couper.",
       submitStub: "Ton poisson est pr\u00eat\u00a0! La soumission automatique n'est pas encore branch\u00e9e \u2014 pour l'instant, utilise \u00ab\u00a0T\u00e9l\u00e9charger le PNG\u00a0\u00bb et soumets-le via le formulaire existant.",
       tourSteps: [
         { sel: ".dyf-template-sidebar", title: "1. Choisis un mod\u00e8le",
-          text: "Commence ici \u2014 choisis une forme de poisson sur laquelle dessiner. Son contour se place sur le calque verrouill\u00e9 Mod\u00e8le de poisson." },
+          text: "Commence ici \u2014 choisis une forme de poisson sur laquelle dessiner, ou choisis Toile libre pour repartir de z\u00e9ro. Son contour (le cas \u00e9ch\u00e9ant) se place sur le calque verrouill\u00e9 Mod\u00e8le de poisson." },
         { sel: ".dyf-stage", title: "2. Ta toile",
           text: "Dessine directement sur le mod\u00e8le avec une souris, un doigt, ou un stylet sensible \u00e0 la pression." },
         { sel: ".dyf-row-color", title: "3. Choisis une couleur",
@@ -258,6 +261,7 @@
       return img;
     }
     TEMPLATES.forEach((t) => {
+      if (t.blank) return; // nothing to preload — chooseTemplate() leaves the layer empty
       t.lineArtImg = loadImg(t.lineArt);
       t.autofillMaskImg = loadImg(t.autofillMask);
       t.cleanMaskImg = loadImg(t.cleanMask);
@@ -322,13 +326,28 @@
       const templateLayer = layerByCanvasZOrder("template");
       templateLayer.undoStack.push(templateLayer.ctx.getImageData(0, 0, W, H));
       templateLayer.ctx.clearRect(0, 0, W, H);
-      const p = imagePlacement(t.lineArtImg);
-      templateLayer.ctx.drawImage(t.lineArtImg, p.x, p.y, p.w, p.h);
+      if (!t.blank) {
+        const p = imagePlacement(t.lineArtImg);
+        templateLayer.ctx.drawImage(t.lineArtImg, p.x, p.y, p.w, p.h);
+      }
       updateThumb(s.layers.indexOf(templateLayer));
       [...s.templateSidebar.querySelectorAll(".pick-btn")].forEach((b) => b.classList.remove("active"));
       t.pickerBtn.classList.add("active");
+      updateFillCleanAvailability();
     }
     s.chooseTemplate = chooseTemplate;
+
+    // Auto-fill and Clean both depend on a body/outline mask that the
+    // open canvas doesn't have, so they're disabled (not just toast-
+    // blocked) whenever it's the active "template".
+    function updateFillCleanAvailability() {
+      const blank = !!(s.activeTemplate && s.activeTemplate.blank);
+      autofillBtn.disabled = blank;
+      cleanBtn.disabled = blank;
+      autofillBtn.title = blank ? STRINGS[currentLang].blankNoMask : "";
+      cleanBtn.title = blank ? STRINGS[currentLang].blankNoMask : "";
+    }
+    s.updateFillCleanAvailability = updateFillCleanAvailability;
 
     TEMPLATES.forEach((t) => {
       const btn = document.createElement("button");
@@ -344,6 +363,18 @@
       s.templateSidebar.appendChild(btn);
       t.pickerBtn = btn;
       t.nameEl = label;
+      if (t.blank) {
+        // No art to load — draw a plain dashed card so the option
+        // reads as "empty" rather than looking like a broken thumbnail.
+        const tctx = thumb.getContext("2d");
+        tctx.fillStyle = "#fff";
+        tctx.fillRect(0, 0, 180, 126);
+        tctx.strokeStyle = "#c9c9c9";
+        tctx.setLineDash([6, 5]);
+        tctx.lineWidth = 3;
+        tctx.strokeRect(10, 10, 160, 106);
+        return;
+      }
       t.lineArtImg.onload = () => {
         const tctx = thumb.getContext("2d");
         tctx.fillStyle = "#fff";
@@ -354,8 +385,10 @@
       };
     });
 
-    q(".dyf-autofill-btn").addEventListener("click", () => {
-      if (!s.activeTemplate) { showToast(STRINGS[currentLang].pickTemplateAlert); return; }
+    const autofillBtn = q(".dyf-autofill-btn");
+    const cleanBtn = q(".dyf-clean-btn");
+    autofillBtn.addEventListener("click", () => {
+      if (!s.activeTemplate || s.activeTemplate.blank) { showToast(STRINGS[currentLang].pickTemplateAlert); return; }
       const baseIdx = s.layers.findIndex((l) => l.id === "base");
       setActiveLayer(baseIdx);
       pushUndo();
@@ -372,8 +405,8 @@
       updateThumb(baseIdx);
     });
 
-    q(".dyf-clean-btn").addEventListener("click", () => {
-      if (!s.activeTemplate) { showToast(STRINGS[currentLang].pickTemplateAlert); return; }
+    cleanBtn.addEventListener("click", () => {
+      if (!s.activeTemplate || s.activeTemplate.blank) { showToast(STRINGS[currentLang].pickTemplateAlert); return; }
       const p = imagePlacement(s.activeTemplate.cleanMaskImg);
       ["base", "accent"].forEach((id) => {
         const idx = s.layers.findIndex((l) => l.id === id);
@@ -455,6 +488,20 @@
       s.brushCursor.style.display = "none";
     });
     sizeSlider.addEventListener("input", updateBrushCursorSize);
+
+    // Scroll-to-resize: lets a mouse/trackpad user change brush size
+    // without leaving the canvas to touch the slider. Wheel events
+    // only fire for mouse/trackpad input, so this never competes with
+    // touch drawing. preventDefault keeps the gesture from doing
+    // anything else (e.g. page scroll) while hovering the stage.
+    s.stage.addEventListener("wheel", (e) => {
+      e.preventDefault();
+      const step = 2;
+      const dir = e.deltaY < 0 ? 1 : -1;
+      const next = Math.min(40, Math.max(2, parseFloat(sizeSlider.value) + dir * step));
+      sizeSlider.value = next;
+      updateBrushCursorSize();
+    }, { passive: false });
 
     clearBtn.addEventListener("click", () => {
       const l = s.layers[s.activeLayer];
@@ -693,6 +740,7 @@
       const lockTag = q(".dyf-lock-tag");
       if (lockTag) lockTag.textContent = s.locked;
       state.applyActiveLayerLabel && state.applyActiveLayerLabel();
+      state.updateFillCleanAvailability && state.updateFillCleanAvailability();
     }
     // If the tour is open mid-step, refresh its text and reposition
     // for the new step titles/copy without resetting progress.

@@ -152,6 +152,8 @@
 }
 .dyf-root button.tool.active { background: var(--dyf-teal); color: #04231c; border-color: var(--dyf-teal); }
 .dyf-root button.tool:hover { border-color: #fff; }
+.dyf-root button.tool:disabled { opacity: 0.4; cursor: not-allowed; }
+.dyf-root button.tool:disabled:hover { border-color: rgba(255,255,255,0.15); }
 .dyf-root button.primary {
   font-family: 'Sixtyfour', monospace; text-transform: uppercase; letter-spacing: .06em; font-size: 0.78rem;
   background: var(--dyf-gold); color: #3a2e00; border: none; border-radius: 6px; padding: 8px 16px; cursor: pointer;
