@@ -245,16 +245,17 @@ const TEXT = {
     walkSend: "Send it in — it only takes a minute.",
     walkReview: "A real person checks every fish before it joins the tank.",
     walkSwim: "Once it's approved, your fish swims for everyone to see!",
-    walkthroughPlaceholder: "Scene {n} of 4 — illustration coming soon",
+    walkthroughPlaceholder: "Scene {n} of {total} — illustration coming soon",
     downloadTitle: "Choose your template",
     asIs: "Ready to print (PNG)",
     psd: "Photoshop (PSD)",
     krita: "Krita (KRA)",
     downloadInfoToggle: "How does it work?",
-    downloadNoteFast: "Print it — color the guide, or draw your own",
-    downloadNoteKrita: "PSD or Krita — the guide's just a starting point",
-    downloadNoteScan: "Keep your file size reasonable — it won't change the quality, just the upload time",
-    downloadNote: "However you make it, it's your fish — surprise us.",
+    templateHowItWorksTitle: "How does it work?",
+    walkTemplateFreedom: "Color in the guide, or draw something completely your own — the template is just a starting point.",
+    walkTemplatePaper: "Working on paper? Scan it if you've got one, or just take a clear, well-lit photo with your phone.",
+    walkTemplateDigital: "Working digitally? Whatever app you used, export your finished piece as a transparent PNG before submitting.",
+    walkTemplateSize: "Keep your file size reasonable — it won't change how it looks in the tank, just how long it takes to upload.",
     goBack: "Back",
     close: "Close",
     by: "by",
@@ -312,16 +313,17 @@ const TEXT = {
     walkSend: "Envoie-le — ça ne prend qu'une minute.",
     walkReview: "Une vraie personne vérifie chaque poisson avant qu'il rejoigne l'aquarium.",
     walkSwim: "Une fois approuvé, ton poisson nage pour que tout le monde le voie !",
-    walkthroughPlaceholder: "Scène {n} sur 4 — illustration à venir",
+    walkthroughPlaceholder: "Scène {n} sur {total} — illustration à venir",
     downloadTitle: "Choisis ton modèle",
     asIs: "Prêt à imprimer (PNG)",
     psd: "Photoshop (PSD)",
     krita: "Krita (KRA)",
     downloadInfoToggle: "Comment ça marche ?",
-    downloadNoteFast: "Imprime-le — colorie le guide, ou dessine le tien",
-    downloadNoteKrita: "PSD ou Krita — le guide n'est qu'un point de départ",
-    downloadNoteScan: "Garde une taille de fichier raisonnable — ça ne change pas la qualité, juste le temps de téléversement",
-    downloadNote: "Peu importe comment tu le fais, c'est ton poisson — surprends-nous.",
+    templateHowItWorksTitle: "Comment ça marche ?",
+    walkTemplateFreedom: "Colorie le guide, ou dessine quelque chose de complètement différent — le modèle n'est qu'un point de départ.",
+    walkTemplatePaper: "Tu travailles sur papier ? Numérise-le si tu peux, ou prends simplement une photo claire et bien éclairée avec ton téléphone.",
+    walkTemplateDigital: "Tu travailles numériquement ? Peu importe l'appli utilisée, exporte ton œuvre finale en PNG avec un fond transparent avant de la soumettre.",
+    walkTemplateSize: "Garde une taille de fichier raisonnable — ça ne change pas l'apparence dans l'aquarium, juste le temps de téléversement.",
     goBack: "Retour",
     close: "Fermer",
     by: "par",
@@ -1060,27 +1062,27 @@ header p  { font-size: clamp(0.85rem, 2vw, 1rem); opacity: 0.9; }
   text-align: center;
   max-width: 44ch;
 }
-/* #walkthroughDots reuses .option-dots' markup shape, but that
+/* Both walkthroughs' dots reuse .option-dots' markup shape, but that
    class's actual dot styling only exists inside the mobile carousel's
-   media query — the walkthrough needs it at every screen size, so
-   it's redefined here rather than widening that mobile-scoped rule
-   and risking touching the carousel it was built for. */
-#walkthroughDots {
+   media query — a walkthrough needs it at every screen size, so it's
+   redefined here rather than widening that mobile-scoped rule and
+   risking touching the carousel it was built for. */
+#walkthroughDots, #templateWalkthroughDots {
   display: flex;
   justify-content: center;
   gap: 10px;
   margin: 16px 0 4px;
 }
-#walkthroughDots button {
+#walkthroughDots button, #templateWalkthroughDots button {
   width: 10px; height: 10px; padding: 0; border: none; border-radius: 50%;
   cursor: pointer;
   background: rgba(255,255,255,0.35);
 }
-#walkthroughDots button.active {
+#walkthroughDots button.active, #templateWalkthroughDots button.active {
   background: rgb(var(--logo-glow));
   box-shadow: 0 0 8px rgba(var(--logo-glow), 0.8);
 }
-#howItWorksBack { margin-top: 12px; }
+#howItWorksBack, #templateHowItWorksBack { margin-top: 12px; }
 
 .iframe-wrap {
   width: 100%;
@@ -1897,25 +1899,40 @@ body.calm .school-arrow, body.calm .school-dots {
 <div class="card-overlay" id="downloadOverlay">
   <div class="card">
     <h2 id="downloadTitle"></h2>
-    <button class="info-toggle" id="downloadInfoToggle" type="button" aria-expanded="false" aria-controls="downloadNotePanel">
+    <button class="info-toggle" id="downloadInfoToggle" type="button" aria-expanded="false" aria-controls="templateHowItWorksOverlay">
       <span id="downloadInfoToggleLabel"></span>
     </button>
-    <div class="info-panel" id="downloadNotePanel" aria-hidden="true">
-      <div class="info-box">
-        <ul class="info-list">
-          <li id="downloadNoteFast"></li>
-          <li id="downloadNoteKrita"></li>
-          <li id="downloadNoteScan"></li>
-        </ul>
-        <p id="downloadNote"></p>
-      </div>
-    </div>
     <div class="option-row">
       <a class="option-btn" id="dlPng"><span class="inlay" id="dlPngLabel"><span class="inlay-text"></span></span></a>
       <a class="option-btn" id="dlPsd" target="_blank" rel="noopener"><span class="inlay" id="dlPsdLabel"><span class="inlay-text"></span></span></a>
       <a class="option-btn" id="dlKrita" target="_blank" rel="noopener"><span class="inlay" id="dlKritaLabel"><span class="inlay-text"></span></span></a>
     </div>
     <button id="downloadBack">Back</button>
+  </div>
+</div>
+
+<!-- Template-specific "How does it work?" walkthrough -- covers the
+     one thing the top-level walkthrough doesn't: what to actually do
+     with a template once it's filled in (paper vs. digital), plus
+     the file-size note. Same carousel mechanics as howItWorksOverlay,
+     wired up via the shared initWalkthrough() helper rather than a
+     second copy of the same code. -->
+<div class="card-overlay" id="templateHowItWorksOverlay" role="dialog" aria-modal="true" aria-labelledby="templateHowItWorksTitle">
+  <div class="card walkthrough-card">
+    <h2 id="templateHowItWorksTitle"></h2>
+    <div class="walkthrough">
+      <button class="card-nav prev shown" id="templateWalkthroughPrev" type="button" aria-label=""><span aria-hidden="true">‹</span></button>
+      <div class="walkthrough-scene">
+        <div class="walkthrough-image" id="templateWalkthroughImage">
+          <span class="walkthrough-placeholder-label" id="templateWalkthroughPlaceholderLabel"></span>
+          <img id="templateWalkthroughImg" alt="" onerror="this.style.display='none'">
+        </div>
+        <p class="walkthrough-caption" id="templateWalkthroughCaption"></p>
+      </div>
+      <button class="card-nav next shown" id="templateWalkthroughNext" type="button" aria-label=""><span aria-hidden="true">›</span></button>
+    </div>
+    <div class="option-dots" id="templateWalkthroughDots"></div>
+    <button id="templateHowItWorksBack">Back</button>
   </div>
 </div>
 
@@ -2539,56 +2556,76 @@ const createOverlay = document.getElementById("createOverlay");
 const createChooseOverlay = document.getElementById("createChooseOverlay");
 const howItWorksOverlay = document.getElementById("howItWorksOverlay");
 
-// "How does it work?" opens the illustrated walkthrough overlay
-// (see the "How it works" walkthrough section further down) instead
-// of toggling an inline panel — a 4:5 illustration needs real room,
-// more than a collapsible strip in this card could ever give it.
+// "How does it work?" opens an illustrated walkthrough overlay
+// instead of toggling an inline panel — a 4:5 illustration needs
+// real room, more than a collapsible strip in a card could ever
+// give it. Two separate walkthroughs share the mechanics below
+// (initWalkthrough) but not the DOM or scene data: this one is the
+// general overview: the template screen's own "How does it work?"
+// opens a second, template-specific one instead (see downloadOverlay
+// wiring further down).
 const createInfoToggle = document.getElementById("createInfoToggle");
 createInfoToggle.addEventListener("click", () => {
   createOverlay.classList.remove("open");
-  resetWalkthrough();
+  mainWalkthrough.reset();
   howItWorksOverlay.classList.add("open");
   focusOverlayHeading(howItWorksOverlay);
 });
 
-/* --- "How does it work?" walkthrough ---------------------------- */
+/* --- Walkthrough mechanics --------------------------------------
+   Shared by both the top-level "How does it work?" and the
+   template-picker's own version — same carousel behavior, different
+   element-id prefix and scene data. Real illustrations drop in later
+   as images/walkthrough/<file> — until those files exist, each
+   <img>'s onerror (see the HTML) hides it and the CSS placeholder
+   underneath shows a scene number instead of a broken-image icon.
+   Swapping in real art later is just adding files at those paths, no
+   code changes needed. */
+function initWalkthrough(idPrefix, scenes) {
+  let index = 0;
+  const img = document.getElementById(idPrefix + "Img");
+  const caption = document.getElementById(idPrefix + "Caption");
+  const placeholderLabel = document.getElementById(idPrefix + "PlaceholderLabel");
+  const dots = document.getElementById(idPrefix + "Dots");
+  scenes.forEach((_, i) => {
+    const dot = document.createElement("button");
+    dot.type = "button";
+    dot.addEventListener("click", () => show(i));
+    dots.appendChild(dot);
+  });
+  function show(i) {
+    index = (i + scenes.length) % scenes.length;
+    const scene = scenes[index];
+    img.style.display = "block";   // undo any earlier onerror hide
+    img.src = "images/walkthrough/" + scene.file;
+    caption.textContent = TEXT[lang][scene.captionKey];
+    placeholderLabel.textContent = TEXT[lang].walkthroughPlaceholder
+      .replace("{n}", index + 1).replace("{total}", scenes.length);
+    [...dots.children].forEach((d, j) => d.classList.toggle("active", j === index));
+  }
+  document.getElementById(idPrefix + "Prev").addEventListener("click", () => show(index - 1));
+  document.getElementById(idPrefix + "Next").addEventListener("click", () => show(index + 1));
+  return { reset: () => show(0), rerender: () => show(index) };
+}
+
 // One scene per real step (make / send / review / swim), the same
-// template-fish character throughout instead of a new mascot. Real
-// illustrations drop in later as images/walkthrough/<file> below —
-// until those files exist, each <img>'s onerror (see the HTML) hides
-// it and the CSS placeholder underneath shows a scene number instead
-// of a broken-image icon. Swapping in real art later is just adding
-// files at those paths -- no code changes needed.
-const WALKTHROUGH_SCENES = [
+// template-fish character throughout instead of a new mascot.
+const mainWalkthrough = initWalkthrough("walkthrough", [
   { file: "1-make.png", captionKey: "walkMake" },
   { file: "2-send.png", captionKey: "walkSend" },
   { file: "3-review.png", captionKey: "walkReview" },
   { file: "4-swim.png", captionKey: "walkSwim" },
-];
-let walkthroughIndex = 0;
-const walkthroughImg = document.getElementById("walkthroughImg");
-const walkthroughCaption = document.getElementById("walkthroughCaption");
-const walkthroughPlaceholderLabel = document.getElementById("walkthroughPlaceholderLabel");
-const walkthroughDots = document.getElementById("walkthroughDots");
-WALKTHROUGH_SCENES.forEach((_, i) => {
-  const dot = document.createElement("button");
-  dot.type = "button";
-  dot.addEventListener("click", () => showWalkthroughScene(i));
-  walkthroughDots.appendChild(dot);
-});
-function showWalkthroughScene(i) {
-  walkthroughIndex = (i + WALKTHROUGH_SCENES.length) % WALKTHROUGH_SCENES.length;
-  const scene = WALKTHROUGH_SCENES[walkthroughIndex];
-  walkthroughImg.style.display = "block";   // undo any earlier onerror hide
-  walkthroughImg.src = "images/walkthrough/" + scene.file;
-  walkthroughCaption.textContent = TEXT[lang][scene.captionKey];
-  walkthroughPlaceholderLabel.textContent =
-    TEXT[lang].walkthroughPlaceholder.replace("{n}", walkthroughIndex + 1);
-  [...walkthroughDots.children].forEach((d, j) => d.classList.toggle("active", j === walkthroughIndex));
-}
-function resetWalkthrough() { showWalkthroughScene(0); }
-document.getElementById("walkthroughPrev").addEventListener("click", () => showWalkthroughScene(walkthroughIndex - 1));
-document.getElementById("walkthroughNext").addEventListener("click", () => showWalkthroughScene(walkthroughIndex + 1));
+]);
+
+// Template-specific: what to actually do with a template once it's
+// filled in (paper vs. digital), plus the file-size note -- the one
+// thing the general walkthrough above doesn't cover.
+const templateWalkthrough = initWalkthrough("templateWalkthrough", [
+  { file: "template-1-freedom.png", captionKey: "walkTemplateFreedom" },
+  { file: "template-2-paper.png", captionKey: "walkTemplatePaper" },
+  { file: "template-3-digital.png", captionKey: "walkTemplateDigital" },
+  { file: "template-4-size.png", captionKey: "walkTemplateSize" },
+]);
 
 // On mobile, an option-row's buttons page one at a time
 // instead of stacking (see buildOptionCarousel() below) — this jumps
@@ -2636,20 +2673,26 @@ if (SETTINGS.templateUrl || SETTINGS.submitEmbedUrl) {
   // Wire the options; hide any whose URL isn't set
   const optDownload = document.getElementById("optDownload");
   const downloadOverlay = document.getElementById("downloadOverlay");
+  const templateHowItWorksOverlay = document.getElementById("templateHowItWorksOverlay");
 
-  // Same collapsed-by-default info panel as the create menu — see
-  // collapseCreateInfo() above.
+  // Same pattern as the top-level "How does it work?" — opens a
+  // dedicated walkthrough overlay instead of toggling an inline panel.
   const downloadInfoToggle = document.getElementById("downloadInfoToggle");
-  const downloadNotePanel = document.getElementById("downloadNotePanel");
-  function collapseDownloadInfo() {
-    downloadNotePanel.classList.remove("open");
-    downloadNotePanel.setAttribute("aria-hidden", "true");
-    downloadInfoToggle.setAttribute("aria-expanded", "false");
-  }
   downloadInfoToggle.addEventListener("click", () => {
-    const open = downloadNotePanel.classList.toggle("open");
-    downloadNotePanel.setAttribute("aria-hidden", String(!open));
-    downloadInfoToggle.setAttribute("aria-expanded", String(open));
+    downloadOverlay.classList.remove("open");
+    templateWalkthrough.reset();
+    templateHowItWorksOverlay.classList.add("open");
+    focusOverlayHeading(templateHowItWorksOverlay);
+  });
+  document.getElementById("templateHowItWorksBack").addEventListener("click", () => {
+    templateHowItWorksOverlay.classList.remove("open");
+    downloadOverlay.classList.add("open");
+    focusOverlayHeading(downloadOverlay);
+  });
+  templateHowItWorksOverlay.addEventListener("click", (e) => {
+    if (e.target !== templateHowItWorksOverlay) return;
+    templateHowItWorksOverlay.classList.remove("open");
+    if (lastFocused && lastFocused.focus) lastFocused.focus();
   });
 
   // "Download the fish template" opens the format submenu
@@ -2657,7 +2700,6 @@ if (SETTINGS.templateUrl || SETTINGS.submitEmbedUrl) {
     optDownload.addEventListener("click", () => {
       createChooseOverlay.classList.remove("open");
       resetOptionCarousel(downloadOverlay);
-      collapseDownloadInfo();
       downloadOverlay.classList.add("open");
       focusOverlayHeading(downloadOverlay);
     });
@@ -2847,6 +2889,9 @@ if (SETTINGS.templateUrl || SETTINGS.submitEmbedUrl) {
    document.getElementById("howItWorksBack"),
    document.getElementById("walkthroughPrev"),
    document.getElementById("walkthroughNext"),
+   document.getElementById("templateHowItWorksBack"),
+   document.getElementById("templateWalkthroughPrev"),
+   document.getElementById("templateWalkthroughNext"),
    document.getElementById("downloadBack"),
    document.getElementById("drawBack"),
    document.getElementById("submitBack")]
@@ -3268,19 +3313,20 @@ function applyLanguage() {
   document.getElementById("howItWorksBack").textContent = t.goBack;
   document.getElementById("walkthroughPrev").setAttribute("aria-label", t.prevOption);
   document.getElementById("walkthroughNext").setAttribute("aria-label", t.nextOption);
-  // Re-render whichever scene is currently showing so its caption
-  // updates immediately if the language changes mid-walkthrough.
-  if (typeof showWalkthroughScene === "function") showWalkthroughScene(walkthroughIndex);
   document.getElementById("downloadTitle").textContent = t.downloadTitle;
   setInlayText("dlPngLabel", t.asIs);
   setInlayText("dlPsdLabel", t.psd);
   setInlayText("dlKritaLabel", t.krita);
   document.getElementById("downloadInfoToggleLabel").textContent = t.downloadInfoToggle;
-  document.getElementById("downloadNoteFast").textContent = t.downloadNoteFast;
-  document.getElementById("downloadNoteKrita").textContent = t.downloadNoteKrita;
-  document.getElementById("downloadNoteScan").textContent = t.downloadNoteScan;
-  document.getElementById("downloadNote").textContent = t.downloadNote;
   document.getElementById("downloadBack").textContent = t.goBack;
+  document.getElementById("templateHowItWorksTitle").textContent = t.templateHowItWorksTitle;
+  document.getElementById("templateHowItWorksBack").textContent = t.goBack;
+  document.getElementById("templateWalkthroughPrev").setAttribute("aria-label", t.prevOption);
+  document.getElementById("templateWalkthroughNext").setAttribute("aria-label", t.nextOption);
+  // Re-render whichever scene each walkthrough is currently showing,
+  // so captions update immediately if the language changes mid-way.
+  if (typeof mainWalkthrough !== "undefined") mainWalkthrough.rerender();
+  if (typeof templateWalkthrough !== "undefined") templateWalkthrough.rerender();
   document.getElementById("createClose").textContent = t.close;
   document.getElementById("drawTitle").textContent = t.drawTitle;
   document.getElementById("drawBack").textContent = t.goBack;
