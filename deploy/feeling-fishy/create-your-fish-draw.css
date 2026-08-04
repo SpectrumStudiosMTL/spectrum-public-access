@@ -179,6 +179,23 @@
   .dyf-root { overflow: auto; }
   .dyf-root .workspace { flex-direction: column; align-items: center; }
   .dyf-root .side-panel { flex-direction: row; flex-wrap: wrap; width: auto; justify-content: center; }
+
+  /* .pick-btn's width:100% is sized for the desktop single-column
+     sidebar — left as-is here it forces one card per row even though
+     .side-panel above just switched to row+wrap, so every template
+     and layer card ends up stacked in one long list. Giving it a
+     fixed basis instead lets them actually wrap into a compact grid. */
+  .dyf-root .pick-btn { width: auto; flex: 0 1 128px; }
+
+  /* Layers is the one panel people need mid-drawing (switching
+     between Base Color and Accent Colors is core to actually using
+     the tool), so it shouldn't sit behind the entire control panel
+     and diagnostics row. Reordered — not moved in the DOM, so
+     desktop's 3-column layout is untouched — to sit directly above
+     the canvas: Template -> Layers -> Canvas. */
+  .dyf-root .dyf-template-sidebar { order: 1; }
+  .dyf-root .dyf-layer-sidebar { order: 2; }
+  .dyf-root .center-column { order: 3; }
 }
 
 /* ==================================================================
