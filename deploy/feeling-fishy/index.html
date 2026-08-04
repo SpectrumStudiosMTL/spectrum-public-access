@@ -2819,11 +2819,11 @@ if (SETTINGS.templateUrl || SETTINGS.submitEmbedUrl) {
     drawToolLoading = new Promise((resolve, reject) => {
       const css = document.createElement("link");
       css.rel = "stylesheet";
-      css.href = "create-your-fish-draw.css?v=11";
+      css.href = "create-your-fish-draw.css?v=13";
       document.head.appendChild(css);
 
       const script = document.createElement("script");
-      script.src = "create-your-fish-draw.js?v=9";
+      script.src = "create-your-fish-draw.js?v=10";
       script.onload = resolve;
       script.onerror = reject;
       document.body.appendChild(script);

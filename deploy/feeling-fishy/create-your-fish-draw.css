@@ -211,9 +211,24 @@
      you're actively working in. */
   .dyf-root .stage { order: 1; width: 100%; max-width: 900px; }
   .dyf-root .panel { order: 2; }
-  .dyf-root .dyf-layer-sidebar { order: 3; }
+  .dyf-root .dyf-layer-sidebar { order: 3; width: 100%; }
   .dyf-root .dyf-template-sidebar { order: 4; width: 100%; }
   .dyf-root .dyf-row-finish { order: 5; }
+
+  /* Within the panel: Color first, then Draw (brush/eraser/size)
+     right under it, then Undo/Clear, with Auto-Fill/Clean pushed to
+     the end — they're occasional shortcuts, not the main draw
+     controls, so they don't need to sit right under Color. Rows stay
+     in their original order on desktop (order only applies here). */
+  .dyf-root .dyf-row-color { order: 1; }
+  .dyf-root .dyf-row-draw { order: 2; flex-wrap: nowrap; }
+  .dyf-root .dyf-row-undoclear { order: 3; }
+  .dyf-root .dyf-row-fillclean { order: 4; }
+
+  /* Brush/Eraser/Size on one line at mobile widths: the 80px-wide
+     slider (sized for the roomier desktop panel) was the main thing
+     pushing this row past the available width. */
+  .dyf-root .dyf-row-draw input[type="range"] { width: 56px; }
 
   /* Template becomes a horizontally-scrollable strip instead of a
      wrapped grid, so the picker holds a fixed one-row height no
