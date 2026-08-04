@@ -2662,6 +2662,7 @@ createInfoToggle.addEventListener("click", () => {
    code changes needed. */
 function initWalkthrough(idPrefix, scenes) {
   let index = 0;
+  let loadToken = 0; // guards against a stale preload landing after a newer one
   const img = document.getElementById(idPrefix + "Img");
   const caption = document.getElementById(idPrefix + "Caption");
   const placeholderLabel = document.getElementById(idPrefix + "PlaceholderLabel");
@@ -2675,15 +2676,26 @@ function initWalkthrough(idPrefix, scenes) {
   function show(i) {
     index = (i + scenes.length) % scenes.length;
     const scene = scenes[index];
-    // The placeholder label is a true fallback now, not a permanent
-    // overlay -- shown only if the real image fails to load, hidden
-    // the moment it loads successfully, instead of sitting underneath
-    // (and showing through) real artwork once one exists.
-    placeholderLabel.style.display = "";
-    img.style.display = "none";
-    img.onload = () => { placeholderLabel.style.display = "none"; img.style.display = "block"; };
-    img.onerror = () => { placeholderLabel.style.display = ""; img.style.display = "none"; };
-    img.src = "images/walkthrough/" + scene.file;
+    const src = "images/walkthrough/" + scene.file;
+    const token = ++loadToken;
+    // Preloaded off-screen first, so the visible <img> only ever gets
+    // a src that's already fully loaded -- setting it directly and
+    // reacting afterward left a real, visible flash of the
+    // placeholder label between switching scenes and the image
+    // actually appearing, even once it was browser-cached.
+    const preload = new Image();
+    preload.onload = () => {
+      if (token !== loadToken) return; // a newer show() already ran
+      img.src = src;
+      img.style.display = "block";
+      placeholderLabel.style.display = "none";
+    };
+    preload.onerror = () => {
+      if (token !== loadToken) return;
+      img.style.display = "none";
+      placeholderLabel.style.display = "";
+    };
+    preload.src = src;
     caption.textContent = TEXT[lang][scene.captionKey];
     placeholderLabel.textContent = TEXT[lang].walkthroughPlaceholder
       .replace("{n}", index + 1).replace("{total}", scenes.length);
