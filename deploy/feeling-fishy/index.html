@@ -35,6 +35,8 @@
    files instead, e.g.  image: "images/my-fish.png"
    ============================================================== */
 const EMBEDDED_IMAGES = {
+  inlayCreate: "images/inlay-create.webp",   // placeholder -- swap out later
+  inlaySubmit: "images/inlay-submit.webp",   // placeholder -- swap out later
   inlayPng: "images/inlay-print.webp",
   inlayKrita: "images/inlay-krita.webp",
   logo: "images/logo-2.webp",
@@ -176,9 +178,9 @@ const SETTINGS = {
   // or logo art you have the rights to use.
   // Example: buttonInlays: { png: "images/inlay-print.png" },
   buttonInlays: {
-    create: null,     // "DESIGN A FISH" button
+    create: EMBEDDED_IMAGES.inlayCreate,  // "DESIGN A FISH" button -- placeholder
     download: null,   // "DRAW AT HOME" button
-    submit: null,     // "SUBMIT A FISH" button
+    submit: EMBEDDED_IMAGES.inlaySubmit,  // "SUBMIT A FISH" button -- placeholder
     png: EMBEDDED_IMAGES.inlayPng,      // "Ready to print" format button
     psd: null,                          // Photoshop format button
     krita: EMBEDDED_IMAGES.inlayKrita,  // Krita format button
@@ -800,6 +802,25 @@ header p  { font-size: clamp(0.85rem, 2vw, 1rem); opacity: 0.9; }
   max-height: 55%;
   object-fit: contain;
   flex-shrink: 0;
+}
+/* The two new DESIGN A FISH / SUBMIT A FISH placeholder icons read
+   too small at the shared 52% sizing above -- scoped to just these
+   two rather than changing the shared rule, since that would also
+   resize the already-tuned PNG/PSD/KRITA icons on the template
+   screen without those having been asked for or checked.
+
+   height is a fixed box (not max-height as a % of the icon's own
+   aspect ratio) specifically so both icons occupy identical vertical
+   space regardless of their own proportions -- the two source
+   drawings aren't the same shape (one's wider, one's taller), so
+   sizing off each image's own aspect ratio put the label text at two
+   different heights between the buttons. object-fit: contain still
+   letterboxes each image within that fixed box at its correct
+   proportions. */
+#createOverlay .card .option-btn .inlay img {
+  width: 100%;
+  height: 90px;
+  object-fit: contain;
 }
 /* Every option button across all three create-menu screens (top
    level, the draw/download sub-menu, and the PNG/PSD/KRITA format
