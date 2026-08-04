@@ -234,7 +234,10 @@ const TEXT = {
     prevOption: "Previous option",
     createTitle: "Add your fish to the tank!",
     createInfoToggle: "How does it work?",
-    createNote: "Draw it here or upload a PSD/PNG for the fastest review — usually within a day. A printed or scanned drawing needs a person to prep it by hand first, so that one takes a few extra days.",
+    createNoteDraw: "Draw it here",
+    createNotePng: "Upload a PNG",
+    createNotePaper: "Draw it on paper",
+    createNote: "We have you covered.",
     download: "Download the fish template",
     draw: "Draw it yourself",
     submit: "Submit your fish",
@@ -290,7 +293,10 @@ const TEXT = {
     prevOption: "Option précédente",
     createTitle: "Ajoute ton poisson à l'aquarium !",
     createInfoToggle: "Comment ça marche ?",
-    createNote: "Dessine-le ici ou téléverse un PSD/PNG pour la revue la plus rapide — habituellement en une journée. Un dessin imprimé ou numérisé doit d'abord être préparé à la main par une personne, ce qui prend quelques jours de plus.",
+    createNoteDraw: "Dessine-le ici",
+    createNotePng: "Téléverse un PNG",
+    createNotePaper: "Dessine-le sur papier",
+    createNote: "On s'occupe de toi.",
     download: "Télécharger le modèle de poisson",
     draw: "Dessine-le toi-même",
     submit: "Soumettre ton poisson",
@@ -835,16 +841,33 @@ header p  { font-size: clamp(0.85rem, 2vw, 1rem); opacity: 0.9; }
   overflow: hidden;
   transition: max-height 0.28s ease;
 }
-.info-panel.open { max-height: 220px; }
-.info-panel p {
-  font-size: 1.05rem;
-  line-height: 1.55;
-  opacity: 1;
+.info-panel.open { max-height: 280px; }
+.info-box {
   background: rgba(255,255,255,0.12);
   border: 1px solid rgba(255,255,255,0.2);
   border-radius: 16px;
-  padding: 14px 16px;
+  padding: 16px 18px;
   margin: 12px 0 6px;
+}
+.info-list {
+  list-style: none;
+  margin: 0 0 10px;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+.info-list li {
+  font-family: var(--title-font);
+  font-size: 1.1rem;
+  font-weight: 700;
+  line-height: 1.35;
+}
+.info-panel p {
+  font-size: 1rem;
+  line-height: 1.5;
+  opacity: 0.9;
+  margin: 0;
 }
 @media (prefers-reduced-motion: reduce) {
   .info-panel { transition: none; }
@@ -1638,7 +1661,14 @@ body.calm .school-arrow, body.calm .school-dots {
       <span id="createInfoToggleLabel"></span>
     </button>
     <div class="info-panel" id="createNotePanel" aria-hidden="true">
-      <p id="createNote"></p>
+      <div class="info-box">
+        <ul class="info-list">
+          <li id="createNoteDraw"></li>
+          <li id="createNotePng"></li>
+          <li id="createNotePaper"></li>
+        </ul>
+        <p id="createNote"></p>
+      </div>
     </div>
     <div class="option-row">
       <a class="option-btn" id="optDownload" role="button" tabindex="0"><span class="inlay" id="optDownloadLabel"><span class="inlay-text"></span></span></a>
@@ -2908,6 +2938,9 @@ function applyLanguage() {
   document.getElementById("cardBack").textContent = t.back;
   document.getElementById("createTitle").textContent = t.createTitle;
   document.getElementById("createInfoToggleLabel").textContent = t.createInfoToggle;
+  document.getElementById("createNoteDraw").textContent = t.createNoteDraw;
+  document.getElementById("createNotePng").textContent = t.createNotePng;
+  document.getElementById("createNotePaper").textContent = t.createNotePaper;
   document.getElementById("createNote").textContent = t.createNote;
   // .inlay-text, not the .inlay span itself — an inlay icon (see
   // SETTINGS.buttonInlays) is an <img> PREPENDED into that same
