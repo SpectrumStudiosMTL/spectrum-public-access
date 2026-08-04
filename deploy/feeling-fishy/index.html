@@ -233,6 +233,7 @@ const TEXT = {
     nextOption: "Next option",
     prevOption: "Previous option",
     createTitle: "Add your fish to the tank!",
+    createInfoToggle: "How long does this take?",
     createNote: "Draw it here or upload a PSD/PNG for the fastest review — usually within a day. A printed or scanned drawing needs a person to prep it by hand first, so that one takes a few extra days.",
     download: "Download the fish template",
     draw: "Draw it yourself",
@@ -288,6 +289,7 @@ const TEXT = {
     nextOption: "Option suivante",
     prevOption: "Option précédente",
     createTitle: "Ajoute ton poisson à l'aquarium !",
+    createInfoToggle: "Combien de temps ça prend ?",
     createNote: "Dessine-le ici ou téléverse un PSD/PNG pour la revue la plus rapide — habituellement en une journée. Un dessin imprimé ou numérisé doit d'abord être préparé à la main par une personne, ce qui prend quelques jours de plus.",
     download: "Télécharger le modèle de poisson",
     draw: "Dessine-le toi-même",
@@ -789,6 +791,45 @@ header p  { font-size: clamp(0.85rem, 2vw, 1rem); opacity: 0.9; }
     0 0 8px rgba(var(--logo-glow), 0.2);
 }
 .card button { font-family: var(--title-font); font-size: 1rem; }
+/* Collapsed by default so it costs nothing on mobile, where the
+   heading above it is already visually hidden to save space — tap
+   to reveal, rather than a paragraph everyone scrolls past. */
+.info-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin: 2px 0 0;
+  padding: 6px 14px;
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,0.32);
+  background: rgba(255,255,255,0.08);
+  color: var(--text);
+  font-family: var(--title-font);
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+.info-toggle:hover, .info-toggle:focus-visible { background: rgba(255,255,255,0.2); }
+.info-panel {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.28s ease;
+}
+.info-panel.open { max-height: 220px; }
+.info-panel p {
+  font-size: 1.05rem;
+  line-height: 1.55;
+  opacity: 1;
+  background: rgba(255,255,255,0.12);
+  border: 1px solid rgba(255,255,255,0.2);
+  border-radius: 16px;
+  padding: 14px 16px;
+  margin: 12px 0 6px;
+}
+@media (prefers-reduced-motion: reduce) {
+  .info-panel { transition: none; }
+}
 .download-note {
   font-size: 0.85rem;
   line-height: 1.5;
@@ -1574,7 +1615,12 @@ body.calm .school-arrow, body.calm .school-dots {
 <div class="card-overlay" id="createOverlay">
   <div class="card">
     <h2 id="createTitle"></h2>
-    <p class="download-note" id="createNote"></p>
+    <button class="info-toggle" id="createInfoToggle" type="button" aria-expanded="false" aria-controls="createNotePanel">
+      <span aria-hidden="true">⏱</span> <span id="createInfoToggleLabel"></span>
+    </button>
+    <div class="info-panel" id="createNotePanel" aria-hidden="true">
+      <p id="createNote"></p>
+    </div>
     <div class="option-row">
       <a class="option-btn" id="optDownload" role="button" tabindex="0"><span class="inlay" id="optDownloadLabel"><span class="inlay-text"></span></span></a>
       <a class="option-btn" id="optDraw" role="button" tabindex="0"><span class="inlay" id="optDrawLabel"><span class="inlay-text"></span></span></a>
@@ -2216,6 +2262,22 @@ if (SETTINGS.music || hasAnySfx) {
 let createBtn = null;
 const createOverlay = document.getElementById("createOverlay");
 
+// The "how long does this take?" note starts collapsed — the heading
+// above it is already visually hidden on mobile to save space, so an
+// always-open paragraph here would undo that. Tap to reveal instead.
+const createInfoToggle = document.getElementById("createInfoToggle");
+const createNotePanel = document.getElementById("createNotePanel");
+function collapseCreateInfo() {
+  createNotePanel.classList.remove("open");
+  createNotePanel.setAttribute("aria-hidden", "true");
+  createInfoToggle.setAttribute("aria-expanded", "false");
+}
+createInfoToggle.addEventListener("click", () => {
+  const open = createNotePanel.classList.toggle("open");
+  createNotePanel.setAttribute("aria-hidden", String(!open));
+  createInfoToggle.setAttribute("aria-expanded", String(open));
+});
+
 // On mobile, an option-row's three buttons page one at a time
 // instead of stacking (see buildOptionCarousel() below) — this jumps
 // it back to the first option whenever its menu is (re)opened, so it
@@ -2245,6 +2307,7 @@ if (SETTINGS.templateUrl || SETTINGS.submitEmbedUrl) {
     e.stopPropagation();
     playPluck();
     resetOptionCarousel(createOverlay);
+    collapseCreateInfo();
     openOverlay(createOverlay, createBtn);
   });
   document.body.appendChild(createBtn);
@@ -2349,6 +2412,7 @@ if (SETTINGS.templateUrl || SETTINGS.submitEmbedUrl) {
   document.getElementById("submitBack").addEventListener("click", () => {
     submitOverlay.classList.remove("open");
     resetOptionCarousel(createOverlay);
+    collapseCreateInfo();
     createOverlay.classList.add("open");
     focusOverlayHeading(createOverlay);
   });
@@ -2362,6 +2426,7 @@ if (SETTINGS.templateUrl || SETTINGS.submitEmbedUrl) {
   document.getElementById("drawBack").addEventListener("click", () => {
     drawOverlay.classList.remove("open");
     resetOptionCarousel(createOverlay);
+    collapseCreateInfo();
     createOverlay.classList.add("open");
     focusOverlayHeading(createOverlay);
   });
@@ -2388,6 +2453,7 @@ if (SETTINGS.templateUrl || SETTINGS.submitEmbedUrl) {
   document.getElementById("downloadBack").addEventListener("click", () => {
     downloadOverlay.classList.remove("open");
     resetOptionCarousel(createOverlay);
+    collapseCreateInfo();
     createOverlay.classList.add("open");
     focusOverlayHeading(createOverlay);
   });
@@ -2822,6 +2888,7 @@ function applyLanguage() {
   document.getElementById("tagline").textContent = t.tagline;
   document.getElementById("cardBack").textContent = t.back;
   document.getElementById("createTitle").textContent = t.createTitle;
+  document.getElementById("createInfoToggleLabel").textContent = t.createInfoToggle;
   document.getElementById("createNote").textContent = t.createNote;
   // .inlay-text, not the .inlay span itself — an inlay icon (see
   // SETTINGS.buttonInlays) is an <img> PREPENDED into that same
