@@ -251,10 +251,10 @@ const TEXT = {
     psd: "Photoshop (PSD)",
     krita: "Krita (KRA)",
     downloadInfoToggle: "How does it work?",
-    downloadNoteFast: "PSD or PNG — fastest",
-    downloadNoteKrita: "Krita — export the layer first",
-    downloadNoteScan: "Printed or scanned — prepped by hand",
-    downloadNote: "We have you covered.",
+    downloadNoteFast: "Print it — color the guide, or draw your own",
+    downloadNoteKrita: "PSD or Krita — the guide's just a starting point",
+    downloadNoteScan: "Keep your file size reasonable — it won't change the quality, just the upload time",
+    downloadNote: "However you make it, it's your fish — surprise us.",
     goBack: "Back",
     close: "Close",
     by: "by",
@@ -318,10 +318,10 @@ const TEXT = {
     psd: "Photoshop (PSD)",
     krita: "Krita (KRA)",
     downloadInfoToggle: "Comment ça marche ?",
-    downloadNoteFast: "PSD ou PNG — le plus rapide",
-    downloadNoteKrita: "Krita — exporte d'abord le calque",
-    downloadNoteScan: "Imprimé ou numérisé — préparé à la main",
-    downloadNote: "On s'occupe de toi.",
+    downloadNoteFast: "Imprime-le — colorie le guide, ou dessine le tien",
+    downloadNoteKrita: "PSD ou Krita — le guide n'est qu'un point de départ",
+    downloadNoteScan: "Garde une taille de fichier raisonnable — ça ne change pas la qualité, juste le temps de téléversement",
+    downloadNote: "Peu importe comment tu le fais, c'est ton poisson — surprends-nous.",
     goBack: "Retour",
     close: "Fermer",
     by: "par",
@@ -799,20 +799,21 @@ header p  { font-size: clamp(0.85rem, 2vw, 1rem); opacity: 0.9; }
   object-fit: contain;
   flex-shrink: 0;
 }
-/* The top-level DESIGN A FISH/SUBMIT A FISH buttons and the
-   create-choose sub-menu's DRAW HERE/DRAW AT HOME buttons, in the
-   same neon blue as the "Feeling Fishy" title — not the
-   template-format picker's PNG/PSD/KRITA buttons, which keep the
-   original yellow. Hovering (or focusing via keyboard) fades to that
-   original yellow, so the two brand colors trade places instead of a
-   hard cut. */
+/* Every option button across all three create-menu screens (top
+   level, the draw/download sub-menu, and the PNG/PSD/KRITA format
+   picker), in the same neon blue as the "Feeling Fishy" title.
+   Hovering (or focusing via keyboard) fades to the site's original
+   yellow, so the two brand colors trade places instead of a hard
+   cut. */
 #createOverlay .card .option-btn .inlay,
-#createChooseOverlay .card .option-btn .inlay {
+#createChooseOverlay .card .option-btn .inlay,
+#downloadOverlay .card .option-btn .inlay {
   background: rgb(var(--title-glow));
   transition: background 0.2s ease;
 }
 #createOverlay .card .option-btn,
-#createChooseOverlay .card .option-btn {
+#createChooseOverlay .card .option-btn,
+#downloadOverlay .card .option-btn {
   box-shadow:
     inset 2px 2px 0 rgba(255,255,255,0.12),
     inset -2px -2px 0 rgba(0,0,0,0.6),
@@ -822,13 +823,17 @@ header p  { font-size: clamp(0.85rem, 2vw, 1rem); opacity: 0.9; }
 #createOverlay .card .option-btn:hover .inlay,
 #createOverlay .card .option-btn:focus-visible .inlay,
 #createChooseOverlay .card .option-btn:hover .inlay,
-#createChooseOverlay .card .option-btn:focus-visible .inlay {
+#createChooseOverlay .card .option-btn:focus-visible .inlay,
+#downloadOverlay .card .option-btn:hover .inlay,
+#downloadOverlay .card .option-btn:focus-visible .inlay {
   background: rgb(var(--logo-glow));
 }
 #createOverlay .card .option-btn:hover,
 #createOverlay .card .option-btn:focus-visible,
 #createChooseOverlay .card .option-btn:hover,
-#createChooseOverlay .card .option-btn:focus-visible {
+#createChooseOverlay .card .option-btn:focus-visible,
+#downloadOverlay .card .option-btn:hover,
+#downloadOverlay .card .option-btn:focus-visible {
   box-shadow:
     inset 2px 2px 0 rgba(255,255,255,0.12),
     inset -2px -2px 0 rgba(0,0,0,0.6),
