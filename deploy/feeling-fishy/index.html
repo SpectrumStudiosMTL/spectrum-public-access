@@ -1638,12 +1638,18 @@ body.calm .school-arrow, body.calm .school-dots {
    viewport, this fully covers the tank so that never gets seen at
    all. It's pure CSS (no JS timing to race), so it's applied by the
    browser as part of layout itself — in sync with the rotation, not
-   a frame behind it. Matched on max-height rather than max-width —
-   width is what's LARGE in landscape — so only phones trigger it;
-   a landscape tablet or a short desktop window has plenty of height
-   to spare and stays fully interactive. */
+   a frame behind it.
+
+   Originally matched on max-height alone, on the assumption that a
+   landscape tablet always has plenty of height to spare — that broke
+   on some drawing tablets (Wacom and similar), which report a short
+   landscape viewport too and got told to rotate away from landscape,
+   exactly the orientation you actually want for drawing. Added
+   max-width so both dimensions have to be small — a real phone is
+   narrow AND short in landscape; a tablet is short but still wide —
+   so only genuine phones trigger this now. */
 .rotate-overlay { display: none; }
-@media (orientation: landscape) and (max-height: 640px) {
+@media (orientation: landscape) and (max-height: 640px) and (max-width: 900px) {
   .rotate-overlay {
     display: flex;
     flex-direction: column;
