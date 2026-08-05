@@ -272,6 +272,8 @@ const TEXT = {
     splashAriaLabel: "Enter the Feeling Fishy tank",
     rotatePrompt: "Please rotate your device to portrait to view Feeling Fishy.",
     nightMode: "Night mode — coming soon",
+    fullscreenEnter: "View fullscreen",
+    fullscreenExit: "Exit fullscreen",
     searchPlaceholder: "Type a name…",
     searchResultsLabel: "Matching fish",
     searchBrowseAll: "Browse every fish in the tank.",
@@ -342,6 +344,8 @@ const TEXT = {
     splashAriaLabel: "Entre dans l'aquarium Feeling Fishy",
     rotatePrompt: "Veuillez faire pivoter votre appareil en mode portrait pour voir Feeling Fishy.",
     nightMode: "Mode nuit — bientôt disponible",
+    fullscreenEnter: "Plein écran",
+    fullscreenExit: "Quitter le plein écran",
     searchPlaceholder: "Tape un nom…",
     searchResultsLabel: "Poissons correspondants",
     searchBrowseAll: "Découvre tous les poissons de l'aquarium.",
@@ -1297,6 +1301,24 @@ header p  { font-size: clamp(0.85rem, 2vw, 1rem); opacity: 0.9; }
   box-shadow: 0 6px 20px rgba(4,26,44,0.35);
 }
 
+/* Fullscreen toggle — part of the top-controls row (after info).
+   Desktop only: see the mobile media query further down, which hides
+   this entirely rather than folding it into the hamburger menu --
+   the tank already fills a phone screen edge to edge, and the
+   Fullscreen API isn't reliably available on mobile browsers anyway. */
+.fullscreen-btn {
+  order: 2;
+  width: 44px;
+  height: 44px;
+  border: none;
+  border-radius: 50%;
+  font-size: 1.15rem;
+  line-height: 1;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 6px 20px rgba(4,26,44,0.35);
+}
+
 /* Search button — part of the top-controls row, leftmost of all five.
    A keyboard/screen-reader path to any fish that doesn't depend on
    hovering or clicking a moving target in the tank. */
@@ -1317,6 +1339,7 @@ header p  { font-size: clamp(0.85rem, 2vw, 1rem); opacity: 0.9; }
    control so tabbing through the page is never a guessing game. */
 .info-btn:focus-visible,
 .search-btn:focus-visible,
+.fullscreen-btn:focus-visible,
 .menu-toggle-btn:focus-visible,
 .sound-btn:focus-visible,
 .lang-btn:focus-visible,
@@ -1476,7 +1499,7 @@ header p  { font-size: clamp(0.85rem, 2vw, 1rem); opacity: 0.9; }
 /* All buttons match the SPA logo: same neon yellow, same glow.
    The color comes from --logo-glow, so changing that one token
    re-themes the logo AND every button together. */
-.create-btn, .sound-btn, .lang-btn, .night-btn, .info-btn, .search-btn, .menu-toggle-btn, .school-arrow, .card-nav, .card button {
+.create-btn, .sound-btn, .lang-btn, .night-btn, .info-btn, .search-btn, .fullscreen-btn, .menu-toggle-btn, .school-arrow, .card-nav, .card button {
   background: rgb(var(--logo-glow));
   color: #123a52;
   box-shadow:
@@ -1516,7 +1539,7 @@ header p  { font-size: clamp(0.85rem, 2vw, 1rem); opacity: 0.9; }
    is slow and gentle (the .calm rules), while the fade back IN is
    quick (the base rules), so the interface returns the instant
    the visitor moves. */
-header, .logo, .create-btn, .sound-btn, .lang-btn, .night-btn, .info-btn, .search-btn, .menu-toggle-btn {
+header, .logo, .create-btn, .sound-btn, .lang-btn, .night-btn, .info-btn, .search-btn, .fullscreen-btn, .menu-toggle-btn {
   transition: opacity 0.25s ease, translate 0.25s ease, transform 0.2s ease;
 }
 body.calm header      { opacity: 0; translate: 0 -16px; pointer-events: none; }
@@ -1527,9 +1550,10 @@ body.calm .lang-btn,
 body.calm .night-btn,
 body.calm .info-btn,
 body.calm .search-btn,
+body.calm .fullscreen-btn,
 body.calm .menu-toggle-btn { opacity: 0; translate: 0 -16px; pointer-events: none; }
 body.calm header, body.calm .logo, body.calm .create-btn,
-body.calm .sound-btn, body.calm .lang-btn, body.calm .night-btn, body.calm .info-btn, body.calm .search-btn, body.calm .menu-toggle-btn {
+body.calm .sound-btn, body.calm .lang-btn, body.calm .night-btn, body.calm .info-btn, body.calm .search-btn, body.calm .fullscreen-btn, body.calm .menu-toggle-btn {
   transition: opacity 1.6s ease, translate 1.6s ease;
 }
 
@@ -1770,6 +1794,11 @@ body.calm .school-arrow, body.calm .school-dots {
   }
   .top-controls > *:not(.menu-toggle-btn) { display: none; }
   .top-controls.menu-open > *:not(.menu-toggle-btn) { display: flex; }
+  /* Desktop-only feature (see .fullscreen-btn's own comment) -- kept
+     out of the hamburger menu entirely rather than just collapsed
+     into it, so this !important wins even once menu-open reveals
+     everything else above. */
+  .fullscreen-btn { display: none !important; }
   /* Open, this was a single column tall enough to reach down into
      the school-arrow buttons (which sit at the vertical center of
      the screen) on shorter phones. Wrapping it into two columns
@@ -3487,6 +3516,34 @@ nightBtn.className = "night-btn";
 nightBtn.textContent = "🌙";
 document.getElementById("topControls").appendChild(nightBtn);
 
+/* --- Fullscreen toggle --------------------------------------------
+   Desktop only -- see .fullscreen-btn's mobile media query. Skipped
+   entirely (not just hidden) on browsers with no Fullscreen API at
+   all, rather than showing a button that couldn't do anything. */
+let fullscreenBtn = null;
+function setFullscreenLabel() {
+  if (!fullscreenBtn) return;
+  const t = TEXT[lang];
+  const active = !!document.fullscreenElement;
+  fullscreenBtn.title = active ? t.fullscreenExit : t.fullscreenEnter;
+  fullscreenBtn.setAttribute("aria-label", fullscreenBtn.title);
+}
+if (document.documentElement.requestFullscreen) {
+  fullscreenBtn = document.createElement("button");
+  fullscreenBtn.className = "fullscreen-btn";
+  fullscreenBtn.textContent = "⛶";
+  document.getElementById("topControls").appendChild(fullscreenBtn);
+  fullscreenBtn.addEventListener("click", (e) => {
+    e.stopPropagation();              // don't start a tank-drag
+    if (document.fullscreenElement) {
+      document.exitFullscreen();
+    } else {
+      document.documentElement.requestFullscreen().catch(() => {});
+    }
+  });
+  document.addEventListener("fullscreenchange", setFullscreenLabel);
+}
+
 // Sets an option button's label text via its .inlay-text child, not
 // the .inlay span itself — see the comment where this is called.
 function setInlayText(labelId, text) {
@@ -3569,6 +3626,7 @@ function applyLanguage() {
   });
   nightBtn.title = t.nightMode;
   nightBtn.setAttribute("aria-label", t.nightMode);
+  setFullscreenLabel();
   // Update every fish's name tag ("by" / "par") and image alt text
   document.querySelectorAll(".fish .name-tag").forEach((tag, i) => {
     tag.textContent = t.by + " " + FISH[i].creator;
@@ -3695,7 +3753,7 @@ window.addEventListener("pointerdown", (e) => {
   // sound played, and any tiny pointer movement between down/up
   // (ordinary hand tremor during a click) rotated the tank behind the
   // modal that was supposedly just closing.
-  if (e.target.closest(".create-btn, .sound-btn, .lang-btn, .night-btn, .info-btn, .search-btn, .menu-toggle-btn, .school-arrow, .school-dots, .card, .card-overlay")) return;
+  if (e.target.closest(".create-btn, .sound-btn, .lang-btn, .night-btn, .info-btn, .search-btn, .fullscreen-btn, .menu-toggle-btn, .school-arrow, .school-dots, .card, .card-overlay")) return;
   isDragging = true;
   wasDragged = false;
   lastPointerX = e.clientX;
