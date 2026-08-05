@@ -205,8 +205,10 @@
           </div>
         </div>
         <div class="side-panel dyf-layer-sidebar">
-          <span class="row-label dyf-layers-label"></span>
-          <div class="pick-strip dyf-layer-grid"></div>
+          <div class="dyf-layer-panel">
+            <span class="row-label dyf-layers-label"></span>
+            <div class="pick-strip dyf-layer-grid"></div>
+          </div>
           <div class="row dyf-row-finish">
             <button class="tool primary dyf-menu-btn dyf-submit-btn" type="button">
               <span class="dyf-menu-btn-inlay dyf-submit-inlay"><span class="dyf-submit-text"></span></span>

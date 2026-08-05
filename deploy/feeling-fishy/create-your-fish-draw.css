@@ -19,7 +19,11 @@
 
   position: relative;
   margin: 0;
-  background: linear-gradient(to bottom, #6ecfe0 0%, #1d7ea8 45%, #0b3556 100%);
+  /* No fill of its own — .card.draw-card's own translucent-black +
+     backdrop-blur (defined in the host page's stylesheet) shows
+     through directly, same as every other card on this page, instead
+     of a second, separate blue box nested inside it. */
+  background: transparent;
   color: var(--dyf-ink); font-family: system-ui, sans-serif;
   display: flex; flex-direction: column; align-items: center;
   padding: 16px 16px 18px;
@@ -32,10 +36,8 @@
   font-family: 'Sixtyfour', 'Courier New', monospace; font-weight: 400;
   text-transform: uppercase; letter-spacing: 1px;
   font-size: 1.1rem; margin: 0 0 12px; color: var(--dyf-gold);
-  /* Gold instead of the tank's own cyan glow — cyan-on-cyan against
-     the top of this gradient had almost no contrast. Gold is the one
-     color the water background never produces on its own, so it
-     always pops, and it echoes the SPA logo itself. */
+  /* Gold reads clearly against the card's own dark translucent
+     background and echoes the SPA logo itself. */
   text-shadow: 0 0 4px rgba(255,238,60,.9), 0 0 14px rgba(255,238,60,.5), 0 0 30px rgba(255,238,60,.25);
   /* Reserves room for the "i" tour button sitting absolutely
      positioned in the top-right corner — without this the centered
@@ -101,6 +103,13 @@
    desktop it just mirrors .side-panel's own column stack, so nothing
    changes there. */
 .dyf-root .pick-strip { display: flex; flex-direction: column; gap: 8px; width: 100%; }
+/* Groups the "LAYERS" label with its card grid, separate from Submit
+   — on desktop this stays invisible (.dyf-layer-sidebar itself is
+   already the real box there, see the grid rules above), but on
+   mobile it becomes its own bezel box (media query below), since
+   .dyf-layer-sidebar itself is display:contents there so Submit can
+   reach its own independent position in the mobile order. */
+.dyf-root .dyf-layer-panel { display: contents; }
 /* Gold instead of teal — matches the SPA logo/title glow and the menu
    buttons' own hover color, so "this card is selected" reads as part
    of the same color language as the rest of the tool. */
@@ -247,26 +256,40 @@
   .dyf-root .dyf-row-back { display: none; }
 
   /* .dyf-layer-sidebar itself no longer generates a box on mobile —
-     desktop nests the "LAYERS" label, its card grid, and the Submit
-     button together inside one stretched sidebar box so Submit can
-     sit flush against .panel's bottom (see the base grid rules and
-     the desktop-only Submit styling below), but mobile still wants
-     those three treated as independent, separately-ordered sections.
-     Promoting them to direct flex items of .workspace, same technique
-     already used for .center-column above. */
+     desktop nests the "LAYERS" label+grid (via .dyf-layer-panel) and
+     the Submit button together inside one stretched sidebar box so
+     Submit can sit flush against .panel's bottom (see the base grid
+     rules and the desktop-only Submit styling below), but mobile
+     still wants the label+grid group and Submit treated as
+     independent, separately-ordered sections. Promoting them to
+     direct flex items of .workspace, same technique already used for
+     .center-column above. */
   .dyf-root .dyf-layer-sidebar { display: contents; }
+  /* .dyf-layer-panel is display:contents by default (see the base
+     rule), which is what desktop wants — but that also means it lost
+     its own box on mobile once .dyf-layer-sidebar (its parent) also
+     became display:contents above, since neither element generates a
+     box anymore. Turning it into a real box here — the same bezel
+     styling .side-panel itself uses — puts that box back specifically
+     for mobile, wrapping just the label+grid, not Submit. */
+  .dyf-root .dyf-layer-panel {
+    display: flex; flex-direction: column; gap: 8px; width: 100%;
+    background: var(--dyf-bezel); border-radius: 10px; padding: 12px;
+    box-shadow:
+      inset 2px 2px 0 rgba(255,255,255,0.08),
+      inset -2px -2px 0 rgba(0,0,0,0.6),
+      0 6px 20px rgba(0,0,0,0.4);
+    order: 3;
+  }
 
   /* Full mobile reading order: canvas, then its immediate drawing
      controls, then Layers (still needed mid-drawing), then Template
      (a one-time pick), then Submit last, since finishing is the last
      step of the flow, not something that belongs next to the canvas
-     you're actively working in. The label and its card grid share an
-     order value — ties keep their original relative (label-then-grid)
-     document order, so they still render as one adjacent group. */
+     you're actively working in. */
   .dyf-root .stage { order: 1; }
   .dyf-root .panel { order: 2; }
-  .dyf-root .dyf-layers-label { order: 3; }
-  .dyf-root .dyf-layer-grid { order: 3; width: 100%; flex-direction: row; flex-wrap: wrap; justify-content: center; }
+  .dyf-root .dyf-layer-grid { width: 100%; flex-direction: row; flex-wrap: wrap; justify-content: center; }
   .dyf-root .dyf-template-sidebar { order: 4; width: 100%; }
   .dyf-root .dyf-row-finish { order: 5; }
 
@@ -322,13 +345,6 @@
    handles Back there instead.
    ================================================================== */
 @media (min-width: 1051px) {
-  /* No fill of its own here — .card.draw-card's own translucent-black
-     + backdrop-blur (defined in the host page's stylesheet) shows
-     through directly instead, same as every other card on this page,
-     rather than a second, separate blue box nested inside it. Mobile
-     keeps the tank-glass gradient from the base rule above. */
-  .dyf-root { background: transparent; }
-
   /* Nested inside .dyf-layer-sidebar / .dyf-template-sidebar (each
      one's own last child, after the cards) — margin-top:auto in that
      flex column pushes each all the way to the bottom of its sidebar's
