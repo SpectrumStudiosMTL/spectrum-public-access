@@ -25,6 +25,19 @@ on:
         description: "Creator email (used to group their fish, never published)"
         required: true
 
+# Serializes runs instead of letting simultaneous submissions race:
+# next_fish_number() in fish_pipeline.py picks the next number from
+# whatever's on `main` at the start of each run, with no locking of
+# its own. Two runs starting close together would each check out the
+# same `main`, compute the same number, and each open a PR touching
+# the same fishN.webp / array-insertion point -- a conflict at best,
+# a silently overwritten submission at worst if one PR gets force-
+# merged over the other. cancel-in-progress:false queues runs rather
+# than dropping a submission that arrived while another was in flight.
+concurrency:
+  group: add-fish
+  cancel-in-progress: false
+
 jobs:
   add-fish:
     runs-on: ubuntu-latest
@@ -50,7 +63,6 @@ jobs:
           FISH_CREATOR_EMAIL: ${{ github.event.client_payload.email || inputs.email }}
           FISH_NAME: ${{ github.event.client_payload.name }}
           FISH_BIO: ${{ github.event.client_payload.bio }}
-          MONDAY_API_TOKEN: ${{ secrets.MONDAY_API_TOKEN }}
         run: python deploy/automation/add_fish.py
 
       # Opens a PR instead of publishing straight to main — the image

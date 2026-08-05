@@ -35,18 +35,22 @@ from fish_pipeline import REPO_ROOT, fail, has_real_transparency, normalize_artw
 
 
 def load_clean_image(path):
-    image = Image.open(path)
-    # Phone photos (and some editors) carry an EXIF orientation tag
-    # that disagrees with the raw pixel data -- normalize it up front
-    # rather than trusting whatever the source app wrote. This isn't
-    # theoretical: a real test photo came out rotated 90 degrees
-    # until this was applied.
-    image = ImageOps.exif_transpose(image)
-    if not has_real_transparency(image):
-        fail(f"{path} doesn't have real transparency -- this script expects "
-             f"the background to already be cut out. Re-export it with a "
-             f"transparent background and try again.")
-    return image.convert("RGBA")
+    try:
+        with Image.open(path) as image:
+            # Phone photos (and some editors) carry an EXIF orientation tag
+            # that disagrees with the raw pixel data -- normalize it up front
+            # rather than trusting whatever the source app wrote. This isn't
+            # theoretical: a real test photo came out rotated 90 degrees
+            # until this was applied.
+            image = ImageOps.exif_transpose(image)
+            if not has_real_transparency(image):
+                fail(f"{path} doesn't have real transparency -- this script "
+                     f"expects the background to already be cut out. "
+                     f"Re-export it with a transparent background and try "
+                     f"again.")
+            return image.convert("RGBA")
+    except OSError as e:
+        fail(f"Couldn't open {path} -- it may be corrupt: {e}")
 
 
 def run(cmd):
@@ -76,12 +80,30 @@ def open_review_pr(n, creator):
         slug = slug[:-4]
 
     branch = f"fish-submission/manual-fish{n}"
-    run(["git", "checkout", "-b", branch])
-    run(["git", "add",
-         "deploy/feeling-fishy/index.html",
-         "deploy/feeling-fishy/images/fish/"])
-    run(["git", "commit", "-m", f"Add fish from {creator} (manual)"])
-    run(["git", "push", "-u", "origin", branch])
+    try:
+        run(["git", "checkout", "-b", branch])
+        run(["git", "add",
+             "deploy/feeling-fishy/index.html",
+             "deploy/feeling-fishy/images/fish/"])
+        run(["git", "commit", "-m", f"Add fish from {creator} (manual)"])
+        run(["git", "push", "-u", "origin", branch])
+    except subprocess.CalledProcessError as e:
+        # Deliberately doesn't auto-checkout back to main here -- if the
+        # failure happened after checkout -b but before commit, the
+        # working tree can still have uncommitted changes that a forced
+        # checkout would silently discard. Safer to tell the person
+        # sitting at this terminal exactly what state they're in and
+        # let them decide, than to guess and possibly lose work.
+        print()
+        print(f"::error:: '{' '.join(e.cmd)}' failed (exit {e.returncode}) "
+              f"while opening the review branch.")
+        print(f"fish{n}.webp and its FISH entry are already written to disk "
+              f"on branch '{branch}' -- nothing was lost, but nothing has "
+              f"been pushed either.")
+        print("To recover: fix the problem above, then either re-run the "
+              "failed git command by hand, or run 'git checkout main' to "
+              "abandon this branch and start over.")
+        sys.exit(1)
 
     print()
     print("Pushed. Open a PR to review and publish it:")

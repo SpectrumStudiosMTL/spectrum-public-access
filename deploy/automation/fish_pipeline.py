@@ -58,10 +58,16 @@ def first_name_only(full_name):
 # True only if the image has an alpha channel AND some of it is
 # actually non-opaque -- some tools write an RGBA PNG with every
 # pixel at alpha=255 out of habit, which functionally means "no
-# transparency" even though the mode says otherwise.
+# transparency" even though the mode says otherwise. Converting to
+# RGBA unconditionally (rather than gating on mode first) is what
+# makes this correct for palette ("P") images too -- a PNG can carry
+# real transparency through its palette's own transparency entry
+# without ever being in RGBA/LA mode, and PIL's own convert() already
+# knows how to derive real alpha from that. A source image with no
+# transparency at all (plain RGB, or P with no transparency entry)
+# still converts cleanly to fully-opaque RGBA, so this stays correct
+# for that case too.
 def has_real_transparency(image):
-    if image.mode not in ("RGBA", "LA"):
-        return False
     alpha = image.convert("RGBA").split()[-1]
     return alpha.getextrema()[0] < 250
 
@@ -116,7 +122,13 @@ def add_embedded_image_entry(content, n):
     marker = "  fish0: \"images/fish/fish0.webp\","
     if marker not in content:
         # fall back: insert right before the closing brace of EMBEDDED_IMAGES
+        if "const EMBEDDED_IMAGES = {" not in content:
+            fail("Couldn't find 'const EMBEDDED_IMAGES = {' in index.html -- "
+                 "it may have moved or changed structure.")
         idx = content.index("const EMBEDDED_IMAGES = {")
+        if "};" not in content[idx:]:
+            fail("Couldn't find the closing '};' for EMBEDDED_IMAGES in "
+                 "index.html -- it may have moved or changed structure.")
         close = content.index("};", idx)
         new_line = f'  fish{n}: "images/fish/fish{n}.webp",\n'
         return content[:close] + new_line + content[close:]
@@ -157,7 +169,13 @@ def add_fish_array_entry(content, n, creator, creator_id, name, bio):
         f'image: EMBEDDED_IMAGES.fish{n}, sound: EMBEDDED_AUDIO.chime, '
         f'height: {h}, size: {s} }},\n'
     )
+    if "const FISH = [" not in content:
+        fail("Couldn't find 'const FISH = [' in index.html -- it may have "
+             "moved or changed structure.")
     idx = content.index("const FISH = [")
+    if "\n];" not in content[idx:]:
+        fail("Couldn't find the closing '];' for the FISH array in "
+             "index.html -- it may have moved or changed structure.")
     close = content.index("\n];", idx) + 1  # right before "];"
     return content[:close] + new_entry + content[close:]
 
@@ -166,14 +184,21 @@ def add_fish_array_entry(content, n, creator, creator_id, name, bio):
 # FISH entry, write index.html back out. Returns the fish number used.
 def write_fish(image, creator, creator_email, name, bio):
     n = next_fish_number()
-    FISH_DIR.mkdir(parents=True, exist_ok=True)
-    out_path = FISH_DIR / f"fish{n}.webp"
-    image.save(out_path, "WEBP", quality=82)
 
+    # Build the new index.html content entirely in memory first, before
+    # writing anything to disk -- add_embedded_image_entry/
+    # add_fish_array_entry each fail() cleanly if index.html's expected
+    # structure is missing, and doing that check before saving the webp
+    # means a structural failure can't leave an orphaned fishN.webp
+    # with no corresponding entry (it used to be saved first).
     creator_id = creator_id_from_email(creator_email)
     published_creator = first_name_only(creator)
     content = INDEX_HTML.read_text(encoding="utf-8")
     content = add_embedded_image_entry(content, n)
     content = add_fish_array_entry(content, n, published_creator, creator_id, name, bio)
+
+    FISH_DIR.mkdir(parents=True, exist_ok=True)
+    out_path = FISH_DIR / f"fish{n}.webp"
+    image.save(out_path, "WEBP", quality=82)
     INDEX_HTML.write_text(content, encoding="utf-8")
     return n

@@ -19,8 +19,6 @@ webhook data):
                         the system of record for grant reporting.
     FISH_NAME          -- (optional) the fish's own name, blank if not asked
     FISH_BIO           -- (optional) a short bio, blank if not asked
-    MONDAY_API_TOKEN   -- needed because monday.com file URLs require
-                        this token in the request header to download
 
 Only submissions where the artwork can be isolated with certainty are
 handled automatically:
@@ -68,12 +66,15 @@ from fish_pipeline import fail, has_real_transparency, normalize_artwork, write_
 TARGET_LAYER_NAME = "your fish design"
 
 
-def download_submission(url, token):
+def download_submission(url):
     # monday's asset public_url is a pre-signed link -- it's already
     # authenticated via the URL itself. Adding an Authorization header
     # on top of that can break the signature and cause an HTTP 400,
     # so this deliberately does NOT send one.
-    resp = requests.get(url, timeout=60)
+    try:
+        resp = requests.get(url, timeout=60)
+    except requests.RequestException as e:
+        fail(f"Couldn't reach {url}: {e}")
     if resp.status_code != 200:
         fail(f"Couldn't download the submitted file (HTTP {resp.status_code}). "
              f"Response body: {resp.text[:500]}")
@@ -115,7 +116,10 @@ def find_target_layer(psd):
 
 
 def extract_from_psd(path):
-    psd = PSDImage.open(path)
+    try:
+        psd = PSDImage.open(path)
+    except Exception as e:
+        fail(f"Couldn't open the PSD file -- it may be corrupt: {e}")
     matches = find_target_layer(psd)
     if not matches:
         fail(f'No layer named "{TARGET_LAYER_NAME}" found. '
@@ -133,12 +137,16 @@ def extract_from_flat_image(path, suffix):
              "separate the fish from its background automatically. Cut it "
              "out by hand and run it through add_fish_manual.py instead.")
 
-    image = Image.open(path)
-    if not has_real_transparency(image):
-        fail("This PNG has no real transparency -- it looks like a flat scan "
-             "or photo, not pre-isolated artwork. Cut out the background by "
-             "hand and run it through add_fish_manual.py instead.")
-    return image.convert("RGBA")
+    try:
+        with Image.open(path) as image:
+            if not has_real_transparency(image):
+                fail("This PNG has no real transparency -- it looks like a "
+                     "flat scan or photo, not pre-isolated artwork. Cut out "
+                     "the background by hand and run it through "
+                     "add_fish_manual.py instead.")
+            return image.convert("RGBA")
+    except OSError as e:
+        fail(f"Couldn't open the image file -- it may be corrupt: {e}")
 
 
 def extract_artwork(path, suffix):
@@ -158,13 +166,12 @@ def main():
     creator_email = os.environ.get("FISH_CREATOR_EMAIL")
     name = os.environ.get("FISH_NAME", "")
     bio = os.environ.get("FISH_BIO", "")
-    token = os.environ.get("MONDAY_API_TOKEN")
 
     if not file_url or not creator or not creator_email:
         fail("Missing FISH_FILE_URL, FISH_CREATOR, or FISH_CREATOR_EMAIL -- "
              "check the workflow's client_payload mapping.")
 
-    data = download_submission(file_url, token)
+    data = download_submission(file_url)
     suffix = sniff_extension(data) or Path(file_url.split("?")[0]).suffix.lower()
     tmp_path = Path(f"/tmp/submission{suffix or '.bin'}")
     tmp_path.write_bytes(data)
