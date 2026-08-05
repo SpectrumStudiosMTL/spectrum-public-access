@@ -282,6 +282,7 @@ const TEXT = {
     nextCreatorFish: "Next fish by this creator",
     back: "Close",
     drawTitle: "Draw your fish",
+    drawToolLoadError: "Couldn't load the drawing tool — check your connection and try again.",
     submitTitle: "Submit your fish",
     submitNote: "Attach your fish file below — a name and email are all we need alongside it.",
     submitFrameTitle: "Feeling Fishy submission form",
@@ -350,6 +351,7 @@ const TEXT = {
     nextCreatorFish: "Poisson suivant de ce créateur",
     back: "Fermer",
     drawTitle: "Dessine ton poisson",
+    drawToolLoadError: "Impossible de charger l'outil de dessin — vérifie ta connexion et réessaie.",
     submitTitle: "Soumets ton poisson",
     submitNote: "Joins ton fichier de poisson ci-dessous — un nom et un courriel suffisent en plus.",
     submitFrameTitle: "Formulaire de soumission Feeling Fishy",
@@ -921,42 +923,6 @@ header p  { font-size: clamp(0.85rem, 2vw, 1rem); opacity: 0.9; }
   transition: background 0.15s ease;
 }
 .info-toggle:hover, .info-toggle:focus-visible { background: rgba(255,255,255,0.2); }
-.info-panel {
-  max-height: 0;
-  overflow: hidden;
-  transition: max-height 0.28s ease;
-}
-.info-panel.open { max-height: 280px; }
-.info-box {
-  background: rgba(255,255,255,0.12);
-  border: 1px solid rgba(255,255,255,0.2);
-  border-radius: 16px;
-  padding: 16px 18px;
-  margin: 12px 0 6px;
-}
-.info-list {
-  list-style: none;
-  margin: 0 0 10px;
-  padding: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 5px;
-}
-.info-list li {
-  font-family: var(--title-font);
-  font-size: 1.1rem;
-  font-weight: 700;
-  line-height: 1.35;
-}
-.info-panel p {
-  font-size: 1rem;
-  line-height: 1.5;
-  opacity: 0.9;
-  margin: 0;
-}
-@media (prefers-reduced-motion: reduce) {
-  .info-panel { transition: none; }
-}
 .download-note {
   font-size: 0.85rem;
   line-height: 1.5;
@@ -1979,7 +1945,7 @@ body.calm .school-arrow, body.calm .school-dots {
     <div class="walkthrough">
       <button class="card-nav prev shown" id="walkthroughPrev" type="button" aria-label=""><span aria-hidden="true">‹</span></button>
       <div class="walkthrough-scene">
-        <div class="walkthrough-image" id="walkthroughImage" data-scene="0">
+        <div class="walkthrough-image">
           <span class="walkthrough-placeholder-label" id="walkthroughPlaceholderLabel"></span>
           <img id="walkthroughImg" alt="">
         </div>
@@ -2020,7 +1986,7 @@ body.calm .school-arrow, body.calm .school-dots {
     <div class="walkthrough">
       <button class="card-nav prev shown" id="templateWalkthroughPrev" type="button" aria-label=""><span aria-hidden="true">‹</span></button>
       <div class="walkthrough-scene">
-        <div class="walkthrough-image" id="templateWalkthroughImage">
+        <div class="walkthrough-image">
           <span class="walkthrough-placeholder-label" id="templateWalkthroughPlaceholderLabel"></span>
           <img id="templateWalkthroughImg" alt="">
         </div>
@@ -2358,7 +2324,11 @@ async function loadChime(src) {
   try {
     const res = await fetch(src);
     chimeBuffer = await audioCtx.decodeAudioData(await res.arrayBuffer());
-  } catch (e) { chimeLoading = false; }
+  } catch (e) {
+    // no-op -- chimeLoading resets in finally either way
+  } finally {
+    chimeLoading = false;
+  }
 }
 
 function playChime(src, semitones) {
@@ -2847,6 +2817,15 @@ if (SETTINGS.templateUrl || SETTINGS.submitEmbedUrl) {
       script.onerror = reject;
       document.body.appendChild(script);
     });
+    // If this load fails, forget about it instead of caching a dead
+    // rejected promise -- otherwise every future click on "Draw it
+    // yourself" for the rest of the session would hit the guard above
+    // and return that same already-rejected promise, so a single
+    // network blip would silently disable the draw tool until a full
+    // page reload. This .catch() only resets the module-level
+    // variable as a side effect -- it doesn't swallow the rejection,
+    // which still propagates to whoever called loadDrawTool().
+    drawToolLoading.catch(() => { drawToolLoading = null; });
     return drawToolLoading;
   }
   optDraw.addEventListener("click", () => {
@@ -2862,7 +2841,9 @@ if (SETTINGS.templateUrl || SETTINGS.submitEmbedUrl) {
     // Fourth argument: what the tool's own internal Back button
     // (desktop only — see create-your-fish-draw.css) calls; the
     // external #drawBack button below still handles this on mobile.
-    loadDrawTool().then(() => window.FishDrawTool.mount(drawToolMount, lang, () => openSubmitScreen(drawOverlay), goBackFromDraw));
+    loadDrawTool()
+      .then(() => window.FishDrawTool.mount(drawToolMount, lang, () => openSubmitScreen(drawOverlay), goBackFromDraw))
+      .catch(() => { drawToolMount.textContent = TEXT[lang].drawToolLoadError; });
   });
 
   // These three are <a> tags with no href (they navigate within the
@@ -3563,10 +3544,21 @@ applyLanguage();
 // viewport — it was computing a negative `bottom` and getting
 // cropped by the screen. Desktop keeps its plain CSS position.
 if (window.innerWidth < 640 && logoEl && createBtn) {
-  const btnRect = createBtn.getBoundingClientRect();
-  const logoRect = logoEl.getBoundingClientRect();
-  const btnCenter = (btnRect.top + btnRect.bottom) / 2;
-  logoEl.style.bottom = `${window.innerHeight - btnCenter - logoRect.height / 2}px`;
+  function centerLogoOnCreateBtn() {
+    const btnRect = createBtn.getBoundingClientRect();
+    const logoRect = logoEl.getBoundingClientRect();
+    const btnCenter = (btnRect.top + btnRect.bottom) / 2;
+    logoEl.style.bottom = `${window.innerHeight - btnCenter - logoRect.height / 2}px`;
+  }
+  centerLogoOnCreateBtn();
+  // createBtn's label uses the Baloo 2 webfont (var(--title-font)),
+  // loaded async via the <link> in <head> -- if it swaps in after the
+  // measurement above, btnRect was measured against the fallback
+  // font's metrics and the offset goes stale. Recompute once the real
+  // font is confirmed loaded; a no-op if it already was by now.
+  if (document.fonts && document.fonts.ready) {
+    document.fonts.ready.then(centerLogoOnCreateBtn);
+  }
 }
 
 /* --- Drag to rotate -------------------------------------------- */
@@ -3612,7 +3604,15 @@ function stopDragSound() {
 }
 
 window.addEventListener("pointerdown", (e) => {
-  if (e.target.closest(".create-btn, .sound-btn, .lang-btn, .night-btn, .info-btn, .search-btn, .menu-toggle-btn, .school-arrow, .school-dots, .card")) return;
+  // .card-overlay is each modal's own full-screen backdrop (the
+  // element a backdrop click closes the modal against, e.g.
+  // searchOverlay's own click handler below) -- without it here, a
+  // backdrop click to close ANY modal also fell through to the tank
+  // drag logic underneath it: the cursor became "grabbing", the drag
+  // sound played, and any tiny pointer movement between down/up
+  // (ordinary hand tremor during a click) rotated the tank behind the
+  // modal that was supposedly just closing.
+  if (e.target.closest(".create-btn, .sound-btn, .lang-btn, .night-btn, .info-btn, .search-btn, .menu-toggle-btn, .school-arrow, .school-dots, .card, .card-overlay")) return;
   isDragging = true;
   wasDragged = false;
   lastPointerX = e.clientX;
