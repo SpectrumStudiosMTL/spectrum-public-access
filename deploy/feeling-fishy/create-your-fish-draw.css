@@ -44,7 +44,38 @@
   max-width: calc(100% - 76px);
 }
 
-.dyf-root .workspace { display: flex; gap: 14px; align-items: flex-start; justify-content: center; }
+/* Grid instead of flex on desktop so Layers can sit in its own
+   right-hand column spanning both rows (matching Template's own
+   full-height span on the left), instead of splitting into two
+   stacked flex rows. .center-column no longer generates its own box
+   (display:contents below) so .stage/.panel become direct grid items
+   here, rather than moving together as one fixed block. Mobile
+   switches this back to a plain flex column (see media query below)
+   — grid-area is simply ignored there. */
+.dyf-root .workspace {
+  display: grid;
+  grid-template-columns: min(11.5vw, 180px) minmax(0, 900px) min(11.5vw, 180px);
+  grid-template-areas:
+    "template stage  layers"
+    "template panel  layers";
+  column-gap: 14px;
+  align-items: start;
+  justify-content: center;
+}
+.dyf-root .dyf-template-sidebar { grid-area: template; }
+.dyf-root .dyf-stage { grid-area: stage; }
+.dyf-root .panel { grid-area: panel; }
+/* Stretched (not start-aligned like Template) so Submit — now nested
+   inside as this box's own last child, pushed down via margin-top:
+   auto — can align its bottom with .panel's bottom, matching its
+   full spanned height instead of just its own cards' height. */
+.dyf-root .dyf-layer-sidebar { grid-area: layers; align-self: stretch; }
+
+/* .stage and .panel already carry their own margin-top/gap for the
+   vertical space between rows 1 and 2 of the middle+right columns, so
+   the grid itself adds no row-gap — avoids double-spacing on top of
+   those existing margins. */
+.dyf-root .center-column { display: contents; }
 
 .dyf-root .side-panel {
   display: flex; flex-direction: column; gap: 8px;
@@ -127,8 +158,6 @@
 }
 .dyf-root .brush-cursor.eraser { border-style: dashed; }
 
-.dyf-root .center-column { display: flex; flex-direction: column; align-items: center; }
-
 .dyf-root .panel {
   width: 100%; max-width: 900px; margin-top: 10px;
   background: var(--dyf-bezel); border-radius: 10px; padding: 10px 16px;
@@ -185,7 +214,13 @@
      of wrapping. Pinning it to 100% here gives the whole chain below
      (.center-column, .stage, .panel, all already width:100%) an
      unambiguous box to size against, so flex-wrap can do its job. */
-  .dyf-root .workspace { flex-direction: column; align-items: center; width: 100%; }
+  /* Base .workspace is a grid on desktop now (see above) — switched
+     back to a plain flex column here, same as before that change.
+     .center-column's display:contents (in the base rules now, not
+     mobile-scoped) still applies, so .stage/.panel stay direct flex
+     items either way; grid-area is simply ignored once the container
+     isn't a grid. */
+  .dyf-root .workspace { display: flex; flex-direction: column; align-items: center; width: 100%; }
   .dyf-root .side-panel { flex-direction: row; flex-wrap: wrap; width: auto; justify-content: center; }
 
   /* Both Template and Layers cards now hug their own thumbnail+label
@@ -194,21 +229,27 @@
      layers included). One shared rule keeps them in visual parity. */
   .dyf-root .pick-btn { width: auto; flex: 0 0 auto; }
 
-  /* .center-column no longer generates its own box on mobile — its
-     children (.stage, .panel, .dyf-row-finish) are "promoted" to be
-     direct flex items of .workspace instead, so each can get its own
-     position in the single mobile order below rather than moving as
-     one fixed block. Desktop is untouched (this only applies here). */
-  .dyf-root .center-column { display: contents; }
+  /* .dyf-layer-sidebar itself no longer generates a box on mobile —
+     desktop nests the "LAYERS" label, its card grid, and the Submit
+     button together inside one stretched sidebar box so Submit can
+     sit flush against .panel's bottom (see the base grid rules and
+     the desktop-only Submit styling below), but mobile still wants
+     those three treated as independent, separately-ordered sections.
+     Promoting them to direct flex items of .workspace, same technique
+     already used for .center-column above. */
+  .dyf-root .dyf-layer-sidebar { display: contents; }
 
   /* Full mobile reading order: canvas, then its immediate drawing
      controls, then Layers (still needed mid-drawing), then Template
      (a one-time pick), then Submit last, since finishing is the last
      step of the flow, not something that belongs next to the canvas
-     you're actively working in. */
+     you're actively working in. The label and its card grid share an
+     order value — ties keep their original relative (label-then-grid)
+     document order, so they still render as one adjacent group. */
   .dyf-root .stage { order: 1; }
   .dyf-root .panel { order: 2; }
-  .dyf-root .dyf-layer-sidebar { order: 3; width: 100%; }
+  .dyf-root .dyf-layers-label { order: 3; }
+  .dyf-root .dyf-layer-grid { order: 3; width: 100%; flex-direction: row; flex-wrap: wrap; justify-content: center; }
   .dyf-root .dyf-template-sidebar { order: 4; width: 100%; }
   .dyf-root .dyf-row-finish { order: 5; }
 
@@ -244,6 +285,84 @@
      hiding it leaves just the 2 editable layers. Desktop keeps all 3
      visible since space isn't tight there. */
   .dyf-root .dyf-layer-sidebar .pick-btn.locked { display: none; }
+}
+
+/* ==================================================================
+   DESKTOP SUBMIT BUTTON — matches the "create your fish" menu
+   buttons (#createOverlay/#createChooseOverlay .option-btn in the
+   host page's own stylesheet) instead of the tool panel's gold
+   button, since it now sits in the sidebar column rather than inside
+   the panel itself. Reuses the same --title-glow/--logo-glow tokens
+   (inherited from the host page's :root — this file's selectors are
+   scoped under .dyf-root, but custom properties still cascade down
+   through the DOM regardless of which stylesheet declared them) so
+   it stays in sync if that palette ever changes. Mobile keeps the
+   plain gold .primary button, unchanged, in its own full-width row
+   after Template.
+   ================================================================== */
+@media (min-width: 1051px) {
+  /* Nested inside .dyf-layer-sidebar (its last child, after the
+     cards) — margin-top:auto in that flex column pushes it all the
+     way to the bottom of the sidebar's now-stretched height, so its
+     bottom lands exactly on .panel's bottom instead of hugging the
+     cards above it. */
+  .dyf-root .dyf-row-finish { width: 100%; max-width: none; margin-top: auto; }
+  .dyf-root button.dyf-submit-btn {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 1 / 1; /* the biggest square the layers column width allows */
+    background: #17191d;
+    border: none;
+    padding: 0; /* bezel thickness now comes from .dyf-submit-inlay's inset, matching the menu buttons' own technique */
+    border-radius: 7px;
+    box-shadow:
+      inset 2px 2px 0 rgba(255,255,255,0.12),
+      inset -2px -2px 0 rgba(0,0,0,0.6),
+      0 5px 0 rgba(0,0,0,0.4),
+      0 0 14px rgba(var(--title-glow), 0.3);
+    transition: transform 0.08s ease, box-shadow 0.08s ease;
+  }
+  .dyf-root .dyf-submit-inlay {
+    position: absolute;
+    inset: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    border-radius: 4px;
+    padding: 8px;
+    font-family: var(--title-font, 'Sixtyfour', monospace);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .05em;
+    font-size: 0.76rem;
+    line-height: 1.25;
+    color: #123a52;
+    background: rgb(var(--title-glow));
+    box-shadow: inset 0 0 7px rgba(0,0,0,0.35);
+    transition: background 0.2s ease;
+  }
+  .dyf-root button.dyf-submit-btn:hover .dyf-submit-inlay,
+  .dyf-root button.dyf-submit-btn:focus-visible .dyf-submit-inlay {
+    background: rgb(var(--logo-glow));
+  }
+  .dyf-root button.dyf-submit-btn:hover,
+  .dyf-root button.dyf-submit-btn:focus-visible {
+    transform: translateY(-2px);
+    box-shadow:
+      inset 2px 2px 0 rgba(255,255,255,0.12),
+      inset -2px -2px 0 rgba(0,0,0,0.6),
+      0 5px 0 rgba(0,0,0,0.4),
+      0 0 18px rgba(var(--logo-glow), 0.45);
+  }
+  .dyf-root button.dyf-submit-btn:active {
+    transform: translateY(3px);
+    box-shadow:
+      inset 2px 2px 0 rgba(0,0,0,0.5),
+      inset -2px -2px 0 rgba(255,255,255,0.08),
+      0 1px 0 rgba(0,0,0,0.4),
+      0 0 8px rgba(var(--logo-glow), 0.2);
+  }
 }
 
 /* ==================================================================

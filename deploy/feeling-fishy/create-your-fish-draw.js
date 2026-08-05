@@ -191,12 +191,15 @@
               <button class="tool dyf-clear-btn" type="button"></button>
             </div>
           </div>
-          <div class="row dyf-row-finish">
-            <button class="tool primary dyf-submit-btn" type="button"></button>
-          </div>
         </div>
         <div class="side-panel dyf-layer-sidebar">
           <span class="row-label dyf-layers-label"></span>
+          <div class="pick-strip dyf-layer-grid"></div>
+          <div class="row dyf-row-finish">
+            <button class="tool primary dyf-submit-btn" type="button">
+              <span class="dyf-submit-inlay"><span class="dyf-submit-text"></span></span>
+            </button>
+          </div>
         </div>
       </div>
     `;
@@ -241,6 +244,7 @@
     s.templateSidebar = q(".dyf-template-sidebar");
     s.templateStrip = q(".dyf-template-strip");
     s.layerSidebar = q(".dyf-layer-sidebar");
+    s.layerGrid = q(".dyf-layer-grid");
 
     function loadImg(src) {
       const img = new Image();
@@ -293,7 +297,7 @@
       btn.appendChild(thumb);
       btn.appendChild(label);
       btn.addEventListener("click", () => { if (l.locked) return; setActiveLayer(idx); });
-      s.layerSidebar.appendChild(btn);
+      s.layerGrid.appendChild(btn);
       l.thumbCtx = thumb.getContext("2d");
       l.btn = btn;
       l.nameEl = nameSpan;
@@ -681,7 +685,7 @@
     q(".dyf-size-label").childNodes[0].textContent = s.sizeLabel + " ";
     q(".dyf-undo-btn").textContent = s.undo;
     q(".dyf-clear-btn").textContent = s.clearLayer;
-    q(".dyf-submit-btn").textContent = s.submit;
+    q(".dyf-submit-text").textContent = s.submit;
     const tourBtn = q(".dyf-tour-btn");
     tourBtn.title = s.tourBtnTitle;
     tourBtn.setAttribute("aria-label", s.tourBtnTitle);
