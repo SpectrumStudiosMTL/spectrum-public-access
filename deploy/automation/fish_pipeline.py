@@ -12,6 +12,7 @@ module doesn't know or care where that image came from.
 """
 
 import hashlib
+import json
 import re
 import sys
 from pathlib import Path
@@ -123,14 +124,36 @@ def add_embedded_image_entry(content, n):
     return content.replace(marker, new_line, 1)
 
 
+# Safely encodes a string as a JS string literal (including the
+# surrounding quotes) for embedding in the inline <script> block these
+# entries live in. These fields come straight from public form
+# submissions with no validation, so this has to hold up against
+# deliberately hostile input, not just accidental typos:
+#
+# - json.dumps() produces valid JS string syntax (JSON string escaping
+#   is a compatible subset of JS's) and correctly handles backslashes,
+#   quotes, and control characters/newlines -- the previous
+#   `.replace('"', '\\"')` only escaped quotes, so a value ending in an
+#   odd number of backslashes desynced the string boundary and could
+#   swallow the rest of the entry, and a literal newline (e.g. a
+#   multi-line bio) was a straight SyntaxError that broke the whole
+#   shared <script> block for every visitor.
+# - json.dumps() does NOT escape "/", so a value containing the literal
+#   text "</script" would still terminate the surrounding <script> tag
+#   at the HTML-parser level regardless of JS string quoting -- that's
+#   real stored XSS, independent of the escaping above. Replacing "</"
+#   with "<\/" (a no-op once JS decodes the string, since "\/" is just
+#   "/") neutralizes that without changing the published value.
+def js_string_literal(value):
+    return json.dumps(value).replace("</", "<\\/")
+
+
 def add_fish_array_entry(content, n, creator, creator_id, name, bio):
     h = HEIGHTS[n % len(HEIGHTS)]
     s = SIZES[n % len(SIZES)]
-    creator_esc = creator.replace('"', '\\"')
-    name_esc = (name or "").replace('"', '\\"')
-    bio_esc = (bio or "").replace('"', '\\"')
     new_entry = (
-        f'  {{ name: "{name_esc}", creator: "{creator_esc}", creatorId: "{creator_id}", bio: "{bio_esc}", '
+        f'  {{ name: {js_string_literal(name or "")}, creator: {js_string_literal(creator)}, '
+        f'creatorId: {js_string_literal(creator_id)}, bio: {js_string_literal(bio or "")}, '
         f'image: EMBEDDED_IMAGES.fish{n}, sound: EMBEDDED_AUDIO.chime, '
         f'height: {h}, size: {s} }},\n'
     )
