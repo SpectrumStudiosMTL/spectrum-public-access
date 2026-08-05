@@ -85,23 +85,20 @@
 .dyf-root .lock-tag { font-size: 0.62rem; border: 1px solid rgba(255,255,255,0.3); border-radius: 5px; padding: 1px 4px; }
 
 .dyf-root .stage {
-  /* Width is capped three ways — by an internal width limit, a hard
-     max, and height converted through the fixed aspect ratio — then
-     aspect-ratio derives height from that width. Two independently
-     computed dimensions almost never land on the actual 900:620
-     canvas ratio, so the browser would stretch the bitmap to fill a
-     box of the wrong shape. Locking to one ratio means the on-screen
-     box always matches the canvas pixel buffer 1:1 — no stretching,
-     on any window or modal shape.
-
-     The 46vh budget (not 66vh) accounts for this living inside a
-     modal card that also has its own title, Back button, and
-     padding around it — sized for the space actually left over,
-     not the full viewport the standalone tool originally assumed. */
+  /* Matches the tool panel below it (.panel is width:100%;
+     max-width:900px) instead of being capped by viewport height —
+     that vh-based cap used to win out on most desktop window shapes,
+     leaving the canvas visibly narrower than the panel underneath it
+     with empty space on both sides. aspect-ratio still derives the
+     height from whatever width this resolves to, so the on-screen
+     box always matches the canvas pixel buffer 1:1 — no stretching.
+     If a short viewport ever makes this taller than there's room for,
+     .card.draw-card's own overflow-y:auto scrolls the card, same as
+     it already does for any other tall content. */
   position: relative;
-  width: min(64vw, 820px, calc(46vh * 900 / 620));
+  width: 100%;
+  max-width: 900px;
   aspect-ratio: 900 / 620;
-  max-width: 100%;
   border-radius: 16px; overflow: hidden;
   box-shadow: 0 10px 40px rgba(0,0,0,0.5);
   background: #fff; touch-action: none; flex-shrink: 0;
@@ -209,7 +206,7 @@
      (a one-time pick), then Submit last, since finishing is the last
      step of the flow, not something that belongs next to the canvas
      you're actively working in. */
-  .dyf-root .stage { order: 1; width: 100%; max-width: 900px; }
+  .dyf-root .stage { order: 1; }
   .dyf-root .panel { order: 2; }
   .dyf-root .dyf-layer-sidebar { order: 3; width: 100%; }
   .dyf-root .dyf-template-sidebar { order: 4; width: 100%; }
