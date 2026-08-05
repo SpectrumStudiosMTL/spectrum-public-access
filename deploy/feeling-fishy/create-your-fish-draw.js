@@ -170,7 +170,7 @@
           <div class="pick-strip dyf-template-strip"></div>
           <div class="row dyf-row-back">
             <button class="tool primary dyf-menu-btn dyf-back-btn" type="button">
-              <span class="dyf-menu-btn-inlay dyf-back-inlay"><span class="dyf-back-text"></span></span>
+              <span class="dyf-menu-btn-inlay"><span class="dyf-back-text"></span></span>
             </button>
           </div>
         </div>
@@ -211,7 +211,7 @@
           </div>
           <div class="row dyf-row-finish">
             <button class="tool primary dyf-menu-btn dyf-submit-btn" type="button">
-              <span class="dyf-menu-btn-inlay dyf-submit-inlay"><span class="dyf-submit-text"></span></span>
+              <span class="dyf-menu-btn-inlay"><span class="dyf-submit-text"></span></span>
             </button>
           </div>
         </div>
@@ -250,14 +250,12 @@
       return { ...def, canvas, ctx: canvas.getContext("2d"), undoStack: [] };
     });
     function layerByCanvasZOrder(id) { return s.layers.find((l) => l.id === id); }
-    s.layerByCanvasZOrder = layerByCanvasZOrder;
 
     s.activeLayer = s.layers.findIndex((l) => l.id === "base");
     s.activeTemplate = null;
 
     s.templateSidebar = q(".dyf-template-sidebar");
     s.templateStrip = q(".dyf-template-strip");
-    s.layerSidebar = q(".dyf-layer-sidebar");
     s.layerGrid = q(".dyf-layer-grid");
 
     function loadImg(src) {
@@ -278,7 +276,6 @@
       const w = img.naturalWidth * scale, h = img.naturalHeight * scale;
       return { x: (W - w) / 2, y: (H - h) / 2, w, h };
     }
-    s.imagePlacement = imagePlacement;
 
     function updateThumb(idx) {
       const l = s.layers[idx];
@@ -289,7 +286,6 @@
       const dw = W * scale, dh = H * scale;
       l.thumbCtx.drawImage(l.canvas, (180 - dw) / 2, (126 - dh) / 2, dw, dh);
     }
-    s.updateThumb = updateThumb;
     function updateAllThumbs() { s.layers.forEach((_, i) => updateThumb(i)); }
 
     s.layers.forEach((l, idx) => {
@@ -322,14 +318,30 @@
       s.layers.forEach((l, idx) => { l.canvas.style.pointerEvents = (idx === s.activeLayer && !l.locked) ? "auto" : "none"; });
       s.layers.forEach((l, idx) => l.btn.classList.toggle("active", idx === s.activeLayer));
     }
-    s.setActiveLayer = setActiveLayer;
     setActiveLayer(s.activeLayer);
     updateAllThumbs();
 
     function chooseTemplate(t) {
+      // Template images start loading in build(), but their picker
+      // buttons are clickable immediately -- a click landing before
+      // the (small, same-origin, normally near-instant) image has
+      // finished loading would read naturalWidth/Height as 0 and
+      // compute a NaN placement, silently failing to draw the
+      // outline. Retrying once the image is actually ready is
+      // simpler and more forgiving than trying to prevent the click.
+      if (!t.blank && !t.lineArtImg.complete) {
+        t.lineArtImg.addEventListener("load", () => chooseTemplate(t), { once: true });
+        return;
+      }
       s.activeTemplate = t;
       const templateLayer = layerByCanvasZOrder("template");
-      templateLayer.undoStack.push(templateLayer.ctx.getImageData(0, 0, W, H));
+      // Not pushed onto templateLayer.undoStack: that layer is locked
+      // and can never become the active layer (the layer-picker click
+      // handler below skips locked layers before calling
+      // setActiveLayer), so nothing can ever pop this back off -- it
+      // was pure unbounded memory growth (a full 900x620 ImageData,
+      // ~2.2MB, every time someone tried a different template) with
+      // no way to ever be consumed.
       templateLayer.ctx.clearRect(0, 0, W, H);
       if (!t.blank) {
         const p = imagePlacement(t.lineArtImg);
@@ -340,7 +352,6 @@
       t.pickerBtn.classList.add("active");
       updateFillCleanAvailability();
     }
-    s.chooseTemplate = chooseTemplate;
 
     // Auto-fill and Clean both depend on a body/outline mask that the
     // open canvas doesn't have, so they're disabled (not just toast-

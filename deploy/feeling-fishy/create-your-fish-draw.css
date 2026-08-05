@@ -216,11 +216,6 @@
   background: var(--dyf-gold); color: #3a2e00; border: none; border-radius: 6px; padding: 8px 16px; cursor: pointer;
   box-shadow: 0 4px 0 rgba(0,0,0,0.4), 0 0 14px rgba(255,238,60,.35);
 }
-.dyf-root button.secondary {
-  font-family: 'Sixtyfour', monospace; text-transform: uppercase; letter-spacing: .06em; font-size: 0.78rem;
-  background: transparent; color: var(--dyf-teal); border: 2px solid var(--dyf-teal); border-radius: 6px; padding: 6px 16px; cursor: pointer;
-  box-shadow: 0 0 10px rgba(63,216,196,.3), inset 0 0 10px rgba(63,216,196,.15);
-}
 .dyf-root label.small { font-size: 0.76rem; color: var(--dyf-dim); display: flex; align-items: center; gap: 6px; }
 .dyf-root input[type="range"] { width: 80px; }
 
