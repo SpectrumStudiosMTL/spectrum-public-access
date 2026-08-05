@@ -41,6 +41,7 @@ const EMBEDDED_IMAGES = {
   inlayDrawAtHome: "images/inlay-draw-at-home.webp",  // placeholder -- swap out later
   inlayPng: "images/inlay-print.webp",
   inlayKrita: "images/inlay-krita.webp",
+  inlayPsd: "images/inlay-psd.webp",
   logo: "images/logo-2.webp",
   fish0: "images/fish/fish0.webp",
   fish75: "images/fish/fish75.webp",
@@ -185,7 +186,7 @@ const SETTINGS = {
     download: EMBEDDED_IMAGES.inlayDrawAtHome,  // "DRAW AT HOME" button -- placeholder
     submit: EMBEDDED_IMAGES.inlaySubmit,  // "SUBMIT A FISH" button -- placeholder
     png: EMBEDDED_IMAGES.inlayPng,      // "Ready to print" format button
-    psd: null,                          // Photoshop format button
+    psd: EMBEDDED_IMAGES.inlayPsd,      // Photoshop format button
     krita: EMBEDDED_IMAGES.inlayKrita,  // Krita format button
   },
 
@@ -252,7 +253,7 @@ const TEXT = {
     walkSwim: "Once it's approved, your fish swims for everyone to see!",
     walkthroughPlaceholder: "Scene {n} of {total} — illustration coming soon",
     downloadTitle: "Choose your template",
-    asIs: "Ready to print (PNG)",
+    asIs: "Ready to print",
     psd: "Photoshop (PSD)",
     krita: "Krita (KRA)",
     downloadInfoToggle: "How does it work?",
@@ -324,7 +325,7 @@ const TEXT = {
     walkSwim: "Une fois approuvé, ton poisson nage pour que tout le monde le voie !",
     walkthroughPlaceholder: "Scène {n} sur {total} — illustration à venir",
     downloadTitle: "Choisis ton modèle",
-    asIs: "Prêt à imprimer (PNG)",
+    asIs: "Prêt à imprimer",
     psd: "Photoshop (PSD)",
     krita: "Krita (KRA)",
     downloadInfoToggle: "Comment ça marche ?",
@@ -815,10 +816,10 @@ header p  { font-size: clamp(0.85rem, 2vw, 1rem); opacity: 0.9; }
   flex-shrink: 0;
 }
 /* The two new DESIGN A FISH / SUBMIT A FISH placeholder icons read
-   too small at the shared 52% sizing above -- scoped to just these
-   two rather than changing the shared rule, since that would also
-   resize the already-tuned PNG/PSD/KRITA icons on the template
-   screen without those having been asked for or checked.
+   too small at the shared sizing above -- scoped to just these two
+   rather than changing the shared rule, since that would also
+   resize the PNG/PSD/KRITA icons on the template screen without
+   those having been asked for or checked.
 
    height is a fixed box (not max-height as a % of the icon's own
    aspect ratio) specifically so both icons occupy identical vertical
@@ -832,6 +833,24 @@ header p  { font-size: clamp(0.85rem, 2vw, 1rem); opacity: 0.9; }
 #createChooseOverlay .card .option-btn .inlay img {
   width: 100%;
   height: 90px;
+  object-fit: contain;
+}
+/* PNG/PSD/KRITA icons on the template screen -- same fixed-pixel-box
+   reasoning as above. A percentage-of-container size (tried first)
+   grows the img box as the button resizes, and since .inlay centers
+   its whole img+text stack with justify-content:center, a taller img
+   pushes the label down with it. Fixing the box in px instead keeps
+   the img's footprint constant, so the label sits in the same spot
+   regardless of how big the button itself renders. */
+#downloadOverlay .card .option-btn .inlay img {
+  width: auto;
+  height: 56px;       /* fits within the smallest rendered button's
+                          available room (~59px) without overflowing
+                          the bezel -- see the option-btn min-width */
+  max-width: 100%;
+  max-height: none;   /* override the shared rule's 55% cap above,
+                          which otherwise still applies per-property
+                          and silently shrinks this back down */
   object-fit: contain;
 }
 /* Every option button across all three create-menu screens (top
