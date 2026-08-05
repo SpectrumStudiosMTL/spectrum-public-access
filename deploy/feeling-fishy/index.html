@@ -1340,6 +1340,14 @@ header p  { font-size: clamp(0.85rem, 2vw, 1rem); opacity: 0.9; }
   z-index: 900;
 }
 .card-overlay.open { display: flex; }
+/* The fish detail card can now open while the search overlay stays
+   open behind it (see selectSearchResult()/randomFishBtn's own
+   comments) — both share the base z-index above, so without this the
+   later-in-DOM #searchOverlay would paint over the card instead of
+   the other way around. Bumped just enough to win that specific
+   stacking, not so far it'd fight the toast/tour z-indexes elsewhere
+   on the page (those stay well above 900 too). */
+#cardOverlay.open { z-index: 910; }
 .card {
   /* Translucent black card — the tank glows through it.
      The backdrop blur keeps text readable over the busy video;
@@ -3377,8 +3385,11 @@ function setSearchActive(row) {
 function selectSearchResult(row) {
   const fishIndex = searchMatches[row];
   if (fishIndex === undefined) return;
-  searchOverlay.classList.remove("open");
-  locateFish(fishIndex, searchBtn);
+  // Search stays open behind the card (see #cardOverlay's z-index)
+  // instead of closing here, so closing the card lands you right back
+  // in the gallery instead of the bare tank -- picking another fish,
+  // or another round of Random, doesn't need reopening search first.
+  locateFish(fishIndex, searchInput);
 }
 
 // Jumps to a fish's card even when it's in a school that isn't
@@ -3415,7 +3426,9 @@ searchOverlay.addEventListener("click", (e) => { if (e.target === searchOverlay)
 // the search box -- scoping it to the current (possibly narrow, or
 // empty from a typo) search would make it feel broken rather than
 // surprising. Rerolls once on a repeat so two clicks in a row don't
-// land on the same fish.
+// land on the same fish. Search stays open behind the card (see
+// selectSearchResult()'s own comment) so closing the card lands you
+// right back here, ready to roll again without reopening search.
 let lastRandomFishIndex = -1;
 document.getElementById("randomFishBtn").addEventListener("click", () => {
   if (!FISH.length) return;
@@ -3423,8 +3436,7 @@ document.getElementById("randomFishBtn").addEventListener("click", () => {
   do { index = Math.floor(Math.random() * FISH.length); }
   while (FISH.length > 1 && index === lastRandomFishIndex);
   lastRandomFishIndex = index;
-  searchOverlay.classList.remove("open");
-  locateFish(index, searchBtn);
+  locateFish(index, searchInput);
 });
 
 searchInput.addEventListener("input", () => renderSearchResults(searchInput.value));
