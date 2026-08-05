@@ -62,13 +62,14 @@
   align-items: start;
   justify-content: center;
 }
-.dyf-root .dyf-template-sidebar { grid-area: template; }
 .dyf-root .dyf-stage { grid-area: stage; }
 .dyf-root .panel { grid-area: panel; }
-/* Stretched (not start-aligned like Template) so Submit — now nested
-   inside as this box's own last child, pushed down via margin-top:
-   auto — can align its bottom with .panel's bottom, matching its
-   full spanned height instead of just its own cards' height. */
+/* Both sidebars stretch (rather than start-aligning like a plain
+   content-sized box) so Back/Submit — nested inside each as its own
+   last child, pushed down via margin-top:auto — can align their
+   bottom edges with .panel's bottom, matching the full spanned
+   height instead of just their own cards' height. */
+.dyf-root .dyf-template-sidebar { grid-area: template; align-self: stretch; }
 .dyf-root .dyf-layer-sidebar { grid-area: layers; align-self: stretch; }
 
 /* .stage and .panel already carry their own margin-top/gap for the
@@ -100,7 +101,18 @@
    desktop it just mirrors .side-panel's own column stack, so nothing
    changes there. */
 .dyf-root .pick-strip { display: flex; flex-direction: column; gap: 8px; width: 100%; }
-.dyf-root .pick-btn.active { background: var(--dyf-teal); color: #04231c; border-color: var(--dyf-teal); }
+/* Gold instead of teal — matches the SPA logo/title glow and the menu
+   buttons' own hover color, so "this card is selected" reads as part
+   of the same color language as the rest of the tool. */
+.dyf-root .pick-btn.active { background: var(--dyf-gold); color: #123a52; border-color: var(--dyf-gold); }
+/* .pick-name has its own hardcoded --dyf-dim color (a deliberately
+   dimmer look against the default translucent button) that doesn't
+   inherit from .pick-btn, so switching the button's own color above
+   did nothing for the label text — it stayed --dyf-dim's light blue,
+   nearly unreadable against the now much lighter active background.
+   Overriding it here targets exactly that broken case without
+   touching the (correctly dim) default look. */
+.dyf-root .pick-btn.active .pick-name { color: #123a52; }
 .dyf-root .pick-btn.locked { opacity: 0.55; cursor: not-allowed; }
 .dyf-root .pick-thumb {
   /* Height-driven with a locked aspect-ratio, instead of width and
@@ -229,6 +241,11 @@
      layers included). One shared rule keeps them in visual parity. */
   .dyf-root .pick-btn { width: auto; flex: 0 0 auto; }
 
+  /* The internal Back button is a desktop-only addition (mirroring
+     Submit at the bottom of Layers) — mobile keeps using the host
+     page's own external #drawBack button below the tool instead. */
+  .dyf-root .dyf-row-back { display: none; }
+
   /* .dyf-layer-sidebar itself no longer generates a box on mobile —
      desktop nests the "LAYERS" label, its card grid, and the Submit
      button together inside one stretched sidebar box so Submit can
@@ -288,32 +305,46 @@
 }
 
 /* ==================================================================
-   DESKTOP SUBMIT BUTTON — matches the "create your fish" menu
-   buttons (#createOverlay/#createChooseOverlay .option-btn in the
-   host page's own stylesheet) instead of the tool panel's gold
-   button, since it now sits in the sidebar column rather than inside
-   the panel itself. Reuses the same --title-glow/--logo-glow tokens
-   (inherited from the host page's :root — this file's selectors are
-   scoped under .dyf-root, but custom properties still cascade down
-   through the DOM regardless of which stylesheet declared them) so
-   it stays in sync if that palette ever changes. Mobile keeps the
-   plain gold .primary button, unchanged, in its own full-width row
-   after Template.
+   DESKTOP MENU BUTTONS (Submit + Back) — matches the "create your
+   fish" menu buttons (#createOverlay/#createChooseOverlay .option-btn
+   in the host page's own stylesheet) instead of the tool panel's gold
+   button, since both now sit in a sidebar column rather than inside
+   the panel itself. Shared .dyf-menu-btn/.dyf-menu-btn-inlay classes
+   carry the visual styling; .dyf-submit-btn/.dyf-back-btn (and their
+   own -inlay variants) are just for JS targeting/text. Reuses the
+   same --title-glow/--logo-glow tokens (inherited from the host
+   page's :root — this file's selectors are scoped under .dyf-root,
+   but custom properties still cascade down through the DOM regardless
+   of which stylesheet declared them) so it stays in sync if that
+   palette ever changes. Mobile keeps the plain gold .primary Submit
+   button, unchanged, in its own full-width row after Template, and
+   the external #drawBack button (in the host page's own stylesheet)
+   handles Back there instead.
    ================================================================== */
 @media (min-width: 1051px) {
-  /* Nested inside .dyf-layer-sidebar (its last child, after the
-     cards) — margin-top:auto in that flex column pushes it all the
-     way to the bottom of the sidebar's now-stretched height, so its
-     bottom lands exactly on .panel's bottom instead of hugging the
-     cards above it. */
-  .dyf-root .dyf-row-finish { width: 100%; max-width: none; margin-top: auto; }
-  .dyf-root button.dyf-submit-btn {
+  /* No fill of its own here — .card.draw-card's own translucent-black
+     + backdrop-blur (defined in the host page's stylesheet) shows
+     through directly instead, same as every other card on this page,
+     rather than a second, separate blue box nested inside it. Mobile
+     keeps the tank-glass gradient from the base rule above. */
+  .dyf-root { background: transparent; }
+
+  /* Nested inside .dyf-layer-sidebar / .dyf-template-sidebar (each
+     one's own last child, after the cards) — margin-top:auto in that
+     flex column pushes each all the way to the bottom of its sidebar's
+     now-stretched height, so its bottom lands exactly on .panel's
+     bottom instead of hugging the cards above it. */
+  .dyf-root .dyf-row-finish,
+  .dyf-root .dyf-row-back {
+    width: 100%; max-width: none; margin-top: auto;
+  }
+  .dyf-root button.dyf-menu-btn {
     position: relative;
     width: 100%;
-    aspect-ratio: 1 / 1; /* the biggest square the layers column width allows */
+    aspect-ratio: 1 / 1; /* the biggest square the sidebar's width allows */
     background: #17191d;
     border: none;
-    padding: 0; /* bezel thickness now comes from .dyf-submit-inlay's inset, matching the menu buttons' own technique */
+    padding: 0; /* bezel thickness comes from .dyf-menu-btn-inlay's inset, matching the menu buttons' own technique */
     border-radius: 7px;
     box-shadow:
       inset 2px 2px 0 rgba(255,255,255,0.12),
@@ -322,7 +353,7 @@
       0 0 14px rgba(var(--title-glow), 0.3);
     transition: transform 0.08s ease, box-shadow 0.08s ease;
   }
-  .dyf-root .dyf-submit-inlay {
+  .dyf-root .dyf-menu-btn-inlay {
     position: absolute;
     inset: 8px;
     display: flex;
@@ -342,12 +373,12 @@
     box-shadow: inset 0 0 7px rgba(0,0,0,0.35);
     transition: background 0.2s ease;
   }
-  .dyf-root button.dyf-submit-btn:hover .dyf-submit-inlay,
-  .dyf-root button.dyf-submit-btn:focus-visible .dyf-submit-inlay {
+  .dyf-root button.dyf-menu-btn:hover .dyf-menu-btn-inlay,
+  .dyf-root button.dyf-menu-btn:focus-visible .dyf-menu-btn-inlay {
     background: rgb(var(--logo-glow));
   }
-  .dyf-root button.dyf-submit-btn:hover,
-  .dyf-root button.dyf-submit-btn:focus-visible {
+  .dyf-root button.dyf-menu-btn:hover,
+  .dyf-root button.dyf-menu-btn:focus-visible {
     transform: translateY(-2px);
     box-shadow:
       inset 2px 2px 0 rgba(255,255,255,0.12),
@@ -355,7 +386,7 @@
       0 5px 0 rgba(0,0,0,0.4),
       0 0 18px rgba(var(--logo-glow), 0.45);
   }
-  .dyf-root button.dyf-submit-btn:active {
+  .dyf-root button.dyf-menu-btn:active {
     transform: translateY(3px);
     box-shadow:
       inset 2px 2px 0 rgba(0,0,0,0.5),

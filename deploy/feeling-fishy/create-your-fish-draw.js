@@ -1,11 +1,15 @@
 /* ==================================================================
    CREATE YOUR FISH — draw-in-browser tool
    Exposes window.FishDrawTool = {
-     mount(container, lang, onSubmit), setLanguage(lang)
+     mount(container, lang, onSubmit, onBack), setLanguage(lang)
    }
    onSubmit is called (no arguments) after "Submit My Fish" has
    downloaded the flattened PNG — the host page decides what "submit"
    actually means (e.g. switching to its own upload screen).
+   onBack is called (no arguments) by the tool's own internal Back
+   button, shown only on desktop (bottom of the Template column) —
+   the host page still owns its own external Back button for mobile,
+   this is purely an additional trigger for the same action.
 
    Not loaded on page load — index.html only injects this file (and
    its stylesheet) the first time someone opens the "Draw it myself"
@@ -58,6 +62,7 @@
       undo: "Undo",
       clearLayer: "Clear layer",
       submit: "Submit My Fish",
+      backBtn: "Back",
       tourBtnTitle: "How it works",
       tourSkip: "Skip tour",
       tourBack: "Back",
@@ -102,6 +107,7 @@
       undo: "Annuler",
       clearLayer: "Effacer le calque",
       submit: "Soumettre mon poisson",
+      backBtn: "Retour",
       tourBtnTitle: "Comment \u00e7a marche",
       tourSkip: "Passer la visite",
       tourBack: "Retour",
@@ -135,6 +141,7 @@
   let currentLang = "en";
   let root = null;
   let onSubmit = null; // host page's callback for "Submit My Fish", set via mount()
+  let onBack = null; // host page's callback for the desktop-only internal Back button
   const state = {}; // populated on mount: DOM refs, layers, tour, etc.
 
   function markup() {
@@ -161,6 +168,11 @@
         <div class="side-panel dyf-template-sidebar">
           <span class="row-label dyf-template-label"></span>
           <div class="pick-strip dyf-template-strip"></div>
+          <div class="row dyf-row-back">
+            <button class="tool primary dyf-menu-btn dyf-back-btn" type="button">
+              <span class="dyf-menu-btn-inlay dyf-back-inlay"><span class="dyf-back-text"></span></span>
+            </button>
+          </div>
         </div>
         <div class="center-column">
           <div class="stage dyf-stage">
@@ -196,8 +208,8 @@
           <span class="row-label dyf-layers-label"></span>
           <div class="pick-strip dyf-layer-grid"></div>
           <div class="row dyf-row-finish">
-            <button class="tool primary dyf-submit-btn" type="button">
-              <span class="dyf-submit-inlay"><span class="dyf-submit-text"></span></span>
+            <button class="tool primary dyf-menu-btn dyf-submit-btn" type="button">
+              <span class="dyf-menu-btn-inlay dyf-submit-inlay"><span class="dyf-submit-text"></span></span>
             </button>
           </div>
         </div>
@@ -528,6 +540,13 @@
       }
     });
 
+    // Desktop-only internal Back button (bottom of the Template
+    // column) — a second trigger for the same action the host page's
+    // own external Back button already handles on mobile. No-op if
+    // the host page never provided one.
+    const backBtn = q(".dyf-back-btn");
+    backBtn.addEventListener("click", () => { if (onBack) onBack(); });
+
     function pushUndo() {
       const l = s.layers[s.activeLayer];
       l.undoStack.push(l.ctx.getImageData(0, 0, W, H));
@@ -686,6 +705,7 @@
     q(".dyf-undo-btn").textContent = s.undo;
     q(".dyf-clear-btn").textContent = s.clearLayer;
     q(".dyf-submit-text").textContent = s.submit;
+    q(".dyf-back-text").textContent = s.backBtn;
     const tourBtn = q(".dyf-tour-btn");
     tourBtn.title = s.tourBtnTitle;
     tourBtn.setAttribute("aria-label", s.tourBtnTitle);
@@ -707,9 +727,10 @@
     if (state.tourDim && state.tourDim.classList.contains("open")) state.placeTourStep();
   }
 
-  function mount(container, lang, onSubmitCallback) {
+  function mount(container, lang, onSubmitCallback, onBackCallback) {
     currentLang = lang || "en";
     onSubmit = onSubmitCallback || null;
+    onBack = onBackCallback || null;
     if (mounted) { applyStrings(currentLang); return; }
     root = container;
     root.classList.add("dyf-root");

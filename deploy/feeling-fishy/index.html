@@ -997,7 +997,12 @@ header p  { font-size: clamp(0.85rem, 2vw, 1rem); opacity: 0.9; }
    just a couple of buttons, so this one is sized close to the full
    viewport instead of the ~560-700px the other cards use. */
 .card.draw-card {
-  max-width: 96vw; width: 96vw; max-height: 92vh;
+  /* Capped instead of a flat 96vw — the tool's own content maxes out
+     around 1290px (Template + canvas/panel + Layers, at their own
+     natural widths), so at wide monitor widths a flat 96vw left a lot
+     of empty card visible around it. Still shrinks with 96vw below
+     that cap, same as before, on narrower desktop windows. */
+  max-width: min(96vw, 1360px); width: min(96vw, 1360px); max-height: 92vh;
   padding: 14px;
   overflow-y: auto; /* safety net if content ever runs slightly tall */
 }
@@ -1015,6 +1020,14 @@ header p  { font-size: clamp(0.85rem, 2vw, 1rem); opacity: 0.9; }
 #drawBack { margin-top: 8px; }
 @media (max-width: 1050px) {
   .card.draw-card { overflow-y: auto; }
+}
+/* Desktop gets its own Back button inside the tool itself (bottom of
+   the Template column, mirroring Submit at the bottom of Layers) —
+   see create-your-fish-draw.css — so this external one would be a
+   duplicate there. Mobile keeps this one; the internal one is a
+   desktop-only addition to that stylesheet. */
+@media (min-width: 1051px) {
+  #drawBack { display: none; }
 }
 
 /* "How does it work?" walkthrough — sized close to the full viewport
@@ -2819,11 +2832,11 @@ if (SETTINGS.templateUrl || SETTINGS.submitEmbedUrl) {
     drawToolLoading = new Promise((resolve, reject) => {
       const css = document.createElement("link");
       css.rel = "stylesheet";
-      css.href = "create-your-fish-draw.css?v=18";
+      css.href = "create-your-fish-draw.css?v=21";
       document.head.appendChild(css);
 
       const script = document.createElement("script");
-      script.src = "create-your-fish-draw.js?v=12";
+      script.src = "create-your-fish-draw.js?v=13";
       script.onload = resolve;
       script.onerror = reject;
       document.body.appendChild(script);
@@ -2840,7 +2853,10 @@ if (SETTINGS.templateUrl || SETTINGS.submitEmbedUrl) {
     // iframe — no script can fill in someone else's file input), so
     // this just gets someone straight to the right screen to attach
     // it themselves, instead of leaving them to hunt for it.
-    loadDrawTool().then(() => window.FishDrawTool.mount(drawToolMount, lang, () => openSubmitScreen(drawOverlay)));
+    // Fourth argument: what the tool's own internal Back button
+    // (desktop only — see create-your-fish-draw.css) calls; the
+    // external #drawBack button below still handles this on mobile.
+    loadDrawTool().then(() => window.FishDrawTool.mount(drawToolMount, lang, () => openSubmitScreen(drawOverlay), goBackFromDraw));
   });
 
   // These three are <a> tags with no href (they navigate within the
@@ -2898,13 +2914,17 @@ if (SETTINGS.templateUrl || SETTINGS.submitEmbedUrl) {
   });
 
   // Back returns to the create/download sub-menu, not the top level;
-  // backdrop click closes fully
-  document.getElementById("drawBack").addEventListener("click", () => {
+  // backdrop click closes fully. Shared by the external #drawBack
+  // button (mobile) and the draw tool's own internal Back button
+  // (desktop, passed in as mount()'s 4th argument) — same action
+  // either way, just triggered from a different place.
+  function goBackFromDraw() {
     drawOverlay.classList.remove("open");
     resetOptionCarousel(createChooseOverlay);
     createChooseOverlay.classList.add("open");
     focusOverlayHeading(createChooseOverlay);
-  });
+  }
+  document.getElementById("drawBack").addEventListener("click", goBackFromDraw);
   drawOverlay.addEventListener("click", (e) => {
     if (e.target !== drawOverlay) return;
     drawOverlay.classList.remove("open");
