@@ -23,11 +23,11 @@
   const ASSET_PATH = "images/";
 
   const TEMPLATES = [
+    { key: "blank", blank: true },
     { key: "fish1", slug: "fish-1" },
     { key: "shark", slug: "shark" },
     { key: "whale", slug: "whale" },
     { key: "stingray", slug: "stingray" },
-    { key: "blank", blank: true },
   ];
   TEMPLATES.forEach((t) => {
     if (t.blank) return; // no art files to build paths for — see build()
