@@ -44,6 +44,16 @@ def creator_id_from_email(email):
     return hashlib.sha256(normalized.encode("utf-8")).hexdigest()[:12]
 
 
+# Only the first name gets published on the site -- avoids putting a
+# submitter's full legal name on a public page. The full name is
+# still what monday.com reports on, and still shows up in the PR
+# title/commit message the workflow and the manual script build
+# straight from the form payload, entirely independent of this.
+def first_name_only(full_name):
+    parts = (full_name or "").strip().split()
+    return parts[0] if parts else full_name
+
+
 # True only if the image has an alpha channel AND some of it is
 # actually non-opaque -- some tools write an RGBA PNG with every
 # pixel at alpha=255 out of habit, which functionally means "no
@@ -138,8 +148,9 @@ def write_fish(image, creator, creator_email, name, bio):
     image.save(out_path, "WEBP", quality=82)
 
     creator_id = creator_id_from_email(creator_email)
+    published_creator = first_name_only(creator)
     content = INDEX_HTML.read_text(encoding="utf-8")
     content = add_embedded_image_entry(content, n)
-    content = add_fish_array_entry(content, n, creator, creator_id, name, bio)
+    content = add_fish_array_entry(content, n, published_creator, creator_id, name, bio)
     INDEX_HTML.write_text(content, encoding="utf-8")
     return n
