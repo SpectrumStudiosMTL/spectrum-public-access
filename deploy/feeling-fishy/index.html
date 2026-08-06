@@ -202,6 +202,14 @@ const SETTINGS = {
   //    pop-up over the tank rather than leaving the site.
   submitEmbedUrl: "https://forms.monday.com/forms/embed/712a0b5d93bb6187748b14aade412e28?r=use1",
 
+  // 3) The draw tool's own "Submit My Fish" button skips that iframe
+  //    entirely -- it posts the finished drawing straight to this
+  //    Cloudflare Worker endpoint (see deploy/automation/
+  //    cloudflare-worker.js), which creates the monday.com item and
+  //    attaches the file itself via the API. Set to null to fall back
+  //    to the old behavior (download the PNG, open the monday form).
+  directSubmitEndpoint: "https://autofish.cameron-d89.workers.dev/submit-fish",
+
   // Your ambience track. Set to null for no music.
   // On the real site, use a file: music: "audio/ambience.mp3"
   music: EMBEDDED_AUDIO.music,
@@ -290,6 +298,15 @@ const TEXT = {
     submitTitle: "Submit your fish",
     submitNote: "Attach your fish file below — a name and email are all we need alongside it.",
     submitFrameTitle: "Feeling Fishy submission form",
+    directSubmitTitle: "Almost done!",
+    directSubmitIntro: "Just your name and email, and we'll send your fish in for review.",
+    directSubmitNameLabel: "Name",
+    directSubmitEmailLabel: "Email",
+    directSubmitSend: "Send it in",
+    directSubmitSending: "Sending…",
+    directSubmitError: "Something went wrong — check your connection and try again.",
+    directSubmitSuccessText: "Thanks! Your fish has been submitted for review.",
+    directSubmitDone: "Done",
     info: "About this project",
     infoTitle: "Feeling Fishy",
     // ✏️ Replace with your own project description.
@@ -362,6 +379,15 @@ const TEXT = {
     submitTitle: "Soumets ton poisson",
     submitNote: "Joins ton fichier de poisson ci-dessous — un nom et un courriel suffisent en plus.",
     submitFrameTitle: "Formulaire de soumission Feeling Fishy",
+    directSubmitTitle: "Presque fini !",
+    directSubmitIntro: "Juste ton nom et courriel, et on envoie ton poisson pour révision.",
+    directSubmitNameLabel: "Nom",
+    directSubmitEmailLabel: "Courriel",
+    directSubmitSend: "Envoie-le",
+    directSubmitSending: "Envoi…",
+    directSubmitError: "Une erreur s'est produite — vérifie ta connexion et réessaie.",
+    directSubmitSuccessText: "Merci ! Ton poisson a été soumis pour révision.",
+    directSubmitDone: "Terminé",
     info: "À propos de ce projet",
     infoTitle: "Feeling Fishy",
     // ✏️ Remplace par la description de ton projet.
@@ -983,6 +1009,30 @@ header p  { font-size: clamp(0.85rem, 2vw, 1rem); opacity: 0.9; }
    this note isn't wired to anything screen readers need, so it's
    simply hidden rather than kept in the DOM for accessibility. */
 .card.submit-card #submitNote { display: none; }
+
+/* "Almost done!" card — the draw tool's own name/email submit form.
+   Reuses .search-input's pill style for the two fields and .card
+   button's pill style for its buttons; only the label and status
+   line need their own rules. Left-aligned unlike the card's default
+   centered text -- a form reads better that way. */
+#directSubmitForm { text-align: left; }
+.direct-submit-label {
+  display: block;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  opacity: 0.6;
+  margin: 16px 0 4px;
+}
+#directSubmitForm button { margin-top: 20px; }
+.direct-submit-status {
+  min-height: 1.3em;
+  font-size: 0.85rem;
+  margin: 10px 0 0;
+}
+.direct-submit-status.error { color: #ffb4b4; }
+#directSubmitSuccess p { margin-bottom: 20px; }
 
 /* "Draw it yourself" card — the draw tool needs real workspace, not
    just a couple of buttons, so this one is sized close to the full
@@ -2125,6 +2175,34 @@ body.calm .school-arrow, body.calm .school-dots {
   </div>
 </div>
 
+<!-- "Almost done!" pop-up: the draw tool's own submit flow. Posts
+     the finished drawing straight to SETTINGS.directSubmitEndpoint
+     (see that setting's own comment) instead of opening the monday
+     iframe above -- name + email are the only two things it still
+     needs from the visitor; everything else the old form asked for
+     isn't used by add_fish.py anyway. -->
+<div class="card-overlay" id="directSubmitOverlay" role="dialog" aria-modal="true" aria-labelledby="directSubmitTitle">
+  <div class="card">
+    <h2 id="directSubmitTitle"></h2>
+    <div id="directSubmitFormWrap">
+      <p class="download-note" id="directSubmitIntro"></p>
+      <form id="directSubmitForm">
+        <label class="direct-submit-label" for="directSubmitName" id="directSubmitNameLabel"></label>
+        <input class="search-input" type="text" id="directSubmitName" required autocomplete="name" maxlength="255">
+        <label class="direct-submit-label" for="directSubmitEmail" id="directSubmitEmailLabel"></label>
+        <input class="search-input" type="email" id="directSubmitEmail" required autocomplete="email">
+        <p class="direct-submit-status" id="directSubmitStatus" role="status" aria-live="polite"></p>
+        <button type="submit" id="directSubmitSend"></button>
+      </form>
+      <button id="directSubmitBack"></button>
+    </div>
+    <div id="directSubmitSuccess" hidden>
+      <p id="directSubmitSuccessText"></p>
+      <button id="directSubmitDone"></button>
+    </div>
+  </div>
+</div>
+
 <!-- "About this project" info pop-up: a short project blurb plus a
      plain-language walkthrough of what everything on the page does. -->
 <div class="card-overlay" id="infoOverlay" role="dialog" aria-modal="true" aria-labelledby="infoTitle">
@@ -2910,7 +2988,7 @@ if (SETTINGS.templateUrl || SETTINGS.submitEmbedUrl) {
       document.head.appendChild(css);
 
       const script = document.createElement("script");
-      script.src = "create-your-fish-draw.js?v=16";
+      script.src = "create-your-fish-draw.js?v=17";
       script.onload = resolve;
       script.onerror = reject;
       document.body.appendChild(script);
@@ -2931,16 +3009,29 @@ if (SETTINGS.templateUrl || SETTINGS.submitEmbedUrl) {
     drawOverlay.classList.add("open");
     focusOverlayHeading(drawOverlay);
     // Third argument: what the draw tool's own "Submit My Fish"
-    // button calls after it downloads the PNG. It can't hand the
-    // file to the monday.com form directly (that's a cross-origin
-    // iframe — no script can fill in someone else's file input), so
-    // this just gets someone straight to the right screen to attach
-    // it themselves, instead of leaving them to hunt for it.
+    // button calls, with a PNG Blob of the finished artwork. Normally
+    // that's openDirectSubmit -- a small name/email form that posts
+    // straight to SETTINGS.directSubmitEndpoint (see its own comment
+    // for how that avoids the monday.com iframe entirely). If that
+    // endpoint isn't configured, falls back to the old flow: download
+    // the PNG, then get them straight to the monday form to attach it
+    // themselves.
     // Fourth argument: what the tool's own internal Back button
     // (desktop only — see create-your-fish-draw.css) calls; the
     // external #drawBack button below still handles this on mobile.
     loadDrawTool()
-      .then(() => window.FishDrawTool.mount(drawToolMount, lang, () => openSubmitScreen(drawOverlay), goBackFromDraw))
+      .then(() => window.FishDrawTool.mount(
+        drawToolMount,
+        lang,
+        SETTINGS.directSubmitEndpoint ? openDirectSubmit : (blob) => {
+          const a = document.createElement("a");
+          a.download = "my-fish.png";
+          a.href = URL.createObjectURL(blob);
+          a.click();
+          openSubmitScreen(drawOverlay);
+        },
+        goBackFromDraw
+      ))
       .catch(() => { drawToolMount.textContent = TEXT[lang].drawToolLoadError; });
   });
 
@@ -3014,6 +3105,76 @@ if (SETTINGS.templateUrl || SETTINGS.submitEmbedUrl) {
     if (e.target !== drawOverlay) return;
     drawOverlay.classList.remove("open");
     if (lastFocused && lastFocused.focus) lastFocused.focus();
+  });
+
+  // "Almost done!" — the draw tool's own submit flow: post the
+  // drawing straight to SETTINGS.directSubmitEndpoint instead of
+  // opening the monday.com iframe. See that setting's own comment.
+  const directSubmitOverlay = document.getElementById("directSubmitOverlay");
+  const directSubmitFormWrap = document.getElementById("directSubmitFormWrap");
+  const directSubmitForm = document.getElementById("directSubmitForm");
+  const directSubmitStatus = document.getElementById("directSubmitStatus");
+  const directSubmitSend = document.getElementById("directSubmitSend");
+  const directSubmitSuccess = document.getElementById("directSubmitSuccess");
+  let pendingFishBlob = null; // set right before this overlay opens, cleared once submitted
+
+  function openDirectSubmit(blob) {
+    pendingFishBlob = blob;
+    directSubmitForm.reset();
+    directSubmitStatus.textContent = "";
+    directSubmitStatus.classList.remove("error");
+    directSubmitSend.disabled = false;
+    directSubmitFormWrap.hidden = false;
+    directSubmitSuccess.hidden = true;
+    drawOverlay.classList.remove("open");
+    directSubmitOverlay.classList.add("open");
+    focusOverlayHeading(directSubmitOverlay);
+  }
+
+  directSubmitForm.addEventListener("submit", (e) => {
+    e.preventDefault();
+    if (!pendingFishBlob) return;
+    const name = document.getElementById("directSubmitName").value.trim();
+    const email = document.getElementById("directSubmitEmail").value.trim();
+    directSubmitSend.disabled = true;
+    directSubmitStatus.classList.remove("error");
+    directSubmitStatus.textContent = TEXT[lang].directSubmitSending;
+
+    const body = new FormData();
+    body.append("creator", name);
+    body.append("email", email);
+    body.append("file", pendingFishBlob, "my-fish.png");
+
+    fetch(SETTINGS.directSubmitEndpoint, { method: "POST", body })
+      .then((resp) => {
+        if (!resp.ok) throw new Error("submit failed: " + resp.status);
+        pendingFishBlob = null;
+        directSubmitFormWrap.hidden = true;
+        directSubmitSuccess.hidden = false;
+        const successHeading = document.getElementById("directSubmitSuccessText");
+        successHeading.setAttribute("tabindex", "-1");
+        successHeading.focus();
+      })
+      .catch(() => {
+        directSubmitStatus.textContent = TEXT[lang].directSubmitError;
+        directSubmitStatus.classList.add("error");
+        directSubmitSend.disabled = false;
+      });
+  });
+
+  // Back returns to the canvas (in case they want to keep editing)
+  // rather than closing outright — nothing's been submitted yet.
+  document.getElementById("directSubmitBack").addEventListener("click", () => {
+    directSubmitOverlay.classList.remove("open");
+    drawOverlay.classList.add("open");
+    focusOverlayHeading(drawOverlay);
+  });
+  document.getElementById("directSubmitDone").addEventListener("click", () => {
+    closeOverlay(directSubmitOverlay);
+  });
+  directSubmitOverlay.addEventListener("click", (e) => {
+    if (e.target !== directSubmitOverlay) return;
+    closeOverlay(directSubmitOverlay);
   });
 
   // The three format buttons
@@ -3097,7 +3258,10 @@ if (SETTINGS.templateUrl || SETTINGS.submitEmbedUrl) {
    document.getElementById("templateWalkthroughNext"),
    document.getElementById("downloadBack"),
    document.getElementById("drawBack"),
-   document.getElementById("submitBack")]
+   document.getElementById("submitBack"),
+   document.getElementById("directSubmitSend"),
+   document.getElementById("directSubmitBack"),
+   document.getElementById("directSubmitDone")]
     .forEach((btn) => btn.addEventListener("click", playPluck));
 
   // Mobile only: page through an option-row one button at a time
@@ -3613,6 +3777,14 @@ function applyLanguage() {
   document.getElementById("submitNote").textContent = t.submitNote;
   document.getElementById("submitFrame").title = t.submitFrameTitle;
   document.getElementById("submitBack").textContent = t.goBack;
+  document.getElementById("directSubmitTitle").textContent = t.directSubmitTitle;
+  document.getElementById("directSubmitIntro").textContent = t.directSubmitIntro;
+  document.getElementById("directSubmitNameLabel").textContent = t.directSubmitNameLabel;
+  document.getElementById("directSubmitEmailLabel").textContent = t.directSubmitEmailLabel;
+  document.getElementById("directSubmitSend").textContent = t.directSubmitSend;
+  document.getElementById("directSubmitBack").textContent = t.goBack;
+  document.getElementById("directSubmitSuccessText").textContent = t.directSubmitSuccessText;
+  document.getElementById("directSubmitDone").textContent = t.directSubmitDone;
   // The draw tool loads its own strings lazily, only once someone has
   // actually opened it — nothing to update if it isn't loaded yet.
   if (window.FishDrawTool) window.FishDrawTool.setLanguage(lang);

@@ -3,9 +3,9 @@
    Exposes window.FishDrawTool = {
      mount(container, lang, onSubmit, onBack), setLanguage(lang)
    }
-   onSubmit is called (no arguments) after "Submit My Fish" has
-   downloaded the flattened PNG — the host page decides what "submit"
-   actually means (e.g. switching to its own upload screen).
+   onSubmit is called with a PNG Blob of the flattened artwork when
+   "Submit My Fish" is clicked — the host page decides what "submit"
+   actually means (e.g. posting it to its own submission endpoint).
    onBack is called (no arguments) by the tool's own internal Back
    button, shown only on desktop (bottom of the Template column) —
    the host page still owns its own external Back button for mobile,
@@ -70,7 +70,7 @@
       tourDone: "Done",
       pickTemplateAlert: "Pick a template first.",
       blankNoMask: "Not available on the open canvas — there's no outline to fill or clip to.",
-      submitStub: "Your fish has been downloaded \u2014 automatic submission isn\u2019t connected yet, so please submit it through the existing form.",
+      submitStub: "Your fish has been downloaded \u2014 the host page hasn't wired up submit handling yet.",
       tourSteps: [
         { sel: ".dyf-template-sidebar", title: "1. Pick a template",
           text: "Start here \u2014 choose a fish shape to draw on, or pick Open Canvas to start from scratch. This loads its outline (if any) onto the locked Fish Template layer." },
@@ -87,7 +87,7 @@
         { sel: ".dyf-row-undoclear", title: "7. Undo & clear",
           text: "Undo steps back one stroke at a time. Clear layer wipes only the layer you're currently working on." },
         { sel: ".dyf-row-finish", title: "8. Finish up",
-          text: "Submit My Fish downloads your finished piece and sends it straight in for review." },
+          text: "Submit My Fish sends your finished piece straight in for review — just add your name and email on the next screen." },
       ],
     },
     fr: {
@@ -115,7 +115,7 @@
       tourDone: "Termin\u00e9",
       pickTemplateAlert: "Choisis d'abord un mod\u00e8le.",
       blankNoMask: "Non disponible sur la toile libre \u2014 il n'y a pas de contour \u00e0 remplir ou \u00e0 d\u00e9couper.",
-      submitStub: "Ton poisson a \u00e9t\u00e9 t\u00e9l\u00e9charg\u00e9 \u2014 la soumission automatique n'est pas encore branch\u00e9e, alors soumets-le via le formulaire existant.",
+      submitStub: "Ton poisson a \u00e9t\u00e9 t\u00e9l\u00e9charg\u00e9 \u2014 la page h\u00f4te n'a pas encore configur\u00e9 l'envoi.",
       tourSteps: [
         { sel: ".dyf-template-sidebar", title: "1. Choisis un mod\u00e8le",
           text: "Commence ici \u2014 choisis une forme de poisson sur laquelle dessiner, ou choisis Toile libre pour repartir de z\u00e9ro. Son contour (le cas \u00e9ch\u00e9ant) se place sur le calque verrouill\u00e9 Mod\u00e8le de poisson." },
@@ -132,7 +132,7 @@
         { sel: ".dyf-row-undoclear", title: "7. Annuler et effacer",
           text: "Annuler recule d'un trait \u00e0 la fois. Effacer le calque efface seulement le calque sur lequel tu travailles." },
         { sel: ".dyf-row-finish", title: "8. Termine ton poisson",
-          text: "Soumettre mon poisson t\u00e9l\u00e9charge ta cr\u00e9ation et l'envoie directement pour r\u00e9vision." },
+          text: "Soumettre mon poisson envoie directement ta cr\u00e9ation pour r\u00e9vision \u2014 ajoute juste ton nom et courriel \u00e0 l'\u00e9cran suivant." },
       ],
     },
   };
@@ -534,23 +534,25 @@
       return flat;
     }
 
-    // SUBMIT. There's no way to hand this canvas straight to the
-    // monday.com form -- it's a cross-origin iframe, and browsers
-    // don't let a script fill in someone else's file input for real
-    // (a legitimate security boundary, not a gap to work around). So
-    // this downloads the PNG itself, then asks the host page to
-    // switch straight to the submit screen -- no separate download
-    // step, no hunting for a second menu to attach it in.
+    // SUBMIT. Flattens the canvas to a PNG blob and hands it straight
+    // to the host page's onSubmit callback, which posts it to its own
+    // submission endpoint (see index.html) -- no download, no manual
+    // reattaching to a separate form. If no host callback was wired
+    // up (e.g. this file loaded standalone during development), falls
+    // back to downloading the PNG so the tool still does *something*
+    // useful on its own.
     submitBtn.addEventListener("click", () => {
-      const a = document.createElement("a");
-      a.download = "my-fish.png";
-      a.href = flattenCanvas().toDataURL("image/png");
-      a.click();
-      if (onSubmit) {
-        onSubmit();
-      } else {
-        showToast(STRINGS[currentLang].submitStub, 6000);
-      }
+      flattenCanvas().toBlob((blob) => {
+        if (onSubmit) {
+          onSubmit(blob);
+        } else {
+          const a = document.createElement("a");
+          a.download = "my-fish.png";
+          a.href = URL.createObjectURL(blob);
+          a.click();
+          showToast(STRINGS[currentLang].submitStub, 6000);
+        }
+      }, "image/png");
     });
 
     // Desktop-only internal Back button (bottom of the Template
