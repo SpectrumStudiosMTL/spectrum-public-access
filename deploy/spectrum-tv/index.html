@@ -1,0 +1,1024 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Spectrum Public Access</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=VT323&family=Sixtyfour&family=Space+Grotesk:wght@400;500;700&display=swap');
+
+/* The logo's real typeface. Shows if installed on the viewer's machine;
+   upload the .ttf and it can be embedded here so it works for everyone. */
+@font-face{
+  font-family:'Alarm Clock';
+  src:local('Alarm Clock'), local('alarm clock'), local('AlarmClock');
+}
+
+:root{
+  --cabinet-navy:#1b2436;
+  --cabinet-navy-dark:#11172480;
+  --phosphor-amber:#f2c744;
+  --logo-yellow:#ffee3c;      /* SPA logo yellow (255,238,60) */
+  --bar-cyan:#37b6c9;
+  --bar-magenta:#c43e96;
+  --cg-white:#ede9df;
+  --screen-black:#050604;
+}
+
+*{box-sizing:border-box;}
+/* Background on body only; body stays full-width (flex on <html> would
+   shrink-wrap <body> and paint the gradient as a centered box). */
+html{ margin:0; padding:0; height:100%; }
+body{
+  margin:0; height:100%;
+  background:
+    radial-gradient(ellipse at 50% -10%, #2a3550 0%, #0c0f18 60%, #050609 100%);
+  font-family:'Space Grotesk',sans-serif;
+  color:var(--cg-white);
+  display:flex; align-items:center; justify-content:center;
+  padding:10px;
+  overflow:hidden; /* one page — no scroll */
+}
+
+/* ---------- TV CABINET ---------- */
+.tv{
+  position:relative;
+  width:min(2000px, 98vw);
+  height:calc(100vh - 20px);
+  display:flex; flex-direction:column;
+  background:
+    linear-gradient(155deg,#232f47 0%, var(--cabinet-navy) 45%, #141b2b 100%);
+  border-radius:28px;
+  padding:16px 20px;
+  box-shadow:
+    0 30px 60px -20px rgba(0,0,0,.7),
+    inset 0 2px 0 rgba(255,255,255,.06),
+    inset 0 -6px 14px rgba(0,0,0,.5);
+}
+.tv:before{ /* brand plate — matches the segmented SPA logo lettering */
+  content:"SPECTRUM PUBLIC ACCESS";
+  position:absolute; top:6px; left:0; right:0;
+  text-align:center;
+  font-family:'Alarm Clock','Sixtyfour',monospace; font-size:11px; letter-spacing:.14em;
+  text-transform:uppercase;
+  color:var(--logo-yellow);
+  text-shadow:0 0 5px rgba(255,238,60,.5), 0 0 14px rgba(255,238,60,.2);
+}
+
+.main-row{
+  display:flex; gap:14px; margin-top:10px; align-items:stretch; justify-content:center;
+  flex:1; min-height:0; /* row height = exactly the space left over — everything scales from this */
+}
+
+/* ---------- LEFT: picture dial panel ---------- */
+.dials{
+  flex:1; min-height:0;
+  display:flex; flex-direction:column; gap:10px;
+  background:linear-gradient(160deg,#232f47,#141b2b); border-radius:16px; padding:12px 14px;
+  box-shadow:inset 0 2px 0 rgba(255,255,255,.06), inset 0 -6px 12px rgba(0,0,0,.5);
+}
+/* five vertical sliders side by side, like a little console */
+.dial-bank{ flex:1; min-height:0; display:flex; justify-content:space-between; gap:6px; }
+.dial-col{ flex:1; min-height:0; display:flex; flex-direction:column; align-items:center; gap:5px; min-width:0; }
+.dial-col .dname{
+  font-family:'VT323',monospace; font-size:12px; letter-spacing:.08em; color:#aab0c2;
+  white-space:nowrap;
+}
+.dial-col .dval{
+  font-family:'VT323',monospace; font-size:12px; letter-spacing:.06em;
+  color:var(--phosphor-amber); white-space:nowrap;
+}
+.vdial{
+  writing-mode:vertical-lr; direction:rtl; /* bottom = min, top = max */
+  -webkit-appearance:none; appearance:none;
+  width:26px; flex:1; min-height:60px;
+  border-radius:5px; outline:none; cursor:pointer;
+  background:
+    linear-gradient(90deg, transparent calc(50% - 2px), #05070c calc(50% - 2px),
+      #05070c calc(50% + 2px), transparent calc(50% + 2px)),
+    repeating-linear-gradient(0deg, rgba(255,255,255,.10) 0 1px, transparent 1px 16px),
+    linear-gradient(160deg,#1a2338,#10151f);
+}
+.vdial::-webkit-slider-thumb{
+  -webkit-appearance:none; appearance:none;
+  width:24px; height:13px; border-radius:3px; cursor:grab;
+  background:
+    linear-gradient(180deg, transparent 42%, var(--logo-yellow) 42%, var(--logo-yellow) 58%, transparent 58%),
+    linear-gradient(180deg,#4a5570 0%, #232c42 45%, #10141f 55%, #2b3448 100%);
+  box-shadow:0 2px 6px rgba(0,0,0,.7), inset 0 0 0 1px rgba(255,255,255,.08);
+}
+.vdial::-moz-range-thumb{
+  width:24px; height:13px; border-radius:3px; border:none; cursor:grab;
+  background:
+    linear-gradient(180deg, transparent 42%, var(--logo-yellow) 42%, var(--logo-yellow) 58%, transparent 58%),
+    linear-gradient(180deg,#4a5570 0%, #232c42 45%, #10141f 55%, #2b3448 100%);
+  box-shadow:0 2px 6px rgba(0,0,0,.7), inset 0 0 0 1px rgba(255,255,255,.08);
+}
+.vdial:focus-visible{ outline:2px solid var(--logo-yellow); outline-offset:3px; }
+.dial-actions{ display:flex; gap:8px; }
+.dial-actions .dbtn{ flex:1; margin-top:0; padding:8px 6px; }
+.dials h4{
+  margin:0; text-align:center; font-family:'VT323',monospace; letter-spacing:.2em;
+  font-size:14px; color:var(--phosphor-amber);
+}
+.dial-row{ display:flex; flex-direction:column; gap:4px; }
+.dial-row label{
+  font-family:'VT323',monospace; font-size:15px; letter-spacing:.1em; color:#aab0c2;
+  display:flex; justify-content:space-between;
+}
+.dial-row input[type=range], .speed-deck input[type=range]{
+  -webkit-appearance:none; appearance:none; width:100%; height:4px; border-radius:2px;
+  background:#0d1420; outline:none;
+}
+.dial-row input[type=range]::-webkit-slider-thumb, .speed-deck input[type=range]::-webkit-slider-thumb{
+  -webkit-appearance:none; appearance:none; width:18px; height:18px; border-radius:50%;
+  background:radial-gradient(circle at 35% 30%, #f4eede, #b7ae94 70%);
+  box-shadow:0 2px 4px rgba(0,0,0,.6); cursor:pointer;
+}
+.dial-row input[type=range]::-moz-range-thumb, .speed-deck input[type=range]::-moz-range-thumb{
+  width:18px; height:18px; border-radius:50%; border:none;
+  background:radial-gradient(circle at 35% 30%, #f4eede, #b7ae94 70%);
+  box-shadow:0 2px 4px rgba(0,0,0,.6); cursor:pointer;
+}
+.dial-row input[type=range]:focus-visible, .speed-deck input[type=range]:focus-visible{ outline:2px solid var(--logo-yellow); outline-offset:3px; }
+.dbtn{
+  margin-top:2px; border:none; border-radius:8px; padding:10px 6px; cursor:pointer;
+  font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:12px; letter-spacing:.16em;
+  color:#f5e9e2;
+}
+.dbtn:focus-visible{ outline:2px solid var(--logo-yellow); outline-offset:2px; }
+.dbtn.degauss{
+  background:linear-gradient(180deg,#c6463a,#7c1f18);
+  box-shadow:0 4px 0 #4c110c;
+}
+.dbtn.degauss:active{ transform:translateY(3px); box-shadow:0 1px 0 #4c110c; }
+.dbtn.reset{
+  background:#2b3854; color:var(--cg-white);
+  box-shadow:0 3px 0 #0d1420;
+}
+.dbtn.reset:active{ transform:translateY(3px); box-shadow:0 0 0 #0d1420; }
+
+/* ---------- LEFT: mixing-desk volume fader ---------- */
+.fader-panel{
+  width:118px; flex:none;
+  display:flex; flex-direction:column; align-items:center; gap:10px;
+  background:linear-gradient(160deg,#232f47,#141b2b); border-radius:16px; padding:14px 12px;
+  box-shadow:inset 0 2px 0 rgba(255,255,255,.06), inset 0 -6px 12px rgba(0,0,0,.5);
+}
+.fader-panel h4{
+  margin:0; text-align:center; font-family:'VT323',monospace; letter-spacing:.2em;
+  font-size:14px; color:var(--phosphor-amber);
+}
+.fader-track-wrap{
+  flex:1; min-height:170px; width:100%;
+  display:flex; justify-content:center; align-items:stretch; gap:10px;
+}
+.fader-scale{
+  display:flex; flex-direction:column; justify-content:space-between;
+  padding:8px 0; text-align:right;
+  font-family:'VT323',monospace; font-size:12px; color:#7d87a3;
+}
+/* vertical fader — channel-strip style */
+.vfader{
+  writing-mode:vertical-lr; direction:rtl; /* bottom = 0, top = 10 */
+  -webkit-appearance:none; appearance:none;
+  width:44px; height:100%;
+  border-radius:6px; outline:none; cursor:pointer;
+  background:
+    /* centre groove */
+    linear-gradient(90deg, transparent calc(50% - 3px), #05070c calc(50% - 3px),
+      #05070c calc(50% + 3px), transparent calc(50% + 3px)),
+    /* tick hash marks */
+    repeating-linear-gradient(0deg, rgba(255,255,255,.10) 0 1px, transparent 1px 22px),
+    linear-gradient(160deg,#1a2338,#10151f);
+}
+.vfader::-webkit-slider-thumb{
+  -webkit-appearance:none; appearance:none;
+  width:40px; height:22px; border-radius:3px; cursor:grab;
+  background:
+    linear-gradient(180deg, transparent 45%, var(--logo-yellow) 45%, var(--logo-yellow) 55%, transparent 55%),
+    linear-gradient(180deg,#4a5570 0%, #232c42 45%, #10141f 55%, #2b3448 100%);
+  box-shadow:0 3px 8px rgba(0,0,0,.7), inset 0 0 0 1px rgba(255,255,255,.08);
+}
+.vfader::-moz-range-thumb{
+  width:40px; height:22px; border-radius:3px; border:none; cursor:grab;
+  background:
+    linear-gradient(180deg, transparent 45%, var(--logo-yellow) 45%, var(--logo-yellow) 55%, transparent 55%),
+    linear-gradient(180deg,#4a5570 0%, #232c42 45%, #10141f 55%, #2b3448 100%);
+  box-shadow:0 3px 8px rgba(0,0,0,.7), inset 0 0 0 1px rgba(255,255,255,.08);
+}
+.vfader:focus-visible{ outline:2px solid var(--logo-yellow); outline-offset:3px; }
+.fader-readout{
+  font-family:'VT323',monospace; font-size:18px; letter-spacing:.12em;
+  color:var(--phosphor-amber); min-height:20px;
+}
+.dbtn.mute{
+  width:100%; background:#2b3854; color:var(--cg-white); box-shadow:0 3px 0 #0d1420;
+}
+.dbtn.mute:active{ transform:translateY(3px); box-shadow:0 0 0 #0d1420; }
+.dbtn.mute.on{
+  background:linear-gradient(180deg,#c6463a,#7c1f18);
+  box-shadow:0 4px 0 #4c110c, 0 0 12px rgba(255,80,60,.35);
+}
+
+/* ---------- speed deck below the screen ---------- */
+.speed-deck{
+  margin-top:10px; padding:9px 16px 12px; border-radius:12px;
+  background:linear-gradient(160deg,#232f47,#141b2b);
+  box-shadow:inset 0 2px 0 rgba(255,255,255,.06), inset 0 -6px 12px rgba(0,0,0,.5);
+}
+.speed-deck label{
+  display:flex; justify-content:space-between;
+  font-family:'VT323',monospace; font-size:15px; letter-spacing:.12em; color:#aab0c2;
+  margin-bottom:8px;
+}
+.speed-deck label span{ color:var(--phosphor-amber); }
+.speed-marks{
+  position:relative; height:14px; margin-top:6px;
+  font-family:'VT323',monospace; font-size:11px; letter-spacing:.08em; color:#7d87a3;
+}
+.speed-marks span{ position:absolute; transform:translateX(-50%); }
+
+/* ---------- CENTER: screen (same size formula as previous build) ---------- */
+.screen-col{
+  flex:none; min-width:0; min-height:0;
+  display:flex; flex-direction:column;
+}
+.screen-bezel{
+  position:relative;
+  border-radius:16px;
+  padding:14px;
+  background:#0a0d14;
+  box-shadow: inset 0 0 0 2px #05070c, inset 0 0 30px rgba(0,0,0,.8);
+  flex:1; min-height:0;
+  display:flex; align-items:center; justify-content:center;
+}
+.screen{
+  position:relative;
+  aspect-ratio:4/3;
+  /* Height rule: always fill 100% of the available vertical space in the
+     bezel — that space IS the row height (fader panel and channel column
+     both stretch to match it), so the screen and the side panels can never
+     drift out of sync. The only other constraint is width: on a very wide,
+     short window the screen must stop growing once it runs out of room
+     between the fader (118px) and the channel column (330px), so we also
+     cap by the exact horizontal budget: tv padding (40) + fader (118) +
+     gaps (28) + channel column (330) + bezel padding (28) = 544px. */
+  height:min(100%, calc((98vw - 544px) * 0.75));
+  width:auto;
+  border-radius:60px/40px; /* curved glass illusion */
+  overflow:hidden;
+  background:var(--screen-black);
+  box-shadow:
+    inset 0 0 60px 10px rgba(0,0,0,.85),
+    inset 0 0 120px 40px rgba(0,0,0,.6),
+    0 0 40px 4px rgba(242,199,68,.08);
+}
+
+/* the dials apply their CSS filters to this wrapper, which contains both
+   players — so effects hit the YouTube live feed and local video alike */
+.picture-wrap{
+  position:absolute; inset:0;
+  filter:saturate(1.05) contrast(1.04);
+}
+.picture-wrap iframe, .picture-wrap video{
+  position:absolute; inset:0; width:100%; height:100%; border:0;
+  background:#000;
+  object-fit:cover;
+}
+
+@keyframes degaussShake{
+  0%{filter:saturate(1.05) contrast(1.04) hue-rotate(0deg) saturate(3) brightness(1.6);}
+  30%{filter:saturate(1.05) contrast(1.04) hue-rotate(180deg) saturate(2) brightness(.7);}
+  60%{filter:saturate(1.05) contrast(1.04) hue-rotate(-90deg) saturate(2.5) brightness(1.3);}
+  100%{}
+}
+.picture-wrap.degauss-anim{ animation:degaussShake .6s ease-out; }
+
+/* scanlines + vignette + glow, always on top */
+.screen .scanlines{
+  position:absolute; inset:0; pointer-events:none;
+  background:repeating-linear-gradient(
+    to bottom, rgba(0,0,0,.18) 0px, rgba(0,0,0,.18) 1px,
+    transparent 2px, transparent 3px);
+  mix-blend-mode:multiply;
+}
+.screen .vignette{
+  position:absolute; inset:0; pointer-events:none;
+  background:radial-gradient(ellipse at center, transparent 55%, rgba(0,0,0,.65) 100%);
+}
+.screen .glow-edge{
+  position:absolute; inset:0; pointer-events:none; border-radius:60px/40px;
+  box-shadow:inset 0 0 50px 8px rgba(242,199,68,.06);
+}
+
+/* continuous "weak signal" snow, opacity driven by the SIGNAL dial */
+.static-signal{
+  position:absolute; inset:0; opacity:0; pointer-events:none;
+  background:
+    repeating-linear-gradient(0deg, #fff 0 1px, #000 1px 2px),
+    repeating-linear-gradient(90deg, rgba(255,255,255,.05) 0 2px, transparent 2px 4px);
+  background-size:100% 3px, 6px 100%;
+  mix-blend-mode:overlay;
+}
+
+/* power-off state */
+.tv.off .picture-wrap{ opacity:0; }
+.tv.off .screen .no-signal{ opacity:1; }
+.no-signal{
+  position:absolute; inset:0; opacity:0; transition:opacity .2s;
+  display:flex; align-items:center; justify-content:center; text-align:center; padding:0 24px;
+  font-family:'VT323',monospace; font-size:26px; letter-spacing:.2em; color:#3a4152;
+}
+.no-signal.pending{ color:var(--phosphor-amber); }
+
+/* static burst on channel change */
+.static-burst{
+  position:absolute; inset:0; opacity:0; pointer-events:none;
+  background:
+    repeating-linear-gradient(0deg, #fff 0 1px, #000 1px 2px),
+    repeating-linear-gradient(90deg, rgba(255,255,255,.04) 0 2px, transparent 2px 4px);
+  background-size:100% 3px, 6px 100%;
+  mix-blend-mode:overlay;
+}
+.static-burst.on{
+  animation: staticFlicker .38s steps(6) 1;
+}
+@keyframes staticFlicker{
+  0%{opacity:.95;} 30%{opacity:.6;} 55%{opacity:.9;} 100%{opacity:0;}
+}
+
+/* Character-generator OSD, like real public-access channel IDs */
+.osd{
+  position:absolute; left:18px; top:16px;
+  padding:6px 14px 8px;
+  background:rgba(5,7,10,.55);
+  border:2px solid var(--phosphor-amber);
+  border-radius:2px;
+  font-family:'VT323',monospace;
+  opacity:0; transform:translateY(-6px);
+  transition:opacity .25s ease, transform .25s ease;
+}
+.osd.show{ opacity:1; transform:translateY(0); }
+.osd .ch-num{ font-size:40px; color:var(--phosphor-amber); line-height:1; }
+.osd .ch-name{ font-size:18px; letter-spacing:.14em; color:var(--cg-white); }
+
+/* bottom ticker, cable-access style — in SPA logo yellow + logo typeface */
+.ticker{
+  position:absolute; left:0; right:0; bottom:0;
+  height:42px; overflow:hidden;
+  background:rgba(5,7,10,.78); border-top:1px solid rgba(255,238,60,.45);
+  display:flex; align-items:center;
+}
+.ticker span{
+  display:inline-block; white-space:nowrap;
+  font-family:'Alarm Clock','Sixtyfour',monospace; font-size:17px; letter-spacing:.05em;
+  text-transform:uppercase;
+  color:var(--logo-yellow);
+  text-shadow:0 0 6px rgba(255,238,60,.55), 0 0 18px rgba(255,238,60,.25);
+  padding-left:100%;
+  animation:scrollTicker 28s linear infinite;
+}
+@keyframes scrollTicker{ to{ transform:translateX(-100%);} }
+
+/* ---------- RIGHT: vending channel grid ----------
+   The whole tile is the button — 4x3 = 12 slots: 9 real channels, 3 OPEN
+   slots reserved for future channels. The grid absorbs whatever width is
+   left after the dial panel and the fixed-size screen. */
+.right-col{
+  flex:none; width:330px; max-width:100%; height:100%; overflow:hidden;
+  display:flex; flex-direction:column; gap:12px;
+}
+.vending{
+  flex:none;
+  display:grid; grid-template-columns:repeat(4, 1fr);
+  gap:10px;               /* tiles are square (aspect-ratio 1/1), so with auto rows
+                             the space between every tile is exactly 10px on all sides */
+  align-content:start;
+}
+.vtile{
+  position:relative; overflow:hidden; border-radius:12px;
+  aspect-ratio:1/1;
+  border:none; padding:0; margin:0; cursor:pointer; appearance:none;
+  background:#0a0d14; box-shadow:inset 0 0 0 2px #05070c;
+  font:inherit; color:inherit;
+  transition:box-shadow .15s ease;
+}
+.vtile:active{ transform:scale(0.98); }
+.vtile:focus-visible{ outline:2px solid var(--logo-yellow); outline-offset:3px; }
+
+.vtile .art{
+  position:absolute; inset:0; overflow:hidden;
+  display:flex; align-items:center; justify-content:center; padding:9%;
+  text-align:center;
+}
+/* channel names use the SPA logo typeface stack, same as the cabinet
+   branding and ticker, for consistent identity */
+.vtile .art .chname{
+  font-family:'Alarm Clock','Sixtyfour',monospace; text-transform:uppercase;
+  font-size:clamp(9px, 0.95vw, 13px); line-height:1.25; position:relative; z-index:1;
+}
+.vtile .art .chsub{
+  font-family:'VT323',monospace; font-size:clamp(8px,0.75vw,11px);
+  letter-spacing:.14em; margin-top:4px; opacity:.85; position:relative; z-index:1;
+}
+.vtile .art img{ max-width:100%; max-height:100%; object-fit:contain; position:relative; z-index:1;
+  filter:drop-shadow(0 0 6px rgba(255,220,60,.5)); transition:filter .2s ease; }
+
+/* backlit fluorescent glow behind every insert, brightening on hover */
+.vtile .art::before{
+  content:""; position:absolute; inset:0; pointer-events:none; z-index:0;
+  background:radial-gradient(ellipse at 50% 40%, rgba(255,255,255,.22) 0%, transparent 68%);
+  mix-blend-mode:screen; opacity:.55; transition:opacity .2s ease;
+}
+.vtile:hover .art::before{ opacity:1; }
+.vtile:hover .art{ filter:brightness(1.12); }
+.vtile:hover .art img{ filter:drop-shadow(0 0 14px rgba(255,220,60,.9)) brightness(1.15); }
+
+/* currently-tuned channel — lit ring + corner LED */
+.vtile.active{
+  box-shadow:inset 0 0 0 3px var(--phosphor-amber), 0 0 14px 2px rgba(242,199,68,.5);
+}
+.vtile.active::after{
+  content:""; position:absolute; top:8px; right:8px; width:8px; height:8px; border-radius:50%;
+  background:var(--phosphor-amber); box-shadow:0 0 6px 2px rgba(242,199,68,.8); z-index:2;
+}
+
+/* CH 001 — the real live feed gets a pulsing LIVE tag */
+.vtile.live .live-badge{
+  position:absolute; top:8px; left:8px; z-index:2;
+  display:flex; align-items:center; gap:4px;
+  padding:2px 7px; border-radius:3px; background:rgba(5,7,10,.65);
+  font-family:'VT323',monospace; font-size:12px; letter-spacing:.14em; color:#ff6b5e;
+}
+.vtile.live .live-dot{
+  width:6px; height:6px; border-radius:50%; background:#ff3b30;
+  box-shadow:0 0 5px 1px rgba(255,59,48,.8);
+  animation:liveBlink 1.6s ease-in-out infinite;
+}
+@keyframes liveBlink{ 0%,100%{opacity:1;} 50%{opacity:.35;} }
+
+/* OPEN slots reserved for future channels — dim, inert */
+.vtile.open-slot{
+  cursor:default; background:transparent;
+  box-shadow:inset 0 0 0 2px rgba(255,255,255,.1);
+}
+.vtile.open-slot .art{
+  background:repeating-linear-gradient(45deg, rgba(255,255,255,.025) 0 10px, transparent 10px 20px);
+}
+.vtile.open-slot .chname, .vtile.open-slot .chsub{ opacity:.35; }
+.vtile.open-slot:hover .art::before{ opacity:.25; }
+.vtile.open-slot:hover .art{ filter:none; }
+.vtile.open-slot:active{ transform:none; }
+
+/* ---------- BOTTOM: power / channel bar ---------- */
+.bottom-bar{
+  margin-top:10px; display:flex; align-items:center; justify-content:space-between; gap:16px;
+  padding-top:10px; border-top:1px solid rgba(255,238,60,.15);
+}
+.bottom-bar .brandtag{ font-family:'VT323',monospace; letter-spacing:.15em; color:#7d87a3; font-size:13px; }
+.bottom-controls{ display:flex; gap:10px; }
+.bbtn{
+  border:none; border-radius:8px; padding:8px 16px; cursor:pointer;
+  font-family:'Space Grotesk',sans-serif; font-weight:600; font-size:13px; letter-spacing:.14em;
+  background:#2b3854; color:var(--cg-white); box-shadow:0 3px 0 #0d1420;
+}
+.bbtn:active{ transform:translateY(3px); box-shadow:0 0 0 #0d1420; }
+.bbtn:focus-visible{ outline:2px solid var(--logo-yellow); outline-offset:2px; }
+.bbtn.power{ background:linear-gradient(180deg,#c6463a,#9c2c22); }
+
+@media (prefers-reduced-motion: reduce){
+  .ticker span{ animation:none; padding-left:16px; }
+  .static-burst.on{ animation:none; }
+  .vtile.live .live-dot{ animation:none; }
+  .picture-wrap.degauss-anim{ animation:none; }
+}
+/* small screens get scroll back so nothing is unreachable — this block is
+   placed last on purpose so it wins the cascade over the desktop rules
+   above whenever its condition is active */
+@media (max-width:900px), (max-height:660px){
+  body{ overflow:auto; height:auto; min-height:100%; }
+  .tv{ height:auto; display:block; }
+  .main-row{ flex-wrap:wrap; }
+  .screen-col{ width:100%; height:auto; }
+  .screen-bezel{ flex:none; }
+  .screen{ height:auto; width:100%; }
+  .fader-panel{ width:100%; height:auto; }
+  .fader-track-wrap{ flex:none; min-height:140px; }
+  .right-col{ height:auto; overflow:visible; }
+  .dials{ flex:none; }
+  .dial-bank{ flex:none; }
+  .vdial{ flex:none; height:100px; }
+}
+</style>
+</head>
+<body>
+
+<div class="tv" id="tv">
+  <div class="main-row">
+
+    <div class="fader-panel">
+      <h4>VOLUME</h4>
+      <div class="fader-track-wrap">
+        <div class="fader-scale"><span>10</span><span>8</span><span>6</span><span>4</span><span>2</span><span>0</span></div>
+        <input type="range" id="vol" class="vfader" min="0" max="100" value="70" aria-label="Volume">
+      </div>
+      <div class="fader-readout" id="volOut">MUTED</div>
+      <button class="dbtn mute on" id="muteBtn" aria-pressed="true">MUTED</button>
+    </div>
+
+    <div class="screen-col" id="screenCol">
+      <div class="screen-bezel">
+        <div class="screen" id="screen">
+          <div class="picture-wrap" id="pictureWrap">
+            <iframe id="player" src="" allow="autoplay; encrypted-media" allowfullscreen title="channel" style="display:none"></iframe>
+            <video id="localPlayer" autoplay muted playsinline loop style="display:none"></video>
+          </div>
+          <div class="scanlines"></div>
+          <div class="vignette"></div>
+          <div class="glow-edge"></div>
+          <div class="static-signal" id="staticSignal"></div>
+          <div class="static-burst" id="staticBurst"></div>
+          <div class="no-signal" id="noSignal">◈ NO SIGNAL ◈</div>
+          <div class="osd" id="osd">
+            <div class="ch-num" id="osdNum">001</div>
+            <div class="ch-name" id="osdName">SPECTRUM PUBLIC ACCESS</div>
+          </div>
+          <div class="ticker"><span id="tickerText">NOW PLAYING —</span></div>
+        </div>
+      </div>
+      <div class="speed-deck">
+        <label for="speed">TAPE SPEED <span id="speedOut">1.00×</span></label>
+        <input type="range" id="speed" min="25" max="200" value="100" step="5">
+        <div class="speed-marks">
+          <span style="left:0; transform:none">0.25×</span>
+          <span style="left:14.3%">0.5×</span>
+          <span style="left:42.9%">1×</span>
+          <span style="left:71.4%">1.5×</span>
+          <span style="left:100%; transform:translateX(-100%)">2×</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="right-col">
+      <div class="vending" id="vending"></div>
+
+      <div class="dials">
+        <h4>PICTURE</h4>
+        <div class="dial-bank">
+          <div class="dial-col">
+            <span class="dname">COLOR</span>
+            <input type="range" id="hue" class="vdial" min="0" max="360" value="0" aria-label="Color">
+            <span class="dval" id="hueOut">0°</span>
+          </div>
+          <div class="dial-col">
+            <span class="dname">BRIGHT</span>
+            <input type="range" id="bright" class="vdial" min="40" max="160" value="100" aria-label="Brightness">
+            <span class="dval" id="brightOut">100%</span>
+          </div>
+          <div class="dial-col">
+            <span class="dname">CONTRAST</span>
+            <input type="range" id="contrast" class="vdial" min="40" max="180" value="100" aria-label="Contrast">
+            <span class="dval" id="contrastOut">100%</span>
+          </div>
+          <div class="dial-col">
+            <span class="dname">TINT</span>
+            <input type="range" id="sat" class="vdial" min="0" max="200" value="100" aria-label="Tint">
+            <span class="dval" id="satOut">100%</span>
+          </div>
+          <div class="dial-col">
+            <span class="dname">SIGNAL</span>
+            <input type="range" id="staticAmt" class="vdial" min="0" max="100" value="0" aria-label="Signal">
+            <span class="dval" id="staticOut">clear</span>
+          </div>
+        </div>
+        <div class="dial-actions">
+          <button class="dbtn degauss" id="degaussBtn">DEGAUSS</button>
+          <button class="dbtn reset" id="resetBtn">RESET</button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="bottom-bar">
+    <div class="brandtag">MODEL SP-1974 · COLOR</div>
+    <div class="bottom-controls">
+      <button class="bbtn" id="chDown">CH ▼</button>
+      <button class="bbtn" id="chUp">CH ▲</button>
+      <button class="bbtn power" id="powerBtn">POWER</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/*
+  ── VIRTUAL CHANNEL SCHEDULER ──────────────────────────────────────
+  Each "channel" is an ordered list of blocks (title + file + duration
+  in seconds). On load / channel-change we compute how far into the
+  channel's total loop the current wall-clock moment falls, find which
+  block that lands in, and start that file at the matching offset — so
+  anyone watching sees the same thing at the same time, like real
+  broadcast, with zero extra streaming infrastructure.
+
+  CH 001 is your real 24/7 live feed and is the ONLY channel that uses
+  the YouTube embed — it's your actual OBS broadcast, not a video file.
+
+  Every other channel plays a LOCAL video file only — no external links.
+  `file` paths are relative to this HTML file, matching your
+  G:\SPECTRUM TV folder:
+  video/CH008_MorningCartoons_block01.mov (this one's currently .mov;
+  the rest are .mp4 going forward, per your latest workflow).
+
+  Channels with `pending: true` have no file wired up yet — they show
+  NO SIGNAL when tuned. As you send more real filenames, swap them in
+  and remove the pending flag.
+
+  DURATIONS are confirmed at 3600s (1 hour) for the three channels with
+  real files. If a future block runs a different length, update its
+  `duration` to match so the broadcast-offset math stays accurate.
+
+  `tile` controls each channel's vending-grid look: two gradient colors,
+  a text color, and optionally `logo` (an <img> data-URI or file path)
+  which replaces the text with your channel artwork.
+*/
+const SPECTRUM_REVIEWS_LOGO = "data:image/png;base64,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";
+
+const CHANNELS = [
+  {
+    number: 1,
+    name: "WATCH LIVE",
+    osdName: "SPECTRUM PUBLIC ACCESS",
+    live: true,
+    blocks: [{ title: "24/7 Live Broadcast", youtubeId: "bhcyctsYfdE" }],
+    tile: { c1:"#993c2c", c2:"#4a1b0c", text:"#faece7" }
+  },
+  {
+    number: 8,
+    name: "MORNING CARTOONS",
+    blocks: [
+      { title: "Morning Cartoons — Block 1", file: "video/CH008_MorningCartoons_block01.mov", duration: 3600 }
+    ],
+    tile: { c1:"#3b6d11", c2:"#1b3006", text:"#eaf3de" }
+  },
+  {
+    number: 17,
+    name: "TINY SHORTS",
+    pending: true,
+    tile: { c1:"#993c1d", c2:"#5a2110", text:"#faece7" }
+  },
+  {
+    number: 30,
+    name: "DOC BLOCK",
+    pending: true,
+    tile: { c1:"#185fa5", c2:"#0a2c4d", text:"#e6f1fb" }
+  },
+  {
+    number: 52,
+    name: "EATS WITH PETE",
+    blocks: [
+      { title: "Eats With Pete — Block 1", file: "video/CH052_Eats with Pete_block01.mp4", duration: 3600 }
+    ],
+    tile: { c1:"#993556", c2:"#4b1528", text:"#fbeaf0" }
+  },
+  {
+    number: 66,
+    name: "SPECTRUM REVIEWS",
+    blocks: [
+      { title: "Spectrum Reviews — Block 1", file: "video/CH066_Spectrum Reviews_block01.mp4", duration: 3600 }
+    ],
+    tile: { c1:"#171310", c2:"#171310", text:"#faeeda", logo: SPECTRUM_REVIEWS_LOGO }
+  },
+  {
+    number: 86,
+    name: "MOVIE ZONE",
+    pending: true,
+    tile: { c1:"#534ab7", c2:"#26215c", text:"#eeedfe" }
+  },
+  {
+    number: 204,
+    name: "BLOCKS OF CHAOS",
+    pending: true,
+    tile: { c1:"#0f6e56", c2:"#04342c", text:"#e1f5ee" }
+  },
+  {
+    number: 999,
+    name: "AFTER HOURS",
+    pending: true,
+    tile: { c1:"#444441", c2:"#1c1c1a", text:"#f1efe8" }
+  }
+];
+
+const OPEN_SLOTS = 3; // future channels — grid is 4x3 = 12 total
+
+let currentIndex = 0;
+let poweredOn = true;
+
+const tv = document.getElementById('tv');
+const player = document.getElementById('player');           // YouTube iframe — live channel only
+const localPlayer = document.getElementById('localPlayer'); // <video> — every local channel
+const pictureWrap = document.getElementById('pictureWrap');
+const noSignal = document.getElementById('noSignal');
+const osd = document.getElementById('osd');
+const osdNum = document.getElementById('osdNum');
+const osdName = document.getElementById('osdName');
+const ticker = document.getElementById('tickerText');
+const staticBurst = document.getElementById('staticBurst');
+const staticSignal = document.getElementById('staticSignal');
+const vending = document.getElementById('vending');
+
+/* ---------- build the vending grid ---------- */
+CHANNELS.forEach((c, i)=>{
+  const b = document.createElement('button');
+  b.className = 'vtile' + (c.live ? ' live' : '');
+  b.dataset.ch = c.number;
+  b.title = c.name + (c.pending ? ' (no video yet)' : '');
+
+  const art = document.createElement('div');
+  art.className = 'art';
+  art.style.background = `linear-gradient(160deg, ${c.tile.c1}, ${c.tile.c2})`;
+  art.style.color = c.tile.text;
+
+  if (c.tile.logo && c.tile.logo.length > 20){
+    const img = document.createElement('img');
+    img.src = c.tile.logo;
+    img.alt = c.name;
+    art.appendChild(img);
+  } else {
+    const wrap = document.createElement('div');
+    wrap.innerHTML = `<div class="chname">${c.name}</div><div class="chsub">CH ${String(c.number).padStart(3,'0')}</div>`;
+    art.appendChild(wrap);
+  }
+  b.appendChild(art);
+
+  if (c.live){
+    const badge = document.createElement('div');
+    badge.className = 'live-badge';
+    badge.innerHTML = '<span class="live-dot"></span>LIVE';
+    b.appendChild(badge);
+  }
+
+  b.addEventListener('click', ()=> poweredOn && tuneTo(i));
+  vending.appendChild(b);
+});
+for (let i=0; i<OPEN_SLOTS; i++){
+  const b = document.createElement('button');
+  b.className = 'vtile open-slot';
+  b.tabIndex = -1;
+  b.setAttribute('aria-hidden','true');
+  const art = document.createElement('div');
+  art.className = 'art';
+  art.innerHTML = '<div><div class="chname">OPEN</div><div class="chsub">·&nbsp;&nbsp;·&nbsp;&nbsp;·</div></div>';
+  b.appendChild(art);
+  vending.appendChild(b);
+}
+
+/* ---------- scheduler ---------- */
+function scheduledBlockFor(channel){
+  if (channel.live) return { block: channel.blocks[0], offset: 0 };
+  const total = channel.blocks.reduce((s,b)=>s+b.duration,0);
+  let pos = Math.floor(Date.now()/1000) % total;
+  for (const b of channel.blocks){
+    if (pos < b.duration) return { block: b, offset: pos };
+    pos -= b.duration;
+  }
+  return { block: channel.blocks[0], offset: 0 };
+}
+
+function tuneTo(index, {silent=false} = {}){
+  currentIndex = (index + CHANNELS.length) % CHANNELS.length;
+  const channel = CHANNELS[currentIndex];
+  const num3 = String(channel.number).padStart(3,'0');
+
+  // stop whatever was playing before switching
+  player.style.display = 'none';
+  player.src = '';
+  localPlayer.style.display = 'none';
+  localPlayer.pause();
+
+  if (channel.pending){
+    noSignal.textContent = '◈ NO SIGNAL — CHANNEL NOT YET PROGRAMMED ◈';
+    noSignal.classList.add('pending');
+    noSignal.style.opacity = '1';
+    ticker.textContent = `CH ${num3} · ${channel.name} · NOT YET PROGRAMMED`;
+  } else if (channel.live){
+    noSignal.classList.remove('pending');
+    noSignal.style.opacity = '0';
+    const { block } = scheduledBlockFor(channel);
+    player.style.display = 'block';
+    const params = new URLSearchParams({ autoplay: 1, mute: 1, playsinline: 1, rel: 0 });
+    // the iframe JS API needs a real http(s) origin — from file:// it makes
+    // YouTube throw Error 153, so only attach it when the page is served
+    if (location.protocol === 'http:' || location.protocol === 'https:'){
+      params.set('enablejsapi', '1');
+      params.set('origin', location.origin);
+    }
+    player.src = `https://www.youtube.com/embed/${block.youtubeId}?${params.toString()}`;
+    ticker.textContent = `NOW PLAYING — CH ${num3} · ${channel.name} · ${block.title}`;
+  } else {
+    noSignal.classList.remove('pending');
+    noSignal.style.opacity = '0';
+    const { block, offset } = scheduledBlockFor(channel);
+    localPlayer.style.display = 'block';
+    if (localPlayer.dataset.src !== block.file){
+      localPlayer.src = block.file;
+      localPlayer.dataset.src = block.file;
+    }
+    localPlayer.currentTime = offset;
+    localPlayer.play().catch(()=>{ /* autoplay blocked — any button press counts as a gesture and unblocks it */ });
+    ticker.textContent = `NOW PLAYING — CH ${num3} · ${channel.name} · ${block.title}`;
+  }
+
+  if (!channel.pending) applyAV(); // carry volume / mute / speed across channel changes
+
+  osdNum.textContent = num3;
+  osdName.textContent = channel.osdName || channel.name;
+
+  document.querySelectorAll('.vtile').forEach(t=>{
+    t.classList.toggle('active', Number(t.dataset.ch) === channel.number);
+  });
+
+  if (!silent){
+    staticBurst.classList.remove('on'); void staticBurst.offsetWidth;
+    staticBurst.classList.add('on');
+    osd.classList.add('show');
+    clearTimeout(tuneTo._t);
+    tuneTo._t = setTimeout(()=>osd.classList.remove('show'), 2200);
+  }
+}
+
+function setPower(on){
+  poweredOn = on;
+  tv.classList.toggle('off', !on);
+  if (on){
+    tuneTo(currentIndex);
+  } else {
+    player.src = '';
+    localPlayer.pause();
+    noSignal.classList.remove('pending');
+    noSignal.textContent = '◈ NO SIGNAL ◈';
+    noSignal.style.opacity = '1';
+  }
+}
+
+/* ---------- picture dials ---------- */
+const hue = document.getElementById('hue');
+const bright = document.getElementById('bright');
+const contrast = document.getElementById('contrast');
+const sat = document.getElementById('sat');
+const staticAmt = document.getElementById('staticAmt');
+
+function applyPicture(){
+  // base look (saturate 1.05 / contrast 1.04) multiplied by the dial values
+  pictureWrap.style.filter =
+    `saturate(1.05) contrast(1.04) hue-rotate(${hue.value}deg) ` +
+    `brightness(${bright.value/100}) contrast(${contrast.value/100}) saturate(${sat.value/100})`;
+  document.getElementById('hueOut').textContent = hue.value + '°';
+  document.getElementById('brightOut').textContent = bright.value + '%';
+  document.getElementById('contrastOut').textContent = contrast.value + '%';
+  document.getElementById('satOut').textContent = sat.value + '%';
+}
+[hue,bright,contrast,sat].forEach(el=>el.addEventListener('input', applyPicture));
+
+staticAmt.addEventListener('input', ()=>{
+  staticSignal.style.opacity = staticAmt.value/140;
+  const out = document.getElementById('staticOut');
+  out.textContent = staticAmt.value == 0 ? 'clear' : staticAmt.value < 40 ? 'weak' : staticAmt.value < 75 ? 'noisy' : 'lost';
+});
+
+document.getElementById('degaussBtn').addEventListener('click', ()=>{
+  pictureWrap.classList.remove('degauss-anim'); void pictureWrap.offsetWidth;
+  pictureWrap.classList.add('degauss-anim');
+});
+pictureWrap.addEventListener('animationend', ()=> pictureWrap.classList.remove('degauss-anim'));
+
+document.getElementById('resetBtn').addEventListener('click', ()=>{
+  hue.value = 0; bright.value = 100; contrast.value = 100; sat.value = 100; staticAmt.value = 0;
+  applyPicture();
+  staticSignal.style.opacity = 0;
+  document.getElementById('staticOut').textContent = 'clear';
+});
+
+/* ---------- audio: volume fader + mute ---------- */
+const vol = document.getElementById('vol');
+const volOut = document.getElementById('volOut');
+const muteBtn = document.getElementById('muteBtn');
+let isMuted = true; // starts muted so browser autoplay is allowed
+
+// sends a command to the YouTube embed (live channel) via the iframe API
+function ytCommand(func, args=[]){
+  if (!player.src || player.style.display === 'none') return;
+  try{
+    player.contentWindow.postMessage(JSON.stringify({event:'command', func, args}), '*');
+  }catch(e){}
+}
+
+function applyAudio(){
+  const v = Number(vol.value);
+  localPlayer.volume = v/100;
+  localPlayer.muted = isMuted;
+  ytCommand('setVolume', [v]);
+  ytCommand(isMuted ? 'mute' : 'unMute');
+  volOut.textContent = isMuted ? 'MUTED' : v;
+  muteBtn.textContent = isMuted ? 'MUTED' : 'MUTE';
+  muteBtn.classList.toggle('on', isMuted);
+  muteBtn.setAttribute('aria-pressed', String(isMuted));
+}
+vol.addEventListener('input', ()=>{
+  if (isMuted && Number(vol.value) > 0) isMuted = false; // grabbing the fader unmutes
+  applyAudio();
+});
+muteBtn.addEventListener('click', ()=>{ isMuted = !isMuted; applyAudio(); });
+
+/* ---------- tape speed ---------- */
+const speed = document.getElementById('speed');
+const speedOut = document.getElementById('speedOut');
+let currentRate = 1;
+
+function applySpeed(){
+  currentRate = speed.value/100;
+  speedOut.textContent = currentRate.toFixed(2) + '×';
+  try{ localPlayer.playbackRate = currentRate; }catch(e){}
+  ytCommand('setPlaybackRate', [currentRate]); // live streams ignore this, VOD embeds honor it
+}
+speed.addEventListener('input', applySpeed);
+speed.addEventListener('dblclick', ()=>{ speed.value = 100; applySpeed(); }); // double-click snaps back to 1×
+
+function applyAV(){ applyAudio(); applySpeed(); }
+
+// once the YouTube widget finishes loading, push the current settings into it
+player.addEventListener('load', ()=> setTimeout(applyAV, 600));
+
+/* ---------- exact 4:3 screen sizing ----------
+   CSS alone can't reliably do this: .screen-col's own width is a
+   "shrink-to-fit" value (nothing sets it directly), and .screen wants its
+   width to come FROM its height via aspect-ratio — that's a circular
+   dependency browsers don't resolve consistently, and in practice it can
+   collapse .screen-col down to whatever its narrowest child (the tape
+   speed slider) happens to need, producing a tall sliver instead of a 4:3
+   screen. Measuring the real, already-fixed-width neighbors (fader panel,
+   channel column) and computing the exact pixel box removes the ambiguity
+   entirely — the math below is the only source of truth for the screen's
+   size, every other panel just stretches to match it via CSS. */
+const smallLayoutMQ = window.matchMedia('(max-width:900px), (max-height:660px)');
+
+function sizeScreen(){
+  const screenCol = document.getElementById('screenCol');
+  const screenEl = document.getElementById('screen');
+  const bezel = document.querySelector('.screen-bezel');
+  const mainRowEl = document.querySelector('.main-row');
+  const faderPanel = document.querySelector('.fader-panel');
+  const rightCol = document.querySelector('.right-col');
+
+  if (smallLayoutMQ.matches){
+    // small/short viewport — the CSS fallback rules take over instead
+    screenCol.style.width = '';
+    screenEl.style.width = '';
+    screenEl.style.height = '';
+    return;
+  }
+
+  // clear any previous override before measuring, so a shrinking viewport
+  // can't get stuck reading its own leftover inline size
+  screenCol.style.width = 'auto';
+
+  const bezelBox = bezel.getBoundingClientRect();
+  const bezelCS = getComputedStyle(bezel);
+  const padX = parseFloat(bezelCS.paddingLeft) + parseFloat(bezelCS.paddingRight);
+  const padY = parseFloat(bezelCS.paddingTop) + parseFloat(bezelCS.paddingBottom);
+
+  const mainRowBox = mainRowEl.getBoundingClientRect();
+  const gapPx = parseFloat(getComputedStyle(mainRowEl).columnGap || getComputedStyle(mainRowEl).gap) || 14;
+
+  const availableInnerHeight = bezelBox.height - padY;
+  const availableOuterWidthForCol =
+    mainRowBox.width - faderPanel.getBoundingClientRect().width - rightCol.getBoundingClientRect().width - gapPx*2;
+  const availableInnerWidth = availableOuterWidthForCol - padX;
+
+  // start from height, derive width at exactly 4:3 — then fall back to
+  // deriving from width instead if that would overflow sideways
+  let innerH = Math.max(0, availableInnerHeight);
+  let innerW = innerH * (4/3);
+  if (innerW > availableInnerWidth){
+    innerW = Math.max(0, availableInnerWidth);
+    innerH = innerW * (3/4);
+  }
+
+  screenEl.style.width = innerW + 'px';
+  screenEl.style.height = innerH + 'px';
+  screenCol.style.width = (innerW + padX) + 'px';
+}
+
+window.addEventListener('resize', sizeScreen);
+smallLayoutMQ.addEventListener('change', sizeScreen);
+sizeScreen();
+
+/* ---------- transport ---------- */
+document.getElementById('chUp').onclick = ()=> poweredOn && tuneTo(currentIndex+1);
+document.getElementById('chDown').onclick = ()=> poweredOn && tuneTo(currentIndex-1);
+document.getElementById('powerBtn').onclick = ()=> setPower(!poweredOn);
+
+tuneTo(0, {silent:true});
+</script>
+</body>
+</html>
