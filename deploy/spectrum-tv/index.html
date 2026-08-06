@@ -551,6 +551,50 @@ body{
 .bbtn:focus-visible{ outline:2px solid var(--logo-yellow); outline-offset:2px; }
 .bbtn.power{ background:linear-gradient(180deg,#c6463a,#9c2c22); }
 
+/* channel guide — an overlay ON .screen, same inset:0/opacity-toggle
+   idiom as .osd, so it never affects .screen's own box */
+.channel-guide{
+  position:absolute; inset:0; z-index:5; pointer-events:none; opacity:0;
+  background:var(--screen-black);
+  display:flex; flex-direction:column;
+  transition:opacity .2s ease;
+}
+.channel-guide.show{ opacity:1; pointer-events:auto; }
+.guide-header{
+  display:flex; align-items:center; justify-content:space-between; flex:none;
+  padding:14px 18px; border-bottom:1px solid rgba(255,255,255,.15);
+  font-family:'Alarm Clock','Sixtyfour',monospace; letter-spacing:.14em; text-transform:uppercase;
+  font-size:15px; color:var(--phosphor-amber);
+}
+.guide-close{
+  background:none; border:1px solid rgba(255,255,255,.3); color:inherit; cursor:pointer;
+  width:26px; height:26px; border-radius:4px; font-size:14px; line-height:1; padding:0;
+}
+.guide-close:hover{ border-color:var(--phosphor-amber); color:var(--phosphor-amber); }
+.guide-list{ flex:1; overflow-y:auto; padding:6px 10px; }
+.guide-row{
+  display:flex; align-items:center; gap:14px; width:100%;
+  background:none; border:none; border-bottom:1px solid rgba(255,255,255,.08);
+  color:inherit; text-align:left; padding:10px 8px; cursor:pointer; font:inherit;
+}
+.guide-row:hover:not(:disabled){ background:rgba(255,255,255,.06); }
+.guide-row:disabled{ opacity:.4; cursor:default; }
+.guide-num{
+  font-family:'VT323',monospace; font-size:20px; color:var(--phosphor-amber);
+  width:3.4em; flex:none;
+}
+.guide-info{ display:flex; flex-direction:column; gap:2px; min-width:0; }
+.guide-name{
+  font-family:'Alarm Clock','Sixtyfour',monospace; font-size:12px;
+  letter-spacing:.08em; text-transform:uppercase; color:var(--cg-white);
+}
+.guide-now, .guide-next{
+  font-family:'VT323',monospace; font-size:15px; letter-spacing:.02em;
+  white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+}
+.guide-now{ color:var(--cg-white); opacity:.85; }
+.guide-next{ color:var(--cg-white); opacity:.5; }
+
 @media (prefers-reduced-motion: reduce){
   .ticker span{ animation:none; padding-left:16px; }
   .static-burst.on{ animation:none; }
@@ -614,6 +658,18 @@ body{
             <div class="ch-name" id="osdName">SPECTRUM PUBLIC ACCESS</div>
           </div>
           <div class="ticker"><span id="tickerText">NOW PLAYING —</span></div>
+
+          <!-- channel guide: an overlay ON the screen (same inset:0 pattern
+               as every other layer above), so opening it can never touch
+               .screen's own size/position — same reasoning as the CRT
+               power animation living on .picture-wrap instead of .screen -->
+          <div class="channel-guide" id="channelGuide">
+            <div class="guide-header">
+              <span>CHANNEL GUIDE</span>
+              <button class="guide-close" id="guideClose" aria-label="Close guide">✕</button>
+            </div>
+            <div class="guide-list" id="guideList"></div>
+          </div>
         </div>
       </div>
       <div class="speed-deck">
@@ -673,6 +729,7 @@ body{
   <div class="bottom-bar">
     <div class="brandtag">MODEL SP-1974 · COLOR</div>
     <div class="bottom-controls">
+      <button class="bbtn" id="guideBtn">GUIDE</button>
       <button class="bbtn" id="chDown">CH ▼</button>
       <button class="bbtn" id="chUp">CH ▲</button>
       <button class="bbtn power" id="powerBtn">POWER</button>
@@ -862,16 +919,30 @@ for (let i=0; i<OPEN_SLOTS; i++){
   vending.appendChild(b);
 }
 
-/* ---------- scheduler ---------- */
-function scheduledBlockFor(channel){
-  if (channel.live) return { block: channel.blocks[0], offset: 0 };
+/* ---------- scheduler ----------
+   projectSchedule() is the one place that walks a channel's block list
+   against wall-clock time. scheduledBlockFor() is kept as a thin wrapper
+   so tuneTo()/the vending-hover-thumbnail code don't need to change; the
+   channel guide uses the extra `next`/`nextStartsInSeconds` fields to
+   show what's coming up, which only exists once a channel has more than
+   one block. */
+function projectSchedule(channel){
+  if (channel.live) return { block: channel.blocks[0], offset: 0, next: null, nextStartsInSeconds: null };
   const total = channel.blocks.reduce((s,b)=>s+b.duration,0);
   let pos = Math.floor(Date.now()/1000) % total;
-  for (const b of channel.blocks){
-    if (pos < b.duration) return { block: b, offset: pos };
+  for (let i=0; i<channel.blocks.length; i++){
+    const b = channel.blocks[i];
+    if (pos < b.duration){
+      const next = channel.blocks.length > 1 ? channel.blocks[(i+1) % channel.blocks.length] : null;
+      return { block: b, offset: pos, next, nextStartsInSeconds: b.duration - pos };
+    }
     pos -= b.duration;
   }
-  return { block: channel.blocks[0], offset: 0 };
+  return { block: channel.blocks[0], offset: 0, next: null, nextStartsInSeconds: null };
+}
+function scheduledBlockFor(channel){
+  const { block, offset } = projectSchedule(channel);
+  return { block, offset };
 }
 
 // builds a YouTube embed URL with the chrome hidden as far as the
@@ -969,6 +1040,7 @@ function tuneTo(index, {silent=false} = {}){
 function setPower(on){
   poweredOn = on;
   tv.classList.toggle('off', !on);
+  if (!on) closeGuide();
 
   // CRT tube collapse/expand — same remove+reflow+add pattern as degauss,
   // so replaying the animation always restarts cleanly
@@ -1218,11 +1290,68 @@ document.getElementById('chUp').onclick = ()=> poweredOn && tuneTo(currentIndex+
 document.getElementById('chDown').onclick = ()=> poweredOn && tuneTo(currentIndex-1);
 document.getElementById('powerBtn').onclick = ()=> setPower(!poweredOn);
 
+/* ---------- channel guide ---------- */
+const channelGuide = document.getElementById('channelGuide');
+const guideList = document.getElementById('guideList');
+let guideOpen = false;
+
+function buildGuide(){
+  guideList.innerHTML = '';
+  CHANNELS.forEach((c, i)=>{
+    const row = document.createElement('button');
+    row.className = 'guide-row';
+    row.disabled = !!c.pending;
+
+    const num = document.createElement('span');
+    num.className = 'guide-num';
+    num.textContent = String(c.number).padStart(3,'0');
+
+    const info = document.createElement('span');
+    info.className = 'guide-info';
+    const name = `<span class="guide-name">${c.name}</span>`;
+
+    if (c.pending){
+      info.innerHTML = `${name}<span class="guide-now">NOT YET PROGRAMMED</span>`;
+    } else if (c.live){
+      info.innerHTML = `${name}<span class="guide-now">● LIVE NOW — ${c.blocks[0].title}</span>`;
+    } else {
+      const { block, next, nextStartsInSeconds } = projectSchedule(c);
+      let html = `${name}<span class="guide-now">NOW: ${block.title}</span>`;
+      if (next){
+        const startsAt = new Date(Date.now() + nextStartsInSeconds*1000);
+        const t = startsAt.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+        html += `<span class="guide-next">NEXT: ${next.title} · ${t}</span>`;
+      }
+      info.innerHTML = html;
+    }
+
+    row.appendChild(num);
+    row.appendChild(info);
+    if (!c.pending) row.addEventListener('click', ()=>{ tuneTo(i); closeGuide(); });
+    guideList.appendChild(row);
+  });
+}
+function openGuide(){
+  if (!poweredOn || guideOpen) return;
+  buildGuide();
+  channelGuide.classList.add('show');
+  guideOpen = true;
+}
+function closeGuide(){
+  channelGuide.classList.remove('show');
+  guideOpen = false;
+}
+function toggleGuide(){ guideOpen ? closeGuide() : openGuide(); }
+
+document.getElementById('guideBtn').onclick = toggleGuide;
+document.getElementById('guideClose').onclick = closeGuide;
+
 /* ---------- keyboard shortcuts (remote-control feel) ---------- */
 window.addEventListener('keydown', (e)=>{
   // let a focused dial handle its own arrow keys instead of hijacking them
   if (e.target instanceof HTMLInputElement) return;
   if (e.ctrlKey || e.metaKey || e.altKey) return;
+  if (e.key === 'Escape' && guideOpen){ closeGuide(); return; }
   switch (e.key){
     case 'ArrowUp':
       if (poweredOn) tuneTo(currentIndex+1);
@@ -1232,6 +1361,9 @@ window.addEventListener('keydown', (e)=>{
       break;
     case 'm': case 'M':
       muteBtn.click();
+      break;
+    case 'g': case 'G':
+      toggleGuide();
       break;
     case ' ': case 'p': case 'P':
       e.preventDefault(); // stop space from also activating a focused button
