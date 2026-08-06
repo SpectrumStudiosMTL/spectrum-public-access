@@ -295,6 +295,23 @@ body{
 }
 .picture-wrap.degauss-anim{ animation:degaussShake .6s ease-out; }
 
+/* CRT power on/off: collapses the PICTURE only (transform, paint-only —
+   .screen itself never changes size/position) to a thin line then a dot,
+   like a real tube. Kept off .screen on purpose so the bezel/frame and
+   the layout math in sizeScreen() are completely unaffected. */
+@keyframes crtPowerOff{
+  0%{ transform:scale(1,1); opacity:1; }
+  55%{ transform:scale(1,.02); opacity:1; }
+  100%{ transform:scale(.02,.001); opacity:0; }
+}
+@keyframes crtPowerOn{
+  0%{ transform:scale(.02,.001); opacity:0; }
+  45%{ transform:scale(1,.02); opacity:1; }
+  100%{ transform:scale(1,1); opacity:1; }
+}
+.picture-wrap.crt-power-off{ animation:crtPowerOff .45s ease-in forwards; }
+.picture-wrap.crt-power-on{ animation:crtPowerOn .45s ease-out both; }
+
 /* scanlines + vignette + glow, always on top */
 .screen .scanlines{
   position:absolute; inset:0; pointer-events:none;
@@ -310,6 +327,37 @@ body{
 .screen .glow-edge{
   position:absolute; inset:0; pointer-events:none; border-radius:60px/40px;
   box-shadow:inset 0 0 50px 8px rgba(242,199,68,.06);
+}
+
+/* slow rolling horizontal sync bar — classic "vertical hold" drift.
+   Pure decoration, sits above the picture, never touches its pixels, so
+   it works identically on the YouTube iframe and the local <video>. */
+.screen .sync-bar{
+  position:absolute; left:0; right:0; top:-14%; height:14%; pointer-events:none;
+  background:linear-gradient(to bottom,
+    transparent 0%, rgba(255,255,255,.05) 45%, rgba(255,255,255,.09) 50%,
+    rgba(255,255,255,.05) 55%, transparent 100%);
+  mix-blend-mode:overlay;
+  animation:syncBarDrift 17s linear infinite;
+}
+@keyframes syncBarDrift{ 0%{ top:-14%; } 100%{ top:100%; } }
+
+/* occasional brief tracking-error band — a couple of horizontally-offset
+   strips, like a tape head momentarily losing the track */
+.screen .tracking-glitch{
+  position:absolute; inset:0; pointer-events:none; opacity:0;
+  background:
+    linear-gradient(to bottom, transparent 22%, rgba(255,255,255,.12) 23%, transparent 24%),
+    linear-gradient(to bottom, transparent 61%, rgba(255,255,255,.09) 62.5%, transparent 64%);
+  mix-blend-mode:overlay;
+  animation:trackingGlitch 9s steps(1) infinite;
+}
+@keyframes trackingGlitch{
+  0%, 96%{ opacity:0; transform:none; }
+  96.4%{ opacity:1; transform:translateX(-1.4%); }
+  97.2%{ opacity:1; transform:translateX(1.1%); }
+  98%{ opacity:0; transform:none; }
+  100%{ opacity:0; }
 }
 
 /* continuous "weak signal" snow, opacity driven by the SIGNAL dial */
@@ -331,6 +379,22 @@ body{
   font-family:'VT323',monospace; font-size:26px; letter-spacing:.2em; color:#3a4152;
 }
 .no-signal.pending{ color:var(--phosphor-amber); }
+
+/* pending channels get snow instead of a flat black screen behind the
+   text. Pure CSS via the sibling combinator — reacts to the .pending
+   class tuneTo() already toggles on #noSignal, no new JS needed. Kept
+   as its own layer (not the SIGNAL-dial-driven .static-signal) so it
+   can't fight with that dial's own opacity control. */
+.pending-static{
+  position:absolute; inset:0; pointer-events:none; opacity:0;
+  background:
+    repeating-linear-gradient(0deg, #fff 0 1px, #000 1px 2px),
+    repeating-linear-gradient(90deg, rgba(255,255,255,.05) 0 2px, transparent 2px 4px);
+  background-size:100% 3px, 6px 100%;
+  mix-blend-mode:overlay;
+  transition:opacity .3s ease;
+}
+.no-signal.pending ~ .pending-static{ opacity:.28; }
 
 /* static burst on channel change */
 .static-burst{
@@ -492,6 +556,8 @@ body{
   .static-burst.on{ animation:none; }
   .vtile.live .live-dot{ animation:none; }
   .picture-wrap.degauss-anim{ animation:none; }
+  .picture-wrap.crt-power-off, .picture-wrap.crt-power-on{ animation:none; }
+  .screen .sync-bar, .screen .tracking-glitch{ animation:none; opacity:0; }
 }
 /* small screens get scroll back so nothing is unreachable — this block is
    placed last on purpose so it wins the cascade over the desktop rules
@@ -537,9 +603,12 @@ body{
           <div class="scanlines"></div>
           <div class="vignette"></div>
           <div class="glow-edge"></div>
+          <div class="sync-bar"></div>
+          <div class="tracking-glitch"></div>
           <div class="static-signal" id="staticSignal"></div>
           <div class="static-burst" id="staticBurst"></div>
           <div class="no-signal" id="noSignal">◈ NO SIGNAL ◈</div>
+          <div class="pending-static"></div>
           <div class="osd" id="osd">
             <div class="ch-num" id="osdNum">001</div>
             <div class="ch-name" id="osdName">SPECTRUM PUBLIC ACCESS</div>
@@ -762,6 +831,22 @@ CHANNELS.forEach((c, i)=>{
     b.appendChild(badge);
   }
 
+  // hover preview: swap the tile art for the currently-airing block's real
+  // YouTube thumbnail (free, already-hosted — no asset work) while the
+  // pointer's over it, then swap back to the gradient+logo art
+  if (!c.pending){
+    const { block } = scheduledBlockFor(c);
+    if (block.youtubeId){
+      const thumbUrl = `https://img.youtube.com/vi/${block.youtubeId}/hqdefault.jpg`;
+      b.addEventListener('mouseenter', ()=>{
+        art.style.backgroundImage = `linear-gradient(rgba(0,0,0,.35),rgba(0,0,0,.55)), url(${thumbUrl})`;
+        art.style.backgroundSize = 'cover';
+        art.style.backgroundPosition = 'center';
+      });
+      b.addEventListener('mouseleave', ()=>{ art.style.backgroundImage = ''; });
+    }
+  }
+
   b.addEventListener('click', ()=> poweredOn && tuneTo(i));
   vending.appendChild(b);
 });
@@ -819,6 +904,10 @@ function tuneTo(index, {silent=false} = {}){
   const channel = CHANNELS[currentIndex];
   const num3 = String(channel.number).padStart(3,'0');
 
+  // keep the URL deep-linkable (#ch=52) without adding history entries
+  // or triggering a hashchange/scroll — replaceState does neither
+  history.replaceState(null, '', `#ch=${channel.number}`);
+
   // stop whatever was playing before switching
   player.style.display = 'none';
   player.src = '';
@@ -870,6 +959,7 @@ function tuneTo(index, {silent=false} = {}){
   if (!silent){
     staticBurst.classList.remove('on'); void staticBurst.offsetWidth;
     staticBurst.classList.add('on');
+    playStaticCrackle();
     osd.classList.add('show');
     clearTimeout(tuneTo._t);
     tuneTo._t = setTimeout(()=>osd.classList.remove('show'), 2200);
@@ -879,6 +969,14 @@ function tuneTo(index, {silent=false} = {}){
 function setPower(on){
   poweredOn = on;
   tv.classList.toggle('off', !on);
+
+  // CRT tube collapse/expand — same remove+reflow+add pattern as degauss,
+  // so replaying the animation always restarts cleanly
+  pictureWrap.classList.remove('crt-power-on', 'crt-power-off');
+  void pictureWrap.offsetWidth;
+  pictureWrap.classList.add(on ? 'crt-power-on' : 'crt-power-off');
+  playPowerThunk(on);
+
   if (on){
     tuneTo(currentIndex);
   } else {
@@ -918,8 +1016,11 @@ staticAmt.addEventListener('input', ()=>{
 document.getElementById('degaussBtn').addEventListener('click', ()=>{
   pictureWrap.classList.remove('degauss-anim'); void pictureWrap.offsetWidth;
   pictureWrap.classList.add('degauss-anim');
+  playDegaussBuzz();
 });
-pictureWrap.addEventListener('animationend', ()=> pictureWrap.classList.remove('degauss-anim'));
+pictureWrap.addEventListener('animationend', ()=>{
+  pictureWrap.classList.remove('degauss-anim', 'crt-power-on', 'crt-power-off');
+});
 
 document.getElementById('resetBtn').addEventListener('click', ()=>{
   hue.value = 0; bright.value = 100; contrast.value = 100; sat.value = 100; staticAmt.value = 0;
@@ -977,6 +1078,76 @@ function applyAV(){ applyAudio(); applySpeed(); }
 
 // once the YouTube widget finishes loading, push the current settings into it
 player.addEventListener('load', ()=> setTimeout(applyAV, 600));
+
+/* ---------- sound effects: synthesized with Web Audio, not recorded
+   files — no new asset to source, and it's exactly the kind of crackle/
+   buzz/thunk that's easy to fake with noise + oscillators. Context is
+   created lazily on first use since browsers block audio before a real
+   user gesture; a channel click or power press already counts as one. */
+let sfxCtx = null;
+function sfxContext(){
+  if (!sfxCtx) sfxCtx = new (window.AudioContext || window.webkitAudioContext)();
+  if (sfxCtx.state === 'suspended') sfxCtx.resume();
+  return sfxCtx;
+}
+function noiseBuffer(ctx, seconds){
+  const buf = ctx.createBuffer(1, Math.ceil(ctx.sampleRate*seconds), ctx.sampleRate);
+  const data = buf.getChannelData(0);
+  for (let i=0; i<data.length; i++) data[i] = Math.random()*2-1;
+  return buf;
+}
+function sfxGain(ctx){
+  const g = ctx.createGain();
+  g.connect(ctx.destination);
+  return g;
+}
+function playStaticCrackle(){
+  if (isMuted) return;
+  const ctx = sfxContext();
+  const src = ctx.createBufferSource();
+  src.buffer = noiseBuffer(ctx, 0.35);
+  const g = sfxGain(ctx);
+  g.gain.setValueAtTime(0.18, ctx.currentTime);
+  g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.35);
+  src.connect(g);
+  src.start();
+}
+function playDegaussBuzz(){
+  if (isMuted) return;
+  const ctx = sfxContext();
+  const osc = ctx.createOscillator();
+  osc.type = 'sawtooth';
+  const g = sfxGain(ctx);
+  osc.frequency.setValueAtTime(120, ctx.currentTime);
+  osc.frequency.exponentialRampToValueAtTime(45, ctx.currentTime + 0.55);
+  g.gain.setValueAtTime(0.12, ctx.currentTime);
+  g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.6);
+  osc.connect(g);
+  osc.start();
+  osc.stop(ctx.currentTime + 0.6);
+}
+function playPowerThunk(on){
+  if (isMuted) return;
+  const ctx = sfxContext();
+  const osc = ctx.createOscillator();
+  osc.type = 'square';
+  const g = sfxGain(ctx);
+  if (on){
+    osc.frequency.setValueAtTime(60, ctx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(220, ctx.currentTime + 0.12);
+    g.gain.setValueAtTime(0.001, ctx.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.2, ctx.currentTime + 0.03);
+    g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.18);
+  } else {
+    osc.frequency.setValueAtTime(220, ctx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(50, ctx.currentTime + 0.3);
+    g.gain.setValueAtTime(0.2, ctx.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.32);
+  }
+  osc.connect(g);
+  osc.start();
+  osc.stop(ctx.currentTime + 0.35);
+}
 
 /* ---------- exact 4:3 screen sizing ----------
    CSS alone can't reliably do this: .screen-col's own width is a
@@ -1047,7 +1218,36 @@ document.getElementById('chUp').onclick = ()=> poweredOn && tuneTo(currentIndex+
 document.getElementById('chDown').onclick = ()=> poweredOn && tuneTo(currentIndex-1);
 document.getElementById('powerBtn').onclick = ()=> setPower(!poweredOn);
 
-tuneTo(0, {silent:true});
+/* ---------- keyboard shortcuts (remote-control feel) ---------- */
+window.addEventListener('keydown', (e)=>{
+  // let a focused dial handle its own arrow keys instead of hijacking them
+  if (e.target instanceof HTMLInputElement) return;
+  if (e.ctrlKey || e.metaKey || e.altKey) return;
+  switch (e.key){
+    case 'ArrowUp':
+      if (poweredOn) tuneTo(currentIndex+1);
+      break;
+    case 'ArrowDown':
+      if (poweredOn) tuneTo(currentIndex-1);
+      break;
+    case 'm': case 'M':
+      muteBtn.click();
+      break;
+    case ' ': case 'p': case 'P':
+      e.preventDefault(); // stop space from also activating a focused button
+      setPower(!poweredOn);
+      break;
+  }
+});
+
+/* ---------- deep link: a URL like #ch=52 tunes straight there on load ---------- */
+function channelIndexFromHash(){
+  const m = location.hash.match(/ch=(\d+)/);
+  if (!m) return -1;
+  return CHANNELS.findIndex(c => c.number === Number(m[1]));
+}
+const initialIndex = channelIndexFromHash();
+tuneTo(initialIndex >= 0 ? initialIndex : 0, {silent:true});
 </script>
 </body>
 </html>
