@@ -301,6 +301,8 @@ const TEXT = {
     submitFrameTitle: "Feeling Fishy submission form",
     directSubmitTitle: "Almost done!",
     directSubmitIntro: "Just your name and email, and we'll send your fish in for review.",
+    directSubmitIntroUpload: "Attach your fish file below — a name, email, and postal code are all we need alongside it.",
+    directSubmitFileLabel: "Fish file",
     directSubmitNameLabel: "Name",
     directSubmitEmailLabel: "Email",
     directSubmitPostalLabel: "Postal code",
@@ -383,6 +385,8 @@ const TEXT = {
     submitFrameTitle: "Formulaire de soumission Feeling Fishy",
     directSubmitTitle: "Presque fini !",
     directSubmitIntro: "Juste ton nom et courriel, et on envoie ton poisson pour révision.",
+    directSubmitIntroUpload: "Joins ton fichier de poisson ci-dessous — un nom, un courriel et un code postal suffisent en plus.",
+    directSubmitFileLabel: "Fichier du poisson",
     directSubmitNameLabel: "Nom",
     directSubmitEmailLabel: "Courriel",
     directSubmitPostalLabel: "Code postal",
@@ -1014,10 +1018,12 @@ header p  { font-size: clamp(0.85rem, 2vw, 1rem); opacity: 0.9; }
    simply hidden rather than kept in the DOM for accessibility. */
 .card.submit-card #submitNote { display: none; }
 
-/* "Almost done!" card — the draw tool's own name/email submit form.
-   Reuses .search-input's pill style for the two fields and .card
-   button's pill style for its buttons; only the label and status
-   line need their own rules. Left-aligned unlike the card's default
+/* "Almost done!" card — the direct-submit form shared by the draw
+   tool (name/email/postal only) and "Submit your fish" (same, plus
+   a real file picker -- see #directSubmitFileRow). Reuses
+   .search-input's pill style for the text fields and .card button's
+   pill style for its buttons; only the label, status line, and file
+   row need their own rules. Left-aligned unlike the card's default
    centered text -- a form reads better that way. */
 #directSubmitForm { text-align: left; }
 .direct-submit-label {
@@ -1028,6 +1034,13 @@ header p  { font-size: clamp(0.85rem, 2vw, 1rem); opacity: 0.9; }
   letter-spacing: 0.14em;
   opacity: 0.6;
   margin: 16px 0 4px;
+}
+#directSubmitFileRow input {
+  display: block;
+  width: 100%;
+  font: inherit;
+  font-size: 0.9rem;
+  color: var(--text);
 }
 #directSubmitForm button { margin-top: 20px; }
 .direct-submit-status {
@@ -2180,17 +2193,25 @@ body.calm .school-arrow, body.calm .school-dots {
 </div>
 
 <!-- "Almost done!" pop-up: the draw tool's own submit flow. Posts
-     the finished drawing straight to SETTINGS.directSubmitEndpoint
+     the finished drawing (or, from "Submit your fish", a file the
+     visitor picks themselves) straight to SETTINGS.directSubmitEndpoint
      (see that setting's own comment) instead of opening the monday
-     iframe above -- name + email are the only two things it still
-     needs from the visitor; everything else the old form asked for
-     isn't used by add_fish.py anyway. -->
+     iframe above -- a name, email, and postal code are the only
+     things it still needs from the visitor; everything else the old
+     form asked for isn't used by add_fish.py anyway. The file picker
+     row is hidden by the draw tool's own path (openDirectSubmit),
+     which already has a finished drawing and doesn't need it; shown
+     by "Submit your fish" (openDirectSubmitPicker), which does. -->
 <div class="card-overlay" id="directSubmitOverlay" role="dialog" aria-modal="true" aria-labelledby="directSubmitTitle">
   <div class="card">
     <h2 id="directSubmitTitle"></h2>
     <div id="directSubmitFormWrap">
       <p class="download-note" id="directSubmitIntro"></p>
       <form id="directSubmitForm">
+        <div id="directSubmitFileRow" hidden>
+          <label class="direct-submit-label" for="directSubmitFile" id="directSubmitFileLabel"></label>
+          <input type="file" id="directSubmitFile" accept="image/*,.psd,.kra">
+        </div>
         <label class="direct-submit-label" for="directSubmitName" id="directSubmitNameLabel"></label>
         <input class="search-input" type="text" id="directSubmitName" required autocomplete="name" maxlength="255">
         <label class="direct-submit-label" for="directSubmitEmail" id="directSubmitEmailLabel"></label>
@@ -2907,7 +2928,7 @@ function resetOptionCarousel(overlay) {
   if (row && row.showCarouselOption) row.showCarouselOption(0);
 }
 
-if (SETTINGS.templateUrl || SETTINGS.submitEmbedUrl) {
+if (SETTINGS.templateUrl || SETTINGS.submitEmbedUrl || SETTINGS.directSubmitEndpoint) {
   createBtn = document.createElement("button");
   createBtn.className = "create-btn";
 
@@ -3078,7 +3099,12 @@ if (SETTINGS.templateUrl || SETTINGS.submitEmbedUrl) {
     submitOverlay.classList.add("open");
     focusOverlayHeading(submitOverlay);
   }
-  if (SETTINGS.submitEmbedUrl) {
+  // Prefers the direct-submit form (openDirectSubmitPicker, defined
+  // below) over monday's iframe when both are configured -- same
+  // fallback relationship as the draw tool's own submit button.
+  if (SETTINGS.directSubmitEndpoint) {
+    optSubmit.addEventListener("click", () => openDirectSubmitPicker());
+  } else if (SETTINGS.submitEmbedUrl) {
     optSubmit.addEventListener("click", () => openSubmitScreen(createOverlay));
   } else optSubmit.style.display = "none";
 
@@ -3113,33 +3139,64 @@ if (SETTINGS.templateUrl || SETTINGS.submitEmbedUrl) {
     if (lastFocused && lastFocused.focus) lastFocused.focus();
   });
 
-  // "Almost done!" — the draw tool's own submit flow: post the
-  // drawing straight to SETTINGS.directSubmitEndpoint instead of
-  // opening the monday.com iframe. See that setting's own comment.
+  // "Almost done!" — shared submit flow for both the draw tool and
+  // "Submit your fish": posts straight to SETTINGS.directSubmitEndpoint
+  // instead of opening the monday.com iframe. See that setting's own
+  // comment, and the overlay's own comment in the markup for how the
+  // two entry points share this one form.
   const directSubmitOverlay = document.getElementById("directSubmitOverlay");
   const directSubmitFormWrap = document.getElementById("directSubmitFormWrap");
   const directSubmitForm = document.getElementById("directSubmitForm");
+  const directSubmitFileRow = document.getElementById("directSubmitFileRow");
+  const directSubmitFile = document.getElementById("directSubmitFile");
   const directSubmitStatus = document.getElementById("directSubmitStatus");
   const directSubmitSend = document.getElementById("directSubmitSend");
   const directSubmitSuccess = document.getElementById("directSubmitSuccess");
-  let pendingFishBlob = null; // set right before this overlay opens, cleared once submitted
+  let pendingFishBlob = null; // set by the draw tool's path, cleared once submitted
+  let directSubmitMode = "draw"; // "draw" (file already in hand) or "upload" (visitor picks one)
+  let directSubmitReturnTo = null; // whichever overlay Back should reopen
 
-  function openDirectSubmit(blob) {
-    pendingFishBlob = blob;
+  function updateDirectSubmitIntro() {
+    document.getElementById("directSubmitIntro").textContent =
+      directSubmitMode === "upload" ? TEXT[lang].directSubmitIntroUpload : TEXT[lang].directSubmitIntro;
+  }
+
+  function openDirectSubmitCommon(fromOverlay) {
     directSubmitForm.reset();
     directSubmitStatus.textContent = "";
     directSubmitStatus.classList.remove("error");
     directSubmitSend.disabled = false;
     directSubmitFormWrap.hidden = false;
     directSubmitSuccess.hidden = true;
-    drawOverlay.classList.remove("open");
+    directSubmitReturnTo = fromOverlay;
+    fromOverlay.classList.remove("open");
     directSubmitOverlay.classList.add("open");
     focusOverlayHeading(directSubmitOverlay);
   }
 
+  // Called by the draw tool with a finished-artwork blob in hand.
+  function openDirectSubmit(blob) {
+    pendingFishBlob = blob;
+    directSubmitMode = "draw";
+    directSubmitFileRow.hidden = true;
+    updateDirectSubmitIntro();
+    openDirectSubmitCommon(drawOverlay);
+  }
+
+  // Called by "Submit your fish" -- no file yet, the visitor picks
+  // one from their own device via #directSubmitFile.
+  function openDirectSubmitPicker() {
+    pendingFishBlob = null;
+    directSubmitMode = "upload";
+    directSubmitFileRow.hidden = false;
+    updateDirectSubmitIntro();
+    openDirectSubmitCommon(createOverlay);
+  }
+
   directSubmitForm.addEventListener("submit", (e) => {
     e.preventDefault();
-    if (!pendingFishBlob) return;
+    const fileToSend = directSubmitFile.files[0] || pendingFishBlob;
+    if (!fileToSend) return;
     const name = document.getElementById("directSubmitName").value.trim();
     const email = document.getElementById("directSubmitEmail").value.trim();
     const postalCode = document.getElementById("directSubmitPostal").value.trim();
@@ -3151,7 +3208,7 @@ if (SETTINGS.templateUrl || SETTINGS.submitEmbedUrl) {
     body.append("creator", name);
     body.append("email", email);
     body.append("postalCode", postalCode);
-    body.append("file", pendingFishBlob, "my-fish.png");
+    body.append("file", fileToSend, fileToSend.name || "my-fish.png");
 
     fetch(SETTINGS.directSubmitEndpoint, { method: "POST", body })
       .then((resp) => {
@@ -3170,12 +3227,15 @@ if (SETTINGS.templateUrl || SETTINGS.submitEmbedUrl) {
       });
   });
 
-  // Back returns to the canvas (in case they want to keep editing)
-  // rather than closing outright — nothing's been submitted yet.
+  // Back returns to wherever this form was opened from (the draw
+  // tool's canvas, or the top-level create menu) rather than closing
+  // outright — nothing's been submitted yet.
   document.getElementById("directSubmitBack").addEventListener("click", () => {
     directSubmitOverlay.classList.remove("open");
-    drawOverlay.classList.add("open");
-    focusOverlayHeading(drawOverlay);
+    if (directSubmitReturnTo) {
+      directSubmitReturnTo.classList.add("open");
+      focusOverlayHeading(directSubmitReturnTo);
+    }
   });
   document.getElementById("directSubmitDone").addEventListener("click", () => {
     closeOverlay(directSubmitOverlay);
@@ -3786,7 +3846,12 @@ function applyLanguage() {
   document.getElementById("submitFrame").title = t.submitFrameTitle;
   document.getElementById("submitBack").textContent = t.goBack;
   document.getElementById("directSubmitTitle").textContent = t.directSubmitTitle;
-  document.getElementById("directSubmitIntro").textContent = t.directSubmitIntro;
+  // Two entry points share this one form (see the overlay's own
+  // comment) -- updateDirectSubmitIntro() picks the right intro text
+  // based on directSubmitMode, so a language switch mid-form still
+  // shows the correct one for whichever entry point is actually open.
+  updateDirectSubmitIntro();
+  document.getElementById("directSubmitFileLabel").textContent = t.directSubmitFileLabel;
   document.getElementById("directSubmitNameLabel").textContent = t.directSubmitNameLabel;
   document.getElementById("directSubmitEmailLabel").textContent = t.directSubmitEmailLabel;
   document.getElementById("directSubmitPostalLabel").textContent = t.directSubmitPostalLabel;
