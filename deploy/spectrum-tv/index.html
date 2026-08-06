@@ -643,6 +643,11 @@ body{
           <div class="picture-wrap" id="pictureWrap">
             <iframe id="player" src="" allow="autoplay; encrypted-media" allowfullscreen title="channel" style="display:none"></iframe>
             <video id="localPlayer" autoplay muted playsinline loop style="display:none"></video>
+            <!-- ambient static loops (no visual footprint) — pendingLoop plays
+                 behind "NOT YET PROGRAMMED" channels, signalLoop follows the
+                 SIGNAL dial. Both real recordings, see audio/ -->
+            <audio id="pendingLoopAudio" src="audio/static-pending-loop.mp3" loop preload="auto"></audio>
+            <audio id="signalLoopAudio" src="audio/static-signal-loop.mp3" loop preload="auto"></audio>
           </div>
           <div class="scanlines"></div>
           <div class="vignette"></div>
@@ -847,6 +852,8 @@ let poweredOn = true;
 const tv = document.getElementById('tv');
 const player = document.getElementById('player');           // YouTube iframe — live channel only
 const localPlayer = document.getElementById('localPlayer'); // <video> — every local channel
+const pendingLoopAudio = document.getElementById('pendingLoopAudio'); // ambient — NOT YET PROGRAMMED channels
+const signalLoopAudio = document.getElementById('signalLoopAudio');   // ambient — follows the SIGNAL dial
 const pictureWrap = document.getElementById('pictureWrap');
 const noSignal = document.getElementById('noSignal');
 const osd = document.getElementById('osd');
@@ -984,12 +991,14 @@ function tuneTo(index, {silent=false} = {}){
   player.src = '';
   localPlayer.style.display = 'none';
   localPlayer.pause();
+  pendingLoopAudio.pause();
 
   if (channel.pending){
     noSignal.textContent = '◈ NO SIGNAL — CHANNEL NOT YET PROGRAMMED ◈';
     noSignal.classList.add('pending');
     noSignal.style.opacity = '1';
     ticker.textContent = `CH ${num3} · ${channel.name} · NOT YET PROGRAMMED`;
+    pendingLoopAudio.play().catch(()=>{ /* autoplay blocked until a real gesture happens */ });
   } else if (channel.live){
     noSignal.classList.remove('pending');
     noSignal.style.opacity = '0';
@@ -1018,7 +1027,10 @@ function tuneTo(index, {silent=false} = {}){
     ticker.textContent = `NOW PLAYING — CH ${num3} · ${channel.name} · ${block.title}`;
   }
 
-  if (!channel.pending) applyAV(); // carry volume / mute / speed across channel changes
+  // carry volume/mute/speed across channel changes — always, not just for
+  // programmed channels, since pendingLoopAudio needs the real mute state
+  // too (otherwise it'd default to unmuted/full-volume on a pending tune)
+  applyAV();
 
   osdNum.textContent = num3;
   osdName.textContent = channel.osdName || channel.name;
@@ -1030,7 +1042,7 @@ function tuneTo(index, {silent=false} = {}){
   if (!silent){
     staticBurst.classList.remove('on'); void staticBurst.offsetWidth;
     staticBurst.classList.add('on');
-    playStaticCrackle();
+    playChannelClick();
     osd.classList.add('show');
     clearTimeout(tuneTo._t);
     tuneTo._t = setTimeout(()=>osd.classList.remove('show'), 2200);
@@ -1054,6 +1066,8 @@ function setPower(on){
   } else {
     player.src = '';
     localPlayer.pause();
+    pendingLoopAudio.pause();
+    signalLoopAudio.pause();
     noSignal.classList.remove('pending');
     noSignal.textContent = '◈ NO SIGNAL ◈';
     noSignal.style.opacity = '1';
@@ -1079,10 +1093,23 @@ function applyPicture(){
 }
 [hue,bright,contrast,sat].forEach(el=>el.addEventListener('input', applyPicture));
 
+// ties the real static-loop recording's volume/play-state to the SIGNAL
+// dial — also re-checked from applyAudio() so muting/the volume fader
+// affects it live even while the dial itself doesn't move
+function updateSignalLoop(){
+  const level = Number(staticAmt.value);
+  if (level > 0 && !isMuted){
+    signalLoopAudio.volume = Math.min(1, (level/100) * (Number(vol.value)/100) * 0.6);
+    if (signalLoopAudio.paused) signalLoopAudio.play().catch(()=>{});
+  } else {
+    signalLoopAudio.pause();
+  }
+}
 staticAmt.addEventListener('input', ()=>{
   staticSignal.style.opacity = staticAmt.value/140;
   const out = document.getElementById('staticOut');
   out.textContent = staticAmt.value == 0 ? 'clear' : staticAmt.value < 40 ? 'weak' : staticAmt.value < 75 ? 'noisy' : 'lost';
+  updateSignalLoop();
 });
 
 document.getElementById('degaussBtn').addEventListener('click', ()=>{
@@ -1099,6 +1126,7 @@ document.getElementById('resetBtn').addEventListener('click', ()=>{
   applyPicture();
   staticSignal.style.opacity = 0;
   document.getElementById('staticOut').textContent = 'clear';
+  updateSignalLoop();
 });
 
 /* ---------- audio: volume fader + mute ---------- */
@@ -1121,6 +1149,9 @@ function applyAudio(){
   localPlayer.muted = isMuted;
   ytCommand('setVolume', [v]);
   ytCommand(isMuted ? 'mute' : 'unMute');
+  pendingLoopAudio.volume = Math.min(1, (v/100) * 0.5);
+  pendingLoopAudio.muted = isMuted;
+  updateSignalLoop();
   volOut.textContent = isMuted ? 'MUTED' : v;
   muteBtn.textContent = isMuted ? 'MUTED' : 'MUTE';
   muteBtn.classList.toggle('on', isMuted);
@@ -1151,75 +1182,47 @@ function applyAV(){ applyAudio(); applySpeed(); }
 // once the YouTube widget finishes loading, push the current settings into it
 player.addEventListener('load', ()=> setTimeout(applyAV, 600));
 
-/* ---------- sound effects: synthesized with Web Audio, not recorded
-   files — no new asset to source, and it's exactly the kind of crackle/
-   buzz/thunk that's easy to fake with noise + oscillators. Context is
-   created lazily on first use since browsers block audio before a real
-   user gesture; a channel click or power press already counts as one. */
+/* ---------- sound effects: real recordings, cut from TV SOUNDs.wav
+   ----------
+   One-shots play through Web Audio (AudioBufferSourceNode), decoded
+   once and cached — same lazily-created-context approach as before,
+   since browsers block audio before a real user gesture and a channel
+   click / power press already counts as one. */
 let sfxCtx = null;
 function sfxContext(){
   if (!sfxCtx) sfxCtx = new (window.AudioContext || window.webkitAudioContext)();
   if (sfxCtx.state === 'suspended') sfxCtx.resume();
   return sfxCtx;
 }
-function noiseBuffer(ctx, seconds){
-  const buf = ctx.createBuffer(1, Math.ceil(ctx.sampleRate*seconds), ctx.sampleRate);
-  const data = buf.getChannelData(0);
-  for (let i=0; i<data.length; i++) data[i] = Math.random()*2-1;
-  return buf;
-}
 function sfxGain(ctx){
   const g = ctx.createGain();
   g.connect(ctx.destination);
   return g;
 }
-function playStaticCrackle(){
-  if (isMuted) return;
-  const ctx = sfxContext();
-  const src = ctx.createBufferSource();
-  src.buffer = noiseBuffer(ctx, 0.35);
-  const g = sfxGain(ctx);
-  g.gain.setValueAtTime(0.18, ctx.currentTime);
-  g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.35);
-  src.connect(g);
-  src.start();
+const sfxBufferCache = {};
+async function loadSfxBuffer(url){
+  if (sfxBufferCache[url]) return sfxBufferCache[url];
+  const arr = await fetch(url).then(r=>r.arrayBuffer());
+  const buf = await sfxContext().decodeAudioData(arr);
+  sfxBufferCache[url] = buf;
+  return buf;
 }
-function playDegaussBuzz(){
+async function playSfxFile(url, gainValue=0.5){
   if (isMuted) return;
-  const ctx = sfxContext();
-  const osc = ctx.createOscillator();
-  osc.type = 'sawtooth';
-  const g = sfxGain(ctx);
-  osc.frequency.setValueAtTime(120, ctx.currentTime);
-  osc.frequency.exponentialRampToValueAtTime(45, ctx.currentTime + 0.55);
-  g.gain.setValueAtTime(0.12, ctx.currentTime);
-  g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.6);
-  osc.connect(g);
-  osc.start();
-  osc.stop(ctx.currentTime + 0.6);
+  try{
+    const ctx = sfxContext();
+    const buffer = await loadSfxBuffer(url);
+    const src = ctx.createBufferSource();
+    src.buffer = buffer;
+    const g = sfxGain(ctx);
+    g.gain.value = gainValue;
+    src.connect(g);
+    src.start();
+  }catch(e){ /* missing/blocked file — fail silently, picture still works */ }
 }
-function playPowerThunk(on){
-  if (isMuted) return;
-  const ctx = sfxContext();
-  const osc = ctx.createOscillator();
-  osc.type = 'square';
-  const g = sfxGain(ctx);
-  if (on){
-    osc.frequency.setValueAtTime(60, ctx.currentTime);
-    osc.frequency.exponentialRampToValueAtTime(220, ctx.currentTime + 0.12);
-    g.gain.setValueAtTime(0.001, ctx.currentTime);
-    g.gain.exponentialRampToValueAtTime(0.2, ctx.currentTime + 0.03);
-    g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.18);
-  } else {
-    osc.frequency.setValueAtTime(220, ctx.currentTime);
-    osc.frequency.exponentialRampToValueAtTime(50, ctx.currentTime + 0.3);
-    g.gain.setValueAtTime(0.2, ctx.currentTime);
-    g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.32);
-  }
-  osc.connect(g);
-  osc.start();
-  osc.stop(ctx.currentTime + 0.35);
-}
+function playChannelClick(){ playSfxFile('audio/channel-click.mp3', 0.5); }
+function playDegaussBuzz(){ playSfxFile('audio/degauss-buzz.mp3', 0.4); }
+function playPowerThunk(on){ playSfxFile(on ? 'audio/power-on.mp3' : 'audio/power-off.mp3', 0.5); }
 
 /* ---------- exact 4:3 screen sizing ----------
    CSS alone can't reliably do this: .screen-col's own width is a
