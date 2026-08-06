@@ -614,29 +614,33 @@ body{
 <script>
 /*
   ── VIRTUAL CHANNEL SCHEDULER ──────────────────────────────────────
-  Each "channel" is an ordered list of blocks (title + file + duration
-  in seconds). On load / channel-change we compute how far into the
-  channel's total loop the current wall-clock moment falls, find which
-  block that lands in, and start that file at the matching offset — so
-  anyone watching sees the same thing at the same time, like real
-  broadcast, with zero extra streaming infrastructure.
+  Each "channel" is an ordered list of blocks (title + duration in
+  seconds, plus either `youtubeId` or `file`). On load / channel-change
+  we compute how far into the channel's total loop the current
+  wall-clock moment falls, find which block that lands in, and start
+  that video at the matching offset — so anyone watching sees the same
+  thing at the same time, like real broadcast, with zero extra
+  streaming infrastructure.
 
-  CH 001 is your real 24/7 live feed and is the ONLY channel that uses
-  the YouTube embed — it's your actual OBS broadcast, not a video file.
+  Two kinds of block:
+  - `youtubeId` — an unlisted YouTube video, played through the shared
+    `player` iframe via buildEmbedUrl(). CH 001's live 24/7 feed is a
+    block like this too (`live` on the channel forces offset 0 and
+    skips start/loop). Non-live youtubeId blocks get `start=<offset>`
+    plus `loop=1&playlist=<id>` so the embed re-loops on its own once
+    the tab's been open longer than one block — this only stays in
+    sync if the YouTube video's real length matches `duration` exactly,
+    same requirement as the local-file case below.
+  - `file` — a local video file, played through the `localPlayer`
+    <video> element, `duration` matching the file's real length so its
+    native `loop` attribute keeps it wall-clock-synced. CH008/052/066
+    still use this for now; once each is uploaded as an unlisted
+    YouTube video, swap its `file` for `youtubeId` here — no other code
+    changes needed, `scheduledBlockFor`/`tuneTo` already handle both.
 
-  Every other channel plays a LOCAL video file only — no external links.
-  `file` paths are relative to this HTML file, matching your
-  G:\SPECTRUM TV folder:
-  video/CH008_MorningCartoons_block01.mov (this one's currently .mov;
-  the rest are .mp4 going forward, per your latest workflow).
-
-  Channels with `pending: true` have no file wired up yet — they show
-  NO SIGNAL when tuned. As you send more real filenames, swap them in
-  and remove the pending flag.
-
-  DURATIONS are confirmed at 3600s (1 hour) for the three channels with
-  real files. If a future block runs a different length, update its
-  `duration` to match so the broadcast-offset math stays accurate.
+  Channels with `pending: true` have no block wired up yet — they show
+  NO SIGNAL when tuned. As you send real YouTube IDs, swap them in and
+  remove the pending flag.
 
   `tile` controls each channel's vending-grid look: two gradient colors,
   a text color, and optionally `logo` (an <img> data-URI or file path)
@@ -785,6 +789,31 @@ function scheduledBlockFor(channel){
   return { block: channel.blocks[0], offset: 0 };
 }
 
+// builds a YouTube embed URL with the chrome hidden as far as the
+// iframe API allows (YouTube's own logo watermark can't be removed —
+// their branding policy dropped that around 2023). `live` skips
+// start/loop since the real broadcast has no fixed offset; VOD blocks
+// get `start=<offset>` plus loop=1&playlist=<id> so the embed keeps
+// itself looping without our code having to intervene.
+function buildEmbedUrl(youtubeId, { live = false, start = 0 } = {}){
+  const params = new URLSearchParams({
+    autoplay: 1, mute: 1, playsinline: 1, rel: 0,
+    controls: 0, disablekb: 1, fs: 0, iv_load_policy: 3, modestbranding: 1
+  });
+  if (!live){
+    params.set('start', Math.floor(start));
+    params.set('loop', 1);
+    params.set('playlist', youtubeId); // required for loop=1 to work on a single video
+  }
+  // the iframe JS API needs a real http(s) origin — from file:// it makes
+  // YouTube throw Error 153, so only attach it when the page is served
+  if (location.protocol === 'http:' || location.protocol === 'https:'){
+    params.set('enablejsapi', '1');
+    params.set('origin', location.origin);
+  }
+  return `https://www.youtube.com/embed/${youtubeId}?${params.toString()}`;
+}
+
 function tuneTo(index, {silent=false} = {}){
   currentIndex = (index + CHANNELS.length) % CHANNELS.length;
   const channel = CHANNELS[currentIndex];
@@ -806,26 +835,26 @@ function tuneTo(index, {silent=false} = {}){
     noSignal.style.opacity = '0';
     const { block } = scheduledBlockFor(channel);
     player.style.display = 'block';
-    const params = new URLSearchParams({ autoplay: 1, mute: 1, playsinline: 1, rel: 0 });
-    // the iframe JS API needs a real http(s) origin — from file:// it makes
-    // YouTube throw Error 153, so only attach it when the page is served
-    if (location.protocol === 'http:' || location.protocol === 'https:'){
-      params.set('enablejsapi', '1');
-      params.set('origin', location.origin);
-    }
-    player.src = `https://www.youtube.com/embed/${block.youtubeId}?${params.toString()}`;
+    player.src = buildEmbedUrl(block.youtubeId, { live: true });
     ticker.textContent = `NOW PLAYING — CH ${num3} · ${channel.name} · ${block.title}`;
   } else {
     noSignal.classList.remove('pending');
     noSignal.style.opacity = '0';
     const { block, offset } = scheduledBlockFor(channel);
-    localPlayer.style.display = 'block';
-    if (localPlayer.dataset.src !== block.file){
-      localPlayer.src = block.file;
-      localPlayer.dataset.src = block.file;
+    if (block.youtubeId){
+      localPlayer.style.display = 'none';
+      player.style.display = 'block';
+      player.src = buildEmbedUrl(block.youtubeId, { live: false, start: offset });
+    } else {
+      player.style.display = 'none';
+      localPlayer.style.display = 'block';
+      if (localPlayer.dataset.src !== block.file){
+        localPlayer.src = block.file;
+        localPlayer.dataset.src = block.file;
+      }
+      localPlayer.currentTime = offset;
+      localPlayer.play().catch(()=>{ /* autoplay blocked — any button press counts as a gesture and unblocks it */ });
     }
-    localPlayer.currentTime = offset;
-    localPlayer.play().catch(()=>{ /* autoplay blocked — any button press counts as a gesture and unblocks it */ });
     ticker.textContent = `NOW PLAYING — CH ${num3} · ${channel.name} · ${block.title}`;
   }
 
