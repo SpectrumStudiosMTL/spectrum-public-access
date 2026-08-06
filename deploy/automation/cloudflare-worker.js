@@ -66,6 +66,17 @@ const COLUMN_ID_FILE = "filebqxounrf";
 // Optional — leave as-is if you don't have a bio column; bio will
 // just stay blank for automated submissions, same as it is today.
 const COLUMN_ID_BIO = "";
+// The real "Postal Code" column is a Location type, built for the
+// form's map-search widget -- it stores real lat/lng coordinates,
+// not free text (confirmed against the API: even a bare postal code
+// string gets rejected, since monday tries to parse it as
+// coordinates). Getting real coordinates from just a typed postal
+// code would need a geocoding service, which is more than this
+// needs -- instead this writes the raw text into a second, plain
+// Text column added just for direct submissions. Not shown to
+// anyone reviewing submissions, and separate from the real Postal
+// Code column the form itself still fills in normally.
+const COLUMN_ID_POSTAL_TEXT = "text_mm5zx6r0";
 
 export default {
   async fetch(request, env) {
@@ -182,6 +193,7 @@ async function handleDirectSubmit(request, env) {
   const email = (form.get("email") || "").toString().trim();
   const fishName = (form.get("name") || "").toString().trim();
   const bio = (form.get("bio") || "").toString().trim();
+  const postalCode = (form.get("postalCode") || "").toString().trim();
   const file = form.get("file");
 
   if (!creator || !email) {
@@ -196,7 +208,7 @@ async function handleDirectSubmit(request, env) {
   }
 
   try {
-    const itemId = await createMondayItem({ creator, email, fishName, bio }, env.MONDAY_API_TOKEN);
+    const itemId = await createMondayItem({ creator, email, fishName, bio, postalCode }, env.MONDAY_API_TOKEN);
     // Deliberately stops here -- no download URL fetch, no GitHub
     // dispatch. monday's own "item created" automation does that,
     // same as it does for a real form submission. See the top-of-
@@ -215,11 +227,12 @@ async function handleDirectSubmit(request, env) {
 // the numeric IDs interpolated elsewhere in this file, creator/
 // email/fishName/bio are arbitrary visitor-typed text, and a stray
 // quote in someone's name could otherwise break out of the query.
-async function createMondayItem({ creator, email, fishName, bio }, token) {
+async function createMondayItem({ creator, email, fishName, bio, postalCode }, token) {
   const columnValues = {};
   if (email) columnValues[COLUMN_ID_EMAIL] = { email, text: email };
   if (fishName) columnValues[COLUMN_ID_FISH_NAME] = fishName;
   if (bio && COLUMN_ID_BIO) columnValues[COLUMN_ID_BIO] = bio;
+  if (postalCode) columnValues[COLUMN_ID_POSTAL_TEXT] = postalCode;
 
   const query = `mutation ($boardId: ID!, $itemName: String!, $columnValues: JSON!) {
     create_item(board_id: $boardId, item_name: $itemName, column_values: $columnValues) {

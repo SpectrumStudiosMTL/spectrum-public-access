@@ -302,6 +302,7 @@ const TEXT = {
     directSubmitIntro: "Just your name and email, and we'll send your fish in for review.",
     directSubmitNameLabel: "Name",
     directSubmitEmailLabel: "Email",
+    directSubmitPostalLabel: "Postal code",
     directSubmitSend: "Send it in",
     directSubmitSending: "Sending…",
     directSubmitError: "Something went wrong — check your connection and try again.",
@@ -383,6 +384,7 @@ const TEXT = {
     directSubmitIntro: "Juste ton nom et courriel, et on envoie ton poisson pour révision.",
     directSubmitNameLabel: "Nom",
     directSubmitEmailLabel: "Courriel",
+    directSubmitPostalLabel: "Code postal",
     directSubmitSend: "Envoie-le",
     directSubmitSending: "Envoi…",
     directSubmitError: "Une erreur s'est produite — vérifie ta connexion et réessaie.",
@@ -2191,6 +2193,8 @@ body.calm .school-arrow, body.calm .school-dots {
         <input class="search-input" type="text" id="directSubmitName" required autocomplete="name" maxlength="255">
         <label class="direct-submit-label" for="directSubmitEmail" id="directSubmitEmailLabel"></label>
         <input class="search-input" type="email" id="directSubmitEmail" required autocomplete="email">
+        <label class="direct-submit-label" for="directSubmitPostal" id="directSubmitPostalLabel"></label>
+        <input class="search-input" type="text" id="directSubmitPostal" required autocomplete="postal-code" maxlength="20">
         <p class="direct-submit-status" id="directSubmitStatus" role="status" aria-live="polite"></p>
         <button type="submit" id="directSubmitSend"></button>
       </form>
@@ -3136,6 +3140,7 @@ if (SETTINGS.templateUrl || SETTINGS.submitEmbedUrl) {
     if (!pendingFishBlob) return;
     const name = document.getElementById("directSubmitName").value.trim();
     const email = document.getElementById("directSubmitEmail").value.trim();
+    const postalCode = document.getElementById("directSubmitPostal").value.trim();
     directSubmitSend.disabled = true;
     directSubmitStatus.classList.remove("error");
     directSubmitStatus.textContent = TEXT[lang].directSubmitSending;
@@ -3143,6 +3148,7 @@ if (SETTINGS.templateUrl || SETTINGS.submitEmbedUrl) {
     const body = new FormData();
     body.append("creator", name);
     body.append("email", email);
+    body.append("postalCode", postalCode);
     body.append("file", pendingFishBlob, "my-fish.png");
 
     fetch(SETTINGS.directSubmitEndpoint, { method: "POST", body })
@@ -3781,6 +3787,7 @@ function applyLanguage() {
   document.getElementById("directSubmitIntro").textContent = t.directSubmitIntro;
   document.getElementById("directSubmitNameLabel").textContent = t.directSubmitNameLabel;
   document.getElementById("directSubmitEmailLabel").textContent = t.directSubmitEmailLabel;
+  document.getElementById("directSubmitPostalLabel").textContent = t.directSubmitPostalLabel;
   document.getElementById("directSubmitSend").textContent = t.directSubmitSend;
   document.getElementById("directSubmitBack").textContent = t.goBack;
   document.getElementById("directSubmitSuccessText").textContent = t.directSubmitSuccessText;
