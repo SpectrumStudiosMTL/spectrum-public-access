@@ -301,7 +301,7 @@ const TEXT = {
     submitFrameTitle: "Feeling Fishy submission form",
     directSubmitTitle: "Almost done!",
     directSubmitIntro: "Just your name and email, and we'll send your fish in for review.",
-    directSubmitIntroUpload: "Attach your fish file below — a name, email, and postal code are all we need alongside it.",
+    directSubmitIntroUpload: "Attach your fish design below and add a name, email, postal code — and before you know it, your fish will be swimming.",
     directSubmitFileLabel: "Fish file",
     directSubmitNameLabel: "Name",
     directSubmitEmailLabel: "Email",
@@ -385,7 +385,7 @@ const TEXT = {
     submitFrameTitle: "Formulaire de soumission Feeling Fishy",
     directSubmitTitle: "Presque fini !",
     directSubmitIntro: "Juste ton nom et courriel, et on envoie ton poisson pour révision.",
-    directSubmitIntroUpload: "Joins ton fichier de poisson ci-dessous — un nom, un courriel et un code postal suffisent en plus.",
+    directSubmitIntroUpload: "Joins le dessin de ton poisson ci-dessous et ajoute un nom, un courriel, un code postal — et avant même de t'en rendre compte, ton poisson nagera dans l'aquarium.",
     directSubmitFileLabel: "Fichier du poisson",
     directSubmitNameLabel: "Nom",
     directSubmitEmailLabel: "Courriel",
@@ -1042,7 +1042,25 @@ header p  { font-size: clamp(0.85rem, 2vw, 1rem); opacity: 0.9; }
   font-size: 0.9rem;
   color: var(--text);
 }
-#directSubmitForm button { margin-top: 20px; }
+/* Send + Back as a centered pair, evenly spaced -- text-align:left
+   above is for the fields only, not this row. */
+.direct-submit-actions {
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+  margin-top: 20px;
+}
+/* Blue instead of the site's usual yellow (.card button's default),
+   so the primary action stands out from Back without a second color
+   competing for attention -- same neon-glow treatment as every other
+   button here, just built on --title-glow instead of --logo-glow. */
+#directSubmitSend {
+  background: rgb(var(--title-glow));
+  box-shadow:
+    0 0 4px  rgba(var(--title-glow), 0.9),
+    0 0 14px rgba(var(--title-glow), 0.55),
+    0 0 32px rgba(var(--title-glow), 0.28);
+}
 .direct-submit-status {
   min-height: 1.3em;
   font-size: 0.85rem;
@@ -2219,9 +2237,11 @@ body.calm .school-arrow, body.calm .school-dots {
         <label class="direct-submit-label" for="directSubmitPostal" id="directSubmitPostalLabel"></label>
         <input class="search-input" type="text" id="directSubmitPostal" required autocomplete="postal-code" maxlength="20">
         <p class="direct-submit-status" id="directSubmitStatus" role="status" aria-live="polite"></p>
-        <button type="submit" id="directSubmitSend"></button>
+        <div class="direct-submit-actions">
+          <button type="submit" id="directSubmitSend"></button>
+          <button type="button" id="directSubmitBack"></button>
+        </div>
       </form>
-      <button id="directSubmitBack"></button>
     </div>
     <div id="directSubmitSuccess" hidden>
       <p id="directSubmitSuccessText"></p>
