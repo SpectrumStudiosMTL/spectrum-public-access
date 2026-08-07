@@ -1409,7 +1409,18 @@ function applySpeed(){
 speed.addEventListener('input', applySpeed);
 speed.addEventListener('dblclick', ()=>{ speed.value = 100; applySpeed(); }); // double-click snaps back to 1×
 
-function applyAV(){ applyAudio(); applySpeed(); }
+// YouTube only exposes a way to force captions ON (cc_load_policy) — a
+// viewer's own saved YouTube caption preference otherwise overrides
+// everything else, including our embed params. unloadModule via the JS
+// API is the only reliable way to force them OFF regardless of that
+// preference. Re-sent every time applyAV() runs (same as volume/speed)
+// since a fresh player.src on channel/block change means a fresh iframe
+// with no memory of the previous one's state.
+function disableCaptions(){
+  ytCommand('unloadModule', ['captions']);
+}
+
+function applyAV(){ applyAudio(); applySpeed(); disableCaptions(); }
 
 // once the YouTube widget finishes loading, push the current settings into it
 player.addEventListener('load', ()=> setTimeout(applyAV, 600));
