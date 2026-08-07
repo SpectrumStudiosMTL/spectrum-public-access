@@ -286,6 +286,9 @@ body{
   background:#000;
   object-fit:cover;
 }
+/* transparent, sits on top of the iframe/video — intercepts every mouse
+   event so YouTube's hover-triggered chrome never gets a hover to react to */
+.video-shield{ position:absolute; inset:0; background:transparent; }
 
 @keyframes degaussShake{
   0%{filter:saturate(1.05) contrast(1.04) hue-rotate(0deg) saturate(3) brightness(1.6);}
@@ -663,6 +666,18 @@ body{
             <div class="ch-name" id="osdName">SPECTRUM PUBLIC ACCESS</div>
           </div>
           <div class="ticker"><span id="tickerText">NOW PLAYING —</span></div>
+
+          <!-- topmost layer while the guide is closed: sits directly over
+               the iframe/video and swallows every mouse event before it
+               reaches YouTube. Nothing in this UI ever needs to click/hover
+               the video itself (tuning is all done via the cabinet's own
+               buttons), so this is pure upside — it's what YouTube's
+               on-hover title/logo/share/captions chrome (unremovable via
+               embed params, see buildEmbedUrl()) needs a real hover to ever
+               show, and now the iframe never gets one. Placed *before*
+               .channel-guide in the DOM so the guide's own buttons still
+               stack on top and stay clickable while it's open. -->
+          <div class="video-shield"></div>
 
           <!-- channel guide: an overlay ON the screen (same inset:0 pattern
                as every other layer above), so opening it can never touch
