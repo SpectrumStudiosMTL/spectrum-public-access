@@ -1427,13 +1427,19 @@ function disableCaptions(){
 
 function applyAV(){ applyAudio(); applySpeed(); disableCaptions(); }
 
-// once the YouTube widget finishes loading, push the current settings into it
-player.addEventListener('load', ()=> setTimeout(applyAV, 600));
+// once the YouTube widget finishes loading, push the current settings into
+// it — a burst of quick attempts right after load closes most of the gap
+// before YouTube applies the viewer's caption preference for real (a
+// single 600ms delay left a visible half-second flash of captions before
+// the steady-state interval below caught up)
+player.addEventListener('load', ()=>{
+  [0, 150, 350, 600, 1000, 2000].forEach(delay => setTimeout(applyAV, delay));
+});
 
 // ytCommand() already no-ops when there's no live YouTube embed
 // (!player.src / display:none), so this is a harmless no-op the rest of
 // the time — no need to start/stop it per channel change.
-setInterval(disableCaptions, 2000);
+setInterval(disableCaptions, 1000);
 
 /* ---------- sound effects: real recordings, cut from TV SOUNDs.wav
    ----------
