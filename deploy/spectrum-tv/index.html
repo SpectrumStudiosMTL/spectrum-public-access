@@ -931,6 +931,7 @@ const OPEN_SLOTS = 3; // future channels — grid is 4x3 = 12 total
 
 let currentIndex = 0;
 let poweredOn = true;
+let blockAdvanceTimer = null; // fires when the current block ends, to move to the next one
 
 const tv = document.getElementById('tv');
 const player = document.getElementById('player');           // YouTube iframe — live channel only
@@ -1065,6 +1066,11 @@ function tuneTo(index, {silent=false} = {}){
   const channel = CHANNELS[currentIndex];
   const num3 = String(channel.number).padStart(3,'0');
 
+  // any previously-scheduled "move to the next block" timer belonged to
+  // whatever was tuned before — always clear it, tuneTo() below reschedules
+  // its own if the new channel needs one
+  clearTimeout(blockAdvanceTimer);
+
   // keep the URL deep-linkable (#ch=52) without adding history entries
   // or triggering a hashchange/scroll — replaceState does neither
   history.replaceState(null, '', `#ch=${channel.number}`);
@@ -1108,6 +1114,16 @@ function tuneTo(index, {silent=false} = {}){
       localPlayer.play().catch(()=>{ /* autoplay blocked — any button press counts as a gesture and unblocks it */ });
     }
     ticker.textContent = `NOW PLAYING — CH ${num3} · ${channel.name} · ${block.title}`;
+
+    // this block won't end itself — a single-video YouTube embed just
+    // loops via loop=1&playlist=<same id> (see buildEmbedUrl), and the
+    // local <video loop> only coincidentally advances correctly when a
+    // channel has exactly one block. For channels with more than one
+    // block (CH066's playlist + bumpers), something has to actually move
+    // to the next one when this one's wall-clock window runs out.
+    // {silent:true} — this isn't a channel change, so no static burst/OSD.
+    const remaining = block.duration - offset;
+    blockAdvanceTimer = setTimeout(()=> tuneTo(currentIndex, {silent:true}), remaining*1000);
   }
 
   // carry volume/mute/speed across channel changes — always, not just for
@@ -1147,6 +1163,7 @@ function setPower(on){
   if (on){
     tuneTo(currentIndex);
   } else {
+    clearTimeout(blockAdvanceTimer);
     player.src = '';
     localPlayer.pause();
     pendingLoopAudio.pause();
