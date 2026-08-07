@@ -838,49 +838,71 @@ const CHANNELS = [
     // yt-dlp --flat-playlist on 2026-08-06 — 43 videos, ~3.3hr total loop.
     // Titles have the playlist's own trailing "| Spectrum Review(s)" tag
     // stripped since the ticker already prefixes the channel name.
+    //
+    // A local branding bumper ("Station ID") is spliced in every 3rd video —
+    // self-hosted (bumpers/, git-tracked, unlike the gitignored video/
+    // junction used for the huge show files) since it's small enough to
+    // commit directly: re-encoded from the ~55MB/10.4Mbps source down to
+    // ~18.5MB/3.5Mbps, visually near-identical at this length. Right now
+    // every slot points at the same spa-bumper-1.mp4 test file — once more
+    // variations exist, swap individual `file:` values to rotate between them.
     blocks: [
       { title: "Monsters Inc | The Pixar Film That Changed Everything For Me", youtubeId: "pGth0ZK6ldA", duration: 186 },
       { title: "Sonic the Hedgehog 3 | A Lifelong Sonic Fan Finally Gets His Movie", youtubeId: "N5a0LeoXqaI", duration: 126 },
       { title: "X-Men 2000 | The Film That Started the Superhero Era", youtubeId: "YdY2gNUCQi0", duration: 221 },
+      { title: "Station ID", file: "bumpers/spa-bumper-1.mp4", duration: 43 },
       { title: "The Super Mario Bros. Movie | Not the 1993 One. The Good One.", youtubeId: "0cuTs7IU1kY", duration: 362 },
       { title: "Mickey's Christmas Carol | The Disney Christmas Special That Still Holds Up", youtubeId: "c_XkHEmwUEw", duration: 166 },
       { title: "Hi Hi Puffy AmiYumi | The Cartoon Network Show That Made Me a Fan Way Too Late", youtubeId: "kdeTM-hCzC8", duration: 568 },
+      { title: "Station ID", file: "bumpers/spa-bumper-1.mp4", duration: 43 },
       { title: "Astro Boy 2009 | The Movie That Got Me Into Anime", youtubeId: "9IaujfDP9nc", duration: 453 },
       { title: "Ralph Breaks the Internet | The Disney Sequel That Gets Friendship Right", youtubeId: "MHHUM0exth0", duration: 209 },
       { title: "The Bad Guys 2 | DreamWorks Actually Pulled Off the Sequel", youtubeId: "ukqeo5KpzWA", duration: 290 },
+      { title: "Station ID", file: "bumpers/spa-bumper-1.mp4", duration: 43 },
       { title: "The Muppet Christmas Carol — The Most Perfect Christmas Carol Adaptation.", youtubeId: "gL7bMHWmo_I", duration: 306 },
       { title: "Zootopia 2 | Disney Actually Did It Again", youtubeId: "CmEEkgiaRno", duration: 273 },
       { title: "Madagascar | The Penguins Were Almost a Beatles Rock Band. We Need to Talk.", youtubeId: "H257YvAvZro", duration: 256 },
+      { title: "Station ID", file: "bumpers/spa-bumper-1.mp4", duration: 43 },
       { title: "GOAT | Spider-Verse Animation, NBA All-Stars, and a Little Goat Who Can Ball", youtubeId: "pJskeIw20h4", duration: 340 },
       { title: "Princess Mononoke — The Studio Ghibli Film That Will Surprise You", youtubeId: "rVrh-Q71DCI", duration: 143 },
       { title: "A Charlie Brown Christmas — 25 Minutes of the Truest Christmas Special Ever Made", youtubeId: "BN-DmjYbZTo", duration: 190 },
+      { title: "Station ID", file: "bumpers/spa-bumper-1.mp4", duration: 43 },
       { title: "Freedom Planet — Lord Brevon Hacked This Review. Subscribe or Else.", youtubeId: "fd7egCSVgZw", duration: 236 },
       { title: "Power Rangers — 28 Seasons of Bright Spandex and It Still Hits", youtubeId: "W352SzAjJFw", duration: 233 },
       { title: "Sword Art Online — Trapped in an MMO Where Death is Real. Still Worth It.", youtubeId: "Z_IjkgylIko", duration: 163 },
+      { title: "Station ID", file: "bumpers/spa-bumper-1.mp4", duration: 43 },
       { title: "Wonka — The Origin Story Nobody Expected to Work This Well", youtubeId: "euizsLGkY2Y", duration: 235 },
       { title: "Shrek Extra Large — The Worst Shrek Game Ever Made (I'm Buying a Copy)", youtubeId: "DjOSizCB3qI", duration: 245 },
       { title: "Nosferatu 2024 — Robert Eggers Finally Made His Masterpiece", youtubeId: "jidrvP04Lvs", duration: 463 },
+      { title: "Station ID", file: "bumpers/spa-bumper-1.mp4", duration: 43 },
       { title: "K-Pop Demon Hunters — The Song \"Golden\" Went #1 For a Reason", youtubeId: "a-QDgVcrKJA", duration: 253 },
       { title: "Spirited Away (2001)", youtubeId: "2cutB5YkfQ0", duration: 189 },
       { title: "I Played This in the Dark and Have Not Slept Since | FNAF: Ultimate Custom Night", youtubeId: "SEZuuUwsj_k", duration: 292 },
+      { title: "Station ID", file: "bumpers/spa-bumper-1.mp4", duration: 43 },
       { title: "Beetlejuice Beetlejuice (2024)", youtubeId: "Sjn-1loQ-jw", duration: 177 },
       { title: "The DCEU Tier List — 17 Films Including Green Lantern Which Absolutely Counts", youtubeId: "PYQc5xBOofI", duration: 716 },
       { title: "Squid Game — Season 1 Was Perfect. Season 2 and 3? Let's Talk.", youtubeId: "mbHwyFevWv8", duration: 261 },
+      { title: "Station ID", file: "bumpers/spa-bumper-1.mp4", duration: 43 },
       { title: "The Day the Earth Blew Up — No Bugs Bunny. No Problem.", youtubeId: "Y-fDhLzXTCM", duration: 310 },
       { title: "Bobobo-bo Bo-bobo — A Man Fights Evil Bald People With His Nose Hair", youtubeId: "XNZTrFkuLOg", duration: 327 },
       { title: "Transformers One (2024)", youtubeId: "oZRIYhmqUXg", duration: 165 },
+      { title: "Station ID", file: "bumpers/spa-bumper-1.mp4", duration: 43 },
       { title: "Avatar & Korra — Two Shows. One Universe. Here's the Honest Verdict on Both.", youtubeId: "leK1C7tcA5I", duration: 524 },
       { title: "Joker: Folie à Deux (2024)", youtubeId: "Qjmj0GKLc0o", duration: 237 },
       { title: "Shrek SuperSlam - Fiona Sings, Shrek Farts, It's Better Than Super Smash Bros.", youtubeId: "Rsc0F3abbNk", duration: 238 },
+      { title: "Station ID", file: "bumpers/spa-bumper-1.mp4", duration: 43 },
       { title: "LARPs: The Series — Montreal Made the Nerd Show We Deserved", youtubeId: "itcj-47P6LY", duration: 309 },
       { title: "Your Name | Makoto Shinkai's Greatest Film Ten Years Later", youtubeId: "AMBzz2azt1c", duration: 199 },
       { title: "The Legend of Vox Machina — When D&D Bleeds (And It's Brilliant)", youtubeId: "K96TiDo-ZUs", duration: 316 },
+      { title: "Station ID", file: "bumpers/spa-bumper-1.mp4", duration: 43 },
       { title: "High School Musical 2 — Makes The Room Look Like Back to the Future", youtubeId: "WwCs56s7zN8", duration: 116 },
       { title: "Hazbin Hotel | The YouTube Pilot That Changed Indie Animation Forever", youtubeId: "PNgA9oZlBg8", duration: 358 },
       { title: "The Dragon Prince — Is This the Next Avatar?", youtubeId: "miLL4dv1jco", duration: 270 },
+      { title: "Station ID", file: "bumpers/spa-bumper-1.mp4", duration: 43 },
       { title: "Frieren: Beyond Journey's End — One of the Best Animes of the Decade", youtubeId: "3ardgA9f_5E", duration: 184 },
       { title: "Fantastic Four 2005 | The Good One, According to Terrance", youtubeId: "fWyZIsb8D40", duration: 205 },
       { title: "Titanfall 2014 | It's Not Just Call of Duty With Mechs", youtubeId: "3RJegQ92lsY", duration: 188 },
+      { title: "Station ID", file: "bumpers/spa-bumper-1.mp4", duration: 43 },
       { title: "Pokémon GO Turns 10 | The Game That Got Us All to Go Outside", youtubeId: "WOf9Gr4C9YI", duration: 383 }
     ],
     tile: { c1:"#171310", c2:"#171310", text:"#faeeda", logo: SPECTRUM_REVIEWS_LOGO }
