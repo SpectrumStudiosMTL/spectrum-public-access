@@ -910,7 +910,72 @@ const CHANNELS = [
   {
     number: 86,
     name: "MOVIE ZONE",
-    pending: true,
+    // real dayparting, not a rolling loop — Summer Camp Films airs
+    // midnight-6pm, Spectrum Studios' more polished work gets a genuine
+    // evening primetime slot, 6pm-midnight, anchored to Eastern/Montreal
+    // time every day (see easternSecondsSinceMidnight/
+    // projectDaypartSchedule). Both playlists pulled via yt-dlp
+    // --flat-playlist on 2026-08-07, same process as CH066.
+    dayparts: [
+      {
+        startHour: 0, endHour: 18,
+        // "Summer Camp Films" (Spectrum Productions) — PLuwpWqAQQOYOCK9dmBUVjZLwVdO4SFu0s
+        blocks: [
+        { title: "Extruding Spaces", youtubeId: "ax6b5dUNhQA", duration: 689 },
+        { title: "Who Wants To Be A Villionaire", youtubeId: "5iYdA3qmWVw", duration: 651 },
+        { title: "Deep Space Emperor", youtubeId: "1hIfauXqcpQ", duration: 329 },
+        { title: "Pitch in the Woods", youtubeId: "480qENDqQzM", duration: 483 },
+        { title: "The Terrible Destiny of the Ocean Child", youtubeId: "wPYXI9Bh3tg", duration: 296 },
+        { title: "The People vs. Walter Maroon", youtubeId: "vpZwehZ9Ghw", duration: 582 },
+        { title: "Box of Stars", youtubeId: "v5hw3aVSMjw", duration: 213 },
+        { title: "Human Game", youtubeId: "6Qtrn_SRQyk", duration: 376 },
+        { title: "Spy Note", youtubeId: "zHtjC-n8s-c", duration: 542 },
+        { title: "Pressured Outlines", youtubeId: "d_QseK-ZoSg", duration: 639 },
+        { title: "The Legend of the Flying Fish Dragon", youtubeId: "JoLdlnz6MKA", duration: 374 },
+        { title: "Anchor Management", youtubeId: "XxnV9nSe6R8", duration: 400 },
+        { title: "Plunge of Doom: Chocolate Plunguu", youtubeId: "FXE3lTpqhI0", duration: 328 },
+        { title: "Hollow Division", youtubeId: "PU8d5FZQV5I", duration: 1013 },
+        { title: "David/David", youtubeId: "ppRx3Q2AEIM", duration: 484 },
+        { title: "M 4 Mutants", youtubeId: "QQhp0fsQbcQ", duration: 413 },
+        { title: "Red Moon Beats", youtubeId: "OJzJX5HMEnE", duration: 573 },
+        { title: "The Adventures of the Rollers", youtubeId: "kiigQIV8odU", duration: 307 },
+        { title: "Eat This!", youtubeId: "DwrXEJfoZO8", duration: 361 },
+        { title: "Violet Hawk II: Ascension of the Feathered Guardians", youtubeId: "aS4T947D1Yc", duration: 390 },
+        { title: "Whale of a Cook-Off", youtubeId: "4P60PrGfKEc", duration: 402 },
+        { title: "Overpowered", youtubeId: "WTRvigs8ooA", duration: 494 },
+        { title: "B-Movie Madness", youtubeId: "hsQsvKROTY0", duration: 413 },
+        { title: "Alien Cats: Furfinity", youtubeId: "OtFSKmS4e6g", duration: 257 },
+        { title: "Race Chairs 3: The Final Lap", youtubeId: "LLUa3IHnoAc", duration: 842 },
+        { title: "Portal Masters", youtubeId: "KQlPZcS-D9w", duration: 350 },
+        { title: "The Corporation", youtubeId: "2PZtyRKUrZA", duration: 414 },
+        { title: "VR.EXE", youtubeId: "Q30AtbmfWsY", duration: 372 },
+        { title: "Pirate's Life: Journey to Tiger Shark Cove", youtubeId: "iGZdH0T3ZSg", duration: 477 },
+        { title: "The Rise of Orkomon", youtubeId: "DSED3ZUCG9c", duration: 522 },
+        { title: "The Mystical Sword of Lost Limbs!", youtubeId: "Nlb0VQNAAJU", duration: 380 },
+        { title: "One Last Bowl", youtubeId: "OjttYK608yA", duration: 608 },
+        { title: "VIDEOGAME NEXUS", youtubeId: "hnhLV0MMsC8", duration: 350 },
+        { title: "The Curious Apartment", youtubeId: "L42H56rQwaU", duration: 434 },
+        { title: "Little Demon, Big Trouble!", youtubeId: "NHHCqcp2peE", duration: 428 },
+        { title: "BioNuke", youtubeId: "4kvMsRpjLKg", duration: 438 },
+        { title: "Where's Bryan Now", youtubeId: "TTcXVV1aB6Y", duration: 397 }
+        ]
+      },
+      {
+        startHour: 18, endHour: 24,
+        // "Original Short Films" (Spectrum Studios MTL) — PLHrzSsL_4jkPljsrxkJyr2yTKbsYhlGue
+        blocks: [
+        { title: "Artist Block", youtubeId: "xsoda-7kDCw", duration: 769 },
+        { title: "H.E.L.I.O.S.", youtubeId: "TqkHMsViTmM", duration: 1125 },
+        { title: "Skinwalker", youtubeId: "xb7FQefE4wE", duration: 705 },
+        { title: "Exhibit A: Friendship | RUE", youtubeId: "XVAO0kq7EQo", duration: 842 },
+        { title: "Une Chance", youtubeId: "LMDVTOFIB-0", duration: 523 },
+        { title: "The Package", youtubeId: "4ZHjNXADvGk", duration: 675 },
+        { title: "Forkland", youtubeId: "35Z07Chmgjw", duration: 515 },
+        { title: "Crystal Crusaders", youtubeId: "yseCsEsJntQ", duration: 883 },
+        { title: "Secret Ninja", youtubeId: "79_NLPLhTO0", duration: 318 }
+        ]
+      }
+    ],
     tile: { c1:"#534ab7", c2:"#26215c", text:"#eeedfe" }
   },
   {
@@ -1017,8 +1082,70 @@ for (let i=0; i<OPEN_SLOTS; i++){
    channel guide uses the extra `next`/`nextStartsInSeconds` fields to
    show what's coming up, which only exists once a channel has more than
    one block. */
+
+// real-world-broadcast primetime needs one shared "now", the same way
+// wall-clock sync already assumes everyone sees the same thing at once —
+// so the daypart boundary is anchored to Eastern/Montreal time, not each
+// viewer's own local clock. Intl's real IANA tz database handles DST
+// automatically; no library, no manually-constructed Eastern Date object.
+function easternSecondsSinceMidnight(){
+  const parts = new Intl.DateTimeFormat('en-US', {
+    timeZone: 'America/Toronto', hour: 'numeric', minute: 'numeric', second: 'numeric', hour12: false
+  }).formatToParts(new Date());
+  const get = t => Number(parts.find(p => p.type === t).value);
+  let h = get('hour');
+  if (h === 24) h = 0; // Intl quirk: midnight can format as "24"
+  return h*3600 + get('minute')*60 + get('second');
+}
+
+// channels with a `dayparts` array instead of `blocks` get a fixed-clock-
+// time schedule (e.g. CH086: Summer Camp Films midnight-6pm, Spectrum
+// Studios 6pm-midnight, every day, identically) rather than one endless
+// rolling loop. Each daypart still loops its own block list the same way
+// projectSchedule() does for a flat channel, just scoped to that
+// segment's own window instead of since the Unix epoch.
+function projectDaypartSchedule(channel){
+  const secondsSinceMidnight = easternSecondsSinceMidnight();
+  const hour = secondsSinceMidnight / 3600;
+  const segIdx = channel.dayparts.findIndex(dp => hour >= dp.startHour && hour < dp.endHour);
+  const segment = channel.dayparts[segIdx];
+
+  const posInWindow = secondsSinceMidnight - segment.startHour*3600;
+  const windowLen = (segment.endHour - segment.startHour)*3600;
+  const secondsUntilSegmentEnd = windowLen - posInWindow;
+
+  const contentTotal = segment.blocks.reduce((s,b)=>s+b.duration,0);
+  let pos = posInWindow % contentTotal;
+
+  for (let i=0; i<segment.blocks.length; i++){
+    const b = segment.blocks[i];
+    if (pos < b.duration){
+      const remainingInBlock = b.duration - pos;
+      // the segment's own end can cut a block off before it naturally
+      // finishes — when that's what's actually happening, both the
+      // advance timer AND what "next" means have to reflect the
+      // boundary, not a same-segment wraparound (otherwise the guide
+      // would show "NEXT: <another Camp Film>" moments before Spectrum
+      // Studios actually starts)
+      const cutByBoundary = secondsUntilSegmentEnd <= remainingInBlock;
+      const nextStartsInSeconds = cutByBoundary ? secondsUntilSegmentEnd : remainingInBlock;
+      let next;
+      if (cutByBoundary){
+        const nextSegment = channel.dayparts[(segIdx+1) % channel.dayparts.length];
+        next = nextSegment.blocks[0];
+      } else {
+        next = segment.blocks.length > 1 ? segment.blocks[(i+1) % segment.blocks.length] : null;
+      }
+      return { block: b, offset: pos, next, nextStartsInSeconds };
+    }
+    pos -= b.duration;
+  }
+  return { block: segment.blocks[0], offset: 0, next: null, nextStartsInSeconds: null };
+}
+
 function projectSchedule(channel){
   if (channel.live) return { block: channel.blocks[0], offset: 0, next: null, nextStartsInSeconds: null };
+  if (channel.dayparts) return projectDaypartSchedule(channel);
   const total = channel.blocks.reduce((s,b)=>s+b.duration,0);
   let pos = Math.floor(Date.now()/1000) % total;
   for (let i=0; i<channel.blocks.length; i++){
@@ -1032,8 +1159,8 @@ function projectSchedule(channel){
   return { block: channel.blocks[0], offset: 0, next: null, nextStartsInSeconds: null };
 }
 function scheduledBlockFor(channel){
-  const { block, offset } = projectSchedule(channel);
-  return { block, offset };
+  const { block, offset, nextStartsInSeconds } = projectSchedule(channel);
+  return { block, offset, nextStartsInSeconds };
 }
 
 // builds a YouTube embed URL with the chrome hidden as far as the
@@ -1098,7 +1225,7 @@ function tuneTo(index, {silent=false} = {}){
   } else {
     noSignal.classList.remove('pending');
     noSignal.style.opacity = '0';
-    const { block, offset } = scheduledBlockFor(channel);
+    const { block, offset, nextStartsInSeconds } = scheduledBlockFor(channel);
     if (block.youtubeId){
       localPlayer.style.display = 'none';
       player.style.display = 'block';
@@ -1119,11 +1246,16 @@ function tuneTo(index, {silent=false} = {}){
     // loops via loop=1&playlist=<same id> (see buildEmbedUrl), and the
     // local <video loop> only coincidentally advances correctly when a
     // channel has exactly one block. For channels with more than one
-    // block (CH066's playlist + bumpers), something has to actually move
-    // to the next one when this one's wall-clock window runs out.
+    // block (CH066's playlist + bumpers, CH086's dayparts), something
+    // has to actually move to the next one when this one's wall-clock
+    // window runs out. nextStartsInSeconds (not block.duration - offset
+    // directly) matters for dayparted channels: it's already clamped to
+    // the daypart boundary in projectDaypartSchedule() when that's what's
+    // actually cutting the block off, not the block's own natural end —
+    // using block.duration - offset here would let daytime content leak
+    // a few minutes into primetime before this timer caught up.
     // {silent:true} — this isn't a channel change, so no static burst/OSD.
-    const remaining = block.duration - offset;
-    blockAdvanceTimer = setTimeout(()=> tuneTo(currentIndex, {silent:true}), remaining*1000);
+    blockAdvanceTimer = setTimeout(()=> tuneTo(currentIndex, {silent:true}), nextStartsInSeconds*1000);
   }
 
   // carry volume/mute/speed across channel changes — always, not just for
