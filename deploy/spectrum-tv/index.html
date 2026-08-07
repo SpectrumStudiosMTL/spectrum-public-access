@@ -1413,9 +1413,14 @@ speed.addEventListener('dblclick', ()=>{ speed.value = 100; applySpeed(); }); //
 // viewer's own saved YouTube caption preference otherwise overrides
 // everything else, including our embed params. unloadModule via the JS
 // API is the only reliable way to force them OFF regardless of that
-// preference. Re-sent every time applyAV() runs (same as volume/speed)
-// since a fresh player.src on channel/block change means a fresh iframe
-// with no memory of the previous one's state.
+// preference, but a single one-shot call loses the race on later videos:
+// confirmed (by spying on ytCommand) that it fires correctly on every
+// channel/block change, yet captions still came back after the first
+// video, meaning YouTube re-applies the viewer's preference again once
+// that video's own playback actually starts, shortly after our
+// 600ms-after-iframe-load command already ran. Re-asserting it on an
+// interval — instead of trying to guess the one exact right moment —
+// sidesteps needing to know YouTube's internal timing at all.
 function disableCaptions(){
   ytCommand('unloadModule', ['captions']);
 }
@@ -1424,6 +1429,11 @@ function applyAV(){ applyAudio(); applySpeed(); disableCaptions(); }
 
 // once the YouTube widget finishes loading, push the current settings into it
 player.addEventListener('load', ()=> setTimeout(applyAV, 600));
+
+// ytCommand() already no-ops when there's no live YouTube embed
+// (!player.src / display:none), so this is a harmless no-op the rest of
+// the time — no need to start/stop it per channel change.
+setInterval(disableCaptions, 2000);
 
 /* ---------- sound effects: real recordings, cut from TV SOUNDs.wav
    ----------
