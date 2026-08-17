@@ -211,6 +211,13 @@ const SETTINGS = {
   //    to the old behavior (download the PNG, open the monday form).
   directSubmitEndpoint: "https://autofish.cameron-d89.workers.dev/submit-fish",
 
+  // 4) After a successful submission, "Continue with my email" sends
+  //    the visitor here with ?email=<their email> pre-filled — the
+  //    portal's own sign-in flow (email OTP code) takes it from there
+  //    and creates a free-tier account for them. Set to null to hide
+  //    that button entirely and only show the plain "Done" close button.
+  portalLoginUrl: "https://spectrumpublicaccess.com/filmlab/login",
+
   // Your ambience track. Set to null for no music.
   // On the real site, use a file: music: "audio/ambience.mp3"
   music: EMBEDDED_AUDIO.music,
@@ -310,6 +317,8 @@ const TEXT = {
     directSubmitSending: "Sending…",
     directSubmitError: "Something went wrong — check your connection and try again.",
     directSubmitSuccessText: "Thanks! Your fish has been submitted for review.",
+    directSubmitContinueText: "Want to save this to your own portfolio, and see what else is here?",
+    directSubmitContinue: "Continue with my email",
     directSubmitDone: "Done",
     info: "About this project",
     infoTitle: "Feeling Fishy",
@@ -394,6 +403,8 @@ const TEXT = {
     directSubmitSending: "Envoi…",
     directSubmitError: "Une erreur s'est produite — vérifie ta connexion et réessaie.",
     directSubmitSuccessText: "Merci ! Ton poisson a été soumis pour révision.",
+    directSubmitContinueText: "Envie de sauvegarder ceci dans ton propre portfolio, et de voir ce qu'il y a d'autre ici ?",
+    directSubmitContinue: "Continuer avec mon courriel",
     directSubmitDone: "Terminé",
     info: "À propos de ce projet",
     infoTitle: "Feeling Fishy",
@@ -2245,7 +2256,11 @@ body.calm .school-arrow, body.calm .school-dots {
     </div>
     <div id="directSubmitSuccess" hidden>
       <p id="directSubmitSuccessText"></p>
-      <button id="directSubmitDone"></button>
+      <p id="directSubmitContinueText"></p>
+      <div class="direct-submit-actions">
+        <button type="button" id="directSubmitContinue"></button>
+        <button type="button" id="directSubmitDone"></button>
+      </div>
     </div>
   </div>
 </div>
@@ -3172,9 +3187,16 @@ if (SETTINGS.templateUrl || SETTINGS.submitEmbedUrl || SETTINGS.directSubmitEndp
   const directSubmitStatus = document.getElementById("directSubmitStatus");
   const directSubmitSend = document.getElementById("directSubmitSend");
   const directSubmitSuccess = document.getElementById("directSubmitSuccess");
+  const directSubmitContinue = document.getElementById("directSubmitContinue");
   let pendingFishBlob = null; // set by the draw tool's path, cleared once submitted
   let directSubmitMode = "draw"; // "draw" (file already in hand) or "upload" (visitor picks one)
   let directSubmitReturnTo = null; // whichever overlay Back should reopen
+  let lastSubmittedEmail = ""; // read by directSubmitContinue's click handler, below
+
+  // Hidden entirely (not just inert) when portalLoginUrl is unset —
+  // matches the pattern dlPng/dlPsd/dlKrita already use for optional
+  // buttons elsewhere on this page.
+  if (!SETTINGS.portalLoginUrl) directSubmitContinue.style.display = "none";
 
   function updateDirectSubmitIntro() {
     document.getElementById("directSubmitIntro").textContent =
@@ -3234,6 +3256,7 @@ if (SETTINGS.templateUrl || SETTINGS.submitEmbedUrl || SETTINGS.directSubmitEndp
       .then((resp) => {
         if (!resp.ok) throw new Error("submit failed: " + resp.status);
         pendingFishBlob = null;
+        lastSubmittedEmail = email;
         directSubmitFormWrap.hidden = true;
         directSubmitSuccess.hidden = false;
         const successHeading = document.getElementById("directSubmitSuccessText");
@@ -3259,6 +3282,14 @@ if (SETTINGS.templateUrl || SETTINGS.submitEmbedUrl || SETTINGS.directSubmitEndp
   });
   document.getElementById("directSubmitDone").addEventListener("click", () => {
     closeOverlay(directSubmitOverlay);
+  });
+  // Sends them straight to the portal's own sign-in with their email
+  // already filled in — the portal's existing OTP flow takes it from
+  // there and creates a free-tier account, no separate account-creation
+  // step needed here. Leaves this tab in place so "back" still works.
+  directSubmitContinue.addEventListener("click", () => {
+    window.location.href =
+      SETTINGS.portalLoginUrl + "?email=" + encodeURIComponent(lastSubmittedEmail);
   });
   directSubmitOverlay.addEventListener("click", (e) => {
     if (e.target !== directSubmitOverlay) return;
@@ -3878,6 +3909,8 @@ function applyLanguage() {
   document.getElementById("directSubmitSend").textContent = t.directSubmitSend;
   document.getElementById("directSubmitBack").textContent = t.goBack;
   document.getElementById("directSubmitSuccessText").textContent = t.directSubmitSuccessText;
+  document.getElementById("directSubmitContinueText").textContent = t.directSubmitContinueText;
+  document.getElementById("directSubmitContinue").textContent = t.directSubmitContinue;
   document.getElementById("directSubmitDone").textContent = t.directSubmitDone;
   // The draw tool loads its own strings lazily, only once someone has
   // actually opened it — nothing to update if it isn't loaded yet.
