@@ -310,6 +310,7 @@ const TEXT = {
     directSubmitIntro: "Just add your name, email and postal code and send it for review.",
     directSubmitIntroUpload: "Attach your fish design below and add a name, email, postal code — and before you know it, your fish will be swimming.",
     directSubmitFileLabel: "Fish file",
+    directSubmitLockedHint: "Filled in from your Spectrum portal account.",
     directSubmitNameLabel: "Name",
     directSubmitEmailLabel: "Email",
     directSubmitPostalLabel: "Postal code",
@@ -396,6 +397,7 @@ const TEXT = {
     directSubmitIntro: "Ajoute juste ton nom, courriel et code postal, et envoie-le pour révision.",
     directSubmitIntroUpload: "Joins le dessin de ton poisson ci-dessous et ajoute un nom, un courriel, un code postal — et avant même de t'en rendre compte, ton poisson nagera dans l'aquarium.",
     directSubmitFileLabel: "Fichier du poisson",
+    directSubmitLockedHint: "Rempli à partir de ton compte du portail Spectrum.",
     directSubmitNameLabel: "Nom",
     directSubmitEmailLabel: "Courriel",
     directSubmitPostalLabel: "Code postal",
@@ -1078,6 +1080,19 @@ header p  { font-size: clamp(0.85rem, 2vw, 1rem); opacity: 0.9; }
   margin: 10px 0 0;
 }
 .direct-submit-status.error { color: #ffb4b4; }
+/* directSubmitLockedHint reuses this same class before the form (see
+   HTML) -- min-height there just reads as ordinary paragraph spacing
+   since it's always either hidden or holding real text. */
+#directSubmitLockedHint { opacity: 0.75; }
+/* Name/email pre-filled from the portal link (see the URLSearchParams
+   read near openDirectSubmitCommon) -- dimmed and uneditable so it
+   reads as "already handled" rather than an empty-looking disabled
+   field. */
+.direct-submit-input-locked {
+  background: rgba(255,255,255,0.04);
+  color: rgba(244,251,253,0.65);
+  cursor: not-allowed;
+}
 #directSubmitSuccess p { margin-bottom: 20px; }
 
 /* "Draw it yourself" card — the draw tool needs real workspace, not
@@ -2236,6 +2251,7 @@ body.calm .school-arrow, body.calm .school-dots {
     <h2 id="directSubmitTitle"></h2>
     <div id="directSubmitFormWrap">
       <p class="download-note" id="directSubmitIntro"></p>
+      <p class="direct-submit-status" id="directSubmitLockedHint" hidden></p>
       <form id="directSubmitForm">
         <div id="directSubmitFileRow" hidden>
           <label class="direct-submit-label" for="directSubmitFile" id="directSubmitFileLabel"></label>
@@ -3188,20 +3204,43 @@ if (SETTINGS.templateUrl || SETTINGS.submitEmbedUrl || SETTINGS.directSubmitEndp
   const directSubmitSend = document.getElementById("directSubmitSend");
   const directSubmitSuccess = document.getElementById("directSubmitSuccess");
   const directSubmitContinue = document.getElementById("directSubmitContinue");
+  const directSubmitNameInput = document.getElementById("directSubmitName");
+  const directSubmitEmailInput = document.getElementById("directSubmitEmail");
+  const directSubmitLockedHint = document.getElementById("directSubmitLockedHint");
   let pendingFishBlob = null; // set by the draw tool's path, cleared once submitted
   let directSubmitMode = "draw"; // "draw" (file already in hand) or "upload" (visitor picks one)
   let directSubmitReturnTo = null; // whichever overlay Back should reopen
   let lastSubmittedEmail = ""; // read by directSubmitContinue's click handler, below
 
-  // Hidden entirely (not just inert) when portalLoginUrl is unset —
-  // matches the pattern dlPng/dlPsd/dlKrita already use for optional
-  // buttons elsewhere on this page.
-  if (!SETTINGS.portalLoginUrl) directSubmitContinue.style.display = "none";
+  // Mirror of portalLoginUrl's own "?email=" pre-fill (see SETTINGS),
+  // opposite direction: a participant arriving here from the portal
+  // already has an account, so their name/email get pre-filled (and
+  // locked, since editing the email would silently break the portal's
+  // hash-matching for "my fish") instead of asked for again. Each
+  // param stands alone -- a link with only ?email= (no name) still
+  // locks just that one field -- so a profile missing a display name
+  // doesn't block the part that actually matters for matching.
+  const portalParams = new URLSearchParams(window.location.search);
+  const portalIdentity = {
+    name: (portalParams.get("name") || "").trim(),
+    email: (portalParams.get("email") || "").trim(),
+  };
 
   function updateDirectSubmitIntro() {
     document.getElementById("directSubmitIntro").textContent =
       directSubmitMode === "upload" ? TEXT[lang].directSubmitIntroUpload : TEXT[lang].directSubmitIntro;
   }
+
+  function updateDirectSubmitLockedHint() {
+    const showHint = !!(portalIdentity.name || portalIdentity.email);
+    directSubmitLockedHint.hidden = !showHint;
+    directSubmitLockedHint.textContent = showHint ? TEXT[lang].directSubmitLockedHint : "";
+  }
+
+  // Hidden entirely (not just inert) when portalLoginUrl is unset —
+  // matches the pattern dlPng/dlPsd/dlKrita already use for optional
+  // buttons elsewhere on this page.
+  if (!SETTINGS.portalLoginUrl) directSubmitContinue.style.display = "none";
 
   function openDirectSubmitCommon(fromOverlay) {
     directSubmitForm.reset();
@@ -3211,6 +3250,28 @@ if (SETTINGS.templateUrl || SETTINGS.submitEmbedUrl || SETTINGS.directSubmitEndp
     directSubmitFormWrap.hidden = false;
     directSubmitSuccess.hidden = true;
     directSubmitReturnTo = fromOverlay;
+
+    // reset() clears values but not a readonly property set by us on
+    // a previous open, so both branches below are explicit rather
+    // than only handling the "has identity" case.
+    if (portalIdentity.name) {
+      directSubmitNameInput.value = portalIdentity.name;
+      directSubmitNameInput.readOnly = true;
+      directSubmitNameInput.classList.add("direct-submit-input-locked");
+    } else {
+      directSubmitNameInput.readOnly = false;
+      directSubmitNameInput.classList.remove("direct-submit-input-locked");
+    }
+    if (portalIdentity.email) {
+      directSubmitEmailInput.value = portalIdentity.email;
+      directSubmitEmailInput.readOnly = true;
+      directSubmitEmailInput.classList.add("direct-submit-input-locked");
+    } else {
+      directSubmitEmailInput.readOnly = false;
+      directSubmitEmailInput.classList.remove("direct-submit-input-locked");
+    }
+    updateDirectSubmitLockedHint();
+
     fromOverlay.classList.remove("open");
     directSubmitOverlay.classList.add("open");
     focusOverlayHeading(directSubmitOverlay);
@@ -3902,6 +3963,7 @@ function applyLanguage() {
   // based on directSubmitMode, so a language switch mid-form still
   // shows the correct one for whichever entry point is actually open.
   updateDirectSubmitIntro();
+  updateDirectSubmitLockedHint();
   document.getElementById("directSubmitFileLabel").textContent = t.directSubmitFileLabel;
   document.getElementById("directSubmitNameLabel").textContent = t.directSubmitNameLabel;
   document.getElementById("directSubmitEmailLabel").textContent = t.directSubmitEmailLabel;
