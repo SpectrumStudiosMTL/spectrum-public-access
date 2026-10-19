@@ -4,8 +4,21 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Spectrum Public Access</title>
-<meta name="description" content="Spectrum Public Access — free activities for neurodivergent and autistic filmmakers and animators. Spectrum TV, Feeling Fishy, and a free FilmLab membership.">
+<meta name="description" content="Free, interactive activities for the neurodivergent and autism community — no sign-up needed. Plus a free FilmLab membership and more from Spectrum Studios.">
 <link rel="icon" type="image/png" href="images/logo.png">
+
+<!-- Social share preview (Facebook, Discord, Slack, iMessage, etc.) -->
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Spectrum Public Access">
+<meta property="og:title" content="Spectrum Public Access">
+<meta property="og:description" content="Free, interactive activities for the neurodivergent and autism community — no sign-up needed. Plus a free FilmLab membership and more from Spectrum Studios.">
+<meta property="og:image" content="images/logo.png">
+<meta property="og:url" content="https://spectrumpublicaccess.com/">
+
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Spectrum Public Access">
+<meta name="twitter:description" content="Free, interactive activities for the neurodivergent and autism community — no sign-up needed. Plus a free FilmLab membership and more from Spectrum Studios.">
+<meta name="twitter:image" content="images/logo.png">
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Sixtyfour&family=VT323&family=Space+Grotesk:wght@400;500;700&display=swap');
 
@@ -26,9 +39,29 @@
    ██     link needs to replace it before this goes anywhere real. ██
    ████████████████████████████████████████████████████████████████ */
 
+/* DSEG14 Classic Bold -- SIL Open Font License 1.1 (fonts/DSEG-LICENSE.txt),
+   free including commercial embedding. Same face FilmLab itself uses for
+   this broadcast-display look (portal app/globals.css) -- "Alarm Clock"
+   (the font this page used before) only ever rendered via local() on a
+   machine that happened to have it installed, so everyone else saw the
+   fallback. This is a real embedded file, so it renders the same for
+   every visitor. */
 @font-face{
-  font-family:'Alarm Clock';
-  src:local('Alarm Clock'), local('alarm clock'), local('AlarmClock');
+  font-family:'DSEG14';
+  src:url('fonts/dseg14-bold.ttf') format('truetype');
+  font-weight:700;
+  font-display:swap;
+}
+/* Accented-Latin fallback slice -- DSEG14 has no accented glyphs at all,
+   only plain A-Z. Not needed for this page's current (English-only) copy,
+   but carried over from the portal's own CSS in case French copy ever
+   lands here too -- cheap insurance, matches the source exactly. */
+@font-face{
+  font-family:'DSEG14';
+  src:local('Courier New'), local('Consolas'), local('Lucida Console');
+  unicode-range:U+00C0-00FF;
+  font-weight:700;
+  size-adjust:130%;
 }
 
 :root{
@@ -50,15 +83,29 @@ body{
   font-family:'Space Grotesk',sans-serif;
   color:var(--cg-white);
   overflow-x:hidden;
+  /* Establishes a local stacking context so the negative z-index
+     overlays below sink underneath body's own children instead of
+     under the page background itself -- same fix as the real app's
+     .scanlines class (globals.css): without this, z-index:-1 on a
+     fixed pseudo-element escapes all the way to the bottom of the
+     whole page stack, behind body's own background color/gradient. */
+  position:relative; z-index:0;
 }
+/* Negative, not +5 -- the previous positive z-index put these two
+   full-page overlays ABOVE every card, image, and line of text on the
+   page (none of which set their own z-index, so they default to
+   auto/0 and lost to a positive 5 every time). That's what was
+   actually making everything harder to read, independent of the
+   per-card scrim work. Same real bug, same fix, as the portal app's
+   own .scanlines overlay already had to solve. */
 body:before{
-  content:""; position:fixed; inset:0; pointer-events:none; z-index:5;
+  content:""; position:fixed; inset:0; pointer-events:none; z-index:-1;
   background:repeating-linear-gradient(
     to bottom, rgba(0,0,0,.14) 0px, rgba(0,0,0,.14) 1px,
     transparent 2px, transparent 4px);
 }
 body:after{
-  content:""; position:fixed; inset:0; pointer-events:none; z-index:5;
+  content:""; position:fixed; inset:0; pointer-events:none; z-index:-1;
   background:radial-gradient(ellipse at center, transparent 60%, rgba(0,0,0,.55) 100%);
 }
 
@@ -154,13 +201,24 @@ body:after{
 .grid-card.inert:hover{ transform:none; border-color:var(--border); }
 .grid-card-scrim{
   position:absolute; inset:0;
-  background:linear-gradient(to top, rgba(5,6,9,.94) 0%, rgba(5,6,9,.55) 50%, rgba(5,6,9,.12) 100%);
+  /* Darker and reaching further up than before -- the plain photos
+     were fine, but a bright poster (Gone with the Wind's pale sky) or
+     a busy background put real text right on top of high-contrast
+     detail, which is what was actually hurting legibility. */
+  background:linear-gradient(to top, rgba(5,6,9,.97) 0%, rgba(5,6,9,.8) 40%, rgba(5,6,9,.25) 100%);
 }
+/* Same technique as the real app's WatchListActivityCard -- a strip of
+   real poster art (one per decade) instead of a single photo, pulled
+   straight from the Watch List's own TMDb poster data rather than a
+   generic stock/desk-shot image. */
+.grid-card-poster-strip{ position:absolute; inset:0; display:flex; }
+.grid-card-poster-strip img{ height:100%; min-width:0; flex:1; object-fit:cover; }
 .grid-card-content{ position:absolute; left:0; right:0; bottom:0; padding:20px 22px; }
 .grid-card-badge{
   display:flex; align-items:center; gap:7px;
   font-size:10.5px; font-weight:700; letter-spacing:.14em; text-transform:uppercase;
   margin:0 0 8px; color:var(--text-soft);
+  text-shadow:0 1px 3px rgba(0,0,0,.8);
 }
 .grid-card-dot{ width:7px; height:7px; border-radius:50%; flex-shrink:0; }
 .grid-card-dot.live{ background:#4ade80; box-shadow:0 0 5px #4ade80; animation:pulse 1.6s ease-in-out infinite; }
@@ -168,20 +226,33 @@ body:after{
 .grid-card-dot.coral{ background:var(--coral); }
 @keyframes pulse{ 0%,100%{opacity:1;} 50%{opacity:.4;} }
 .grid-card-title{
-  font-family:'Alarm Clock','Sixtyfour',monospace;
+  font-family:'DSEG14','Sixtyfour',monospace;
   font-size:clamp(17px, 2vw, 21px); letter-spacing:.02em; color:var(--gold);
   margin:0 0 8px; text-shadow:0 0 6px rgba(253,213,93,.4);
 }
 .grid-card-desc{
-  font-size:12.5px; line-height:1.5; color:var(--cg-white); opacity:.85;
+  font-size:13px; line-height:1.5; color:var(--cg-white); opacity:.95;
   margin:0 0 12px; max-width:92%;
+  text-shadow:0 1px 4px rgba(0,0,0,.85);
 }
 .grid-card-cta{
-  font-size:11.5px; font-weight:700; color:var(--cg-white); opacity:.9;
+  font-size:11.5px; font-weight:700; color:var(--cg-white); opacity:.95;
+  text-shadow:0 1px 3px rgba(0,0,0,.8);
 }
 .grid-card.muted .grid-card-title{ color:var(--text-soft); text-shadow:none; }
 .grid-card.muted .grid-card-desc{ opacity:.6; }
 .grid-card.muted .grid-card-cta{ color:var(--text-soft); }
+
+/* DSEG14's space glyph is ~20% of a normal character's width, and its
+   segment-display glyphs are visually much bolder than a synthesized
+   bold on the accented-fallback slice above -- same two fixes as the
+   portal's own .font-dseg14, applied here to every element using the
+   font instead of via a shared class, since these selectors already
+   existed independently before the font swap. */
+.grid-card-title, .section-eyebrow, .filmlab-card h3{
+  word-spacing:0.45em;
+  font-synthesis:none;
+}
 
 .scroll-cue{
   display:flex; flex-direction:column; align-items:center; gap:8px;
@@ -201,52 +272,71 @@ body:after{
   .scroll-cue-arrow{ animation:none; }
 }
 
-/* ---------- BELOW THE FOLD ---------- */
-.section{
-  position:relative; z-index:1;
-  max-width:1100px; margin:0 auto;
-  padding:0 24px 72px;
-  scroll-margin-top:24px;
+/* ---------- BELOW THE FOLD -- ONE SCREEN, NOT THREE STACKED BLOCKS ----------
+   FilmLab pitch, the 3 teaser cards, the join CTA, and a slim channels
+   mention used to be three separate blocks the user had to keep scrolling
+   through. Now it's one min-height:100vh section (same centering
+   technique as .first-screen), so landing here via the scroll-cue shows
+   the whole thing without a second scroll on a normal viewport.
+   min-height, not a hard height+overflow:hidden lock, on purpose -- a
+   genuinely short viewport still scrolls a little rather than clipping
+   content, same call as the signed-in app's own layout. */
+.second-screen{
+  min-height:100vh;
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  width:100%;
+  padding:40px 24px;
 }
+/* Same 1680px row cap as .hero-split -- "full bleed" like the hero,
+   not the narrower 1100px this used to be capped at. */
+.second-screen-inner{ width:100%; max-width:1680px; text-align:center; }
 .section-eyebrow{
-  font-family:'Alarm Clock','Sixtyfour',monospace;
+  font-family:'DSEG14','Sixtyfour',monospace;
   font-size:12px; letter-spacing:.18em; color:var(--gold);
-  text-shadow:0 0 8px rgba(253,213,93,.5); margin:0 0 10px;
+  text-shadow:0 0 8px rgba(253,213,93,.5); margin:0 0 8px;
 }
-.section-heading{ font-size:clamp(22px, 3.4vw, 32px); font-weight:700; margin:0 0 14px; }
-.section-sub{ font-size:15px; color:var(--text-soft); max-width:640px; margin:0 0 36px; line-height:1.6; }
+.section-heading{ font-size:clamp(20px, 3vw, 28px); font-weight:700; margin:0 0 10px; }
+.section-sub{ font-size:14px; color:var(--text-soft); max-width:640px; margin:0 auto 28px; line-height:1.5; }
 
-.filmlab-grid{ display:grid; grid-template-columns:repeat(auto-fit, minmax(260px, 1fr)); gap:20px; }
+.filmlab-grid{ display:grid; grid-template-columns:repeat(auto-fit, minmax(230px, 1fr)); gap:16px; text-align:left; }
 .filmlab-card{
   position:relative; border-radius:14px; border:1px solid var(--border);
   background:radial-gradient(ellipse at 50% -10%, #2a3550 0%, #0c0f18 65%, #050609 100%);
-  padding:24px; display:flex; flex-direction:column; gap:10px;
+  padding:18px; display:flex; flex-direction:column; gap:7px;
   text-decoration:none; color:inherit; overflow:hidden;
   transition:border-color .15s ease, transform .15s ease;
 }
 .filmlab-card:hover{ border-color:rgba(253,213,93,.5); transform:translateY(-2px); }
-.filmlab-card-badge{ display:flex; align-items:center; gap:7px; font-size:11px; font-weight:700; letter-spacing:.14em; text-transform:uppercase; color:var(--gold); }
+.filmlab-card-badge{ display:flex; align-items:center; gap:7px; font-size:10.5px; font-weight:700; letter-spacing:.14em; text-transform:uppercase; color:var(--gold); }
 .filmlab-card-dot{ width:7px; height:7px; border-radius:50%; background:var(--gold); }
-.filmlab-card h3{ font-family:'Alarm Clock','Sixtyfour',monospace; font-size:clamp(17px, 2.6vw, 22px); letter-spacing:.03em; color:var(--gold); margin:0; }
-.filmlab-card p{ font-size:13.5px; color:var(--text-soft); line-height:1.55; margin:0; }
-.filmlab-card-cta{ margin-top:10px; align-self:flex-start; font-size:13px; font-weight:700; padding:9px 18px; border-radius:999px; background:var(--gold); color:var(--navy); }
+.filmlab-card h3{ font-family:'DSEG14','Sixtyfour',monospace; font-size:clamp(15px, 2.2vw, 19px); letter-spacing:.03em; color:var(--gold); margin:0; }
+.filmlab-card p{ font-size:12.5px; color:var(--text-soft); line-height:1.45; margin:0; }
 
-.signup{
-  position:relative; z-index:1; max-width:720px; margin:0 auto 90px; padding:48px 32px;
-  text-align:center; border-radius:18px; border:2px solid rgba(253,213,93,.4);
-  background:radial-gradient(ellipse at 50% -20%, rgba(253,213,93,.1) 0%, rgba(12,15,24,.9) 70%);
-  box-shadow:0 0 40px rgba(253,213,93,.12);
+.join-row{
+  display:flex; flex-wrap:wrap; align-items:center; justify-content:center; gap:18px;
+  margin:28px 0 14px;
 }
-.signup-eyebrow{ font-family:'Alarm Clock','Sixtyfour',monospace; font-size:13px; letter-spacing:.16em; color:var(--coral); margin:0 0 14px; }
-.signup h2{ font-size:clamp(24px, 4vw, 36px); margin:0 0 16px; }
-.signup p{ font-size:15px; color:var(--text-soft); max-width:520px; margin:0 auto 28px; line-height:1.6; }
 .signup-cta{
   display:inline-flex; align-items:center; gap:10px;
-  font-family:'Alarm Clock','Sixtyfour',monospace; font-size:16px; letter-spacing:.06em; text-transform:uppercase;
-  text-decoration:none; padding:18px 36px; border-radius:999px;
+  /* DSEG14 is a segment-display face built for short all-caps
+     broadcast headings (SPECTRUM TV, FILM LAB) -- it's genuinely hard
+     to read as a sentence-case button label with an arrow in it,
+     which is the "reads weird" the button was getting. Plain body
+     font here instead, same as every other real button on the page. */
+  font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:16px; letter-spacing:.01em;
+  text-decoration:none; padding:14px 30px; border-radius:999px;
   background:var(--gold); color:var(--navy); box-shadow:0 0 24px rgba(253,213,93,.4);
 }
-.signup-note{ margin-top:16px; font-size:12.5px; color:var(--text-soft); }
+.signup-note{ font-size:12px; color:var(--text-soft); }
+
+.back-to-top{
+  display:inline-flex; flex-direction:column; align-items:center; gap:4px;
+  text-decoration:none; color:var(--text-soft);
+  font-size:11.5px; font-weight:700; letter-spacing:.1em; text-transform:uppercase;
+  opacity:.8; transition:opacity .15s ease, color .15s ease;
+}
+.back-to-top:hover{ opacity:1; color:var(--gold); }
+.back-to-top-arrow{ font-size:18px; }
 
 /* ---------- STREAM POP-UP ---------- */
 .stream-modal{ display:none; position:fixed; inset:0; z-index:100; align-items:center; justify-content:center; padding:24px; }
@@ -270,7 +360,7 @@ body:after{
 </head>
 <body>
 
-<section class="first-screen">
+<section class="first-screen" id="top">
   <div class="hero-split">
     <div class="hero-logo-col">
       <img class="logo" src="images/logo.png" alt="Spectrum Public Access">
@@ -292,16 +382,19 @@ body:after{
             <span class="grid-card-cta">Dive in →</span>
           </div>
         </a>
-        <a class="grid-card" id="spectrumTvCard" href="https://www.youtube.com/live/ow3RDIXTPXk" target="_blank" rel="noopener noreferrer"
-           style="background-image:url('https://i.ytimg.com/vi/ow3RDIXTPXk/hqdefault.jpg')" aria-label="Spectrum TV — plays in a pop-up">
+        <!-- Matches the real app's own SpectrumTvPreviewCard: coming
+             soon, not a link -- the full channel-switcher product isn't
+             built yet, so this no longer pretends the live-stream embed
+             (still below, dormant) is that finished thing. -->
+        <div class="grid-card inert muted" style="background-image:url('images/spectrum-tv-bg.jpg')" aria-label="Spectrum TV — coming soon">
           <div class="grid-card-scrim"></div>
           <div class="grid-card-content">
-            <p class="grid-card-badge"><span class="grid-card-dot live"></span>Live now</p>
+            <p class="grid-card-badge"><span class="grid-card-dot coral"></span>Coming soon</p>
             <h2 class="grid-card-title">SPECTRUM TV</h2>
-            <p class="grid-card-desc">Spectrum's channel, streaming live right now — real films, animation, and skits made by neurodivergent and Autistic creators.</p>
-            <span class="grid-card-cta">Watch now →</span>
+            <p class="grid-card-desc">Spectrum's own channel — films, animation, and skits made by neurodivergent and Autistic creators.</p>
+            <span class="grid-card-cta">Coming soon</span>
           </div>
-        </a>
+        </div>
 
         <!-- Row 2: coming soon + join -->
         <!-- Coming soon -- no href, matches the muted/inert treatment
@@ -309,7 +402,8 @@ body:after{
              No invented description this time -- there's nothing real
              to go on beyond the name, and a guessed pitch would read
              as a real feature promise. Replace with the real one. -->
-        <div class="grid-card no-photo inert muted" aria-label="Funny Foley — coming soon">
+        <div class="grid-card inert muted" style="background-image:url('images/funny-foley-bg.png')" aria-label="Funny Foley — coming soon">
+          <div class="grid-card-scrim"></div>
           <div class="grid-card-content">
             <p class="grid-card-badge"><span class="grid-card-dot coral"></span>Coming soon</p>
             <h2 class="grid-card-title">FUNNY FOLEY</h2>
@@ -317,7 +411,21 @@ body:after{
             <span class="grid-card-cta">Coming soon</span>
           </div>
         </div>
-        <a class="grid-card no-photo" href="/filmlab/login">
+        <!-- Real Watch List poster art, one per decade -- same source
+             and technique as the dashboard's own Watch List card, not a
+             stock photo. -->
+        <a class="grid-card" href="/filmlab/login">
+          <div class="grid-card-poster-strip">
+            <img src="https://image.tmdb.org/t/p/w342/rN703hMFxmkZfyEzsXvFtuFhkXE.jpg" alt="">
+            <img src="https://image.tmdb.org/t/p/w342/lNz2Ow0wGCAvzckW7EOjE03KcYv.jpg" alt="">
+            <img src="https://image.tmdb.org/t/p/w342/g01IwlJcBW3DFOcHWJ6CzCYskX7.jpg" alt="">
+            <img src="https://image.tmdb.org/t/p/w342/gkoZ8fFib24zhB2DKpjQ09SK9FU.jpg" alt="">
+            <img src="https://image.tmdb.org/t/p/w342/bywQIfmWTZneoccJwUskBTJWDke.jpg" alt="">
+            <img src="https://image.tmdb.org/t/p/w342/kZRSP3FmOcq0xnBulqpUQngJUXY.jpg" alt="">
+            <img src="https://image.tmdb.org/t/p/w342/63ta6SW20iJNstuKoAd7EbJ1mdr.jpg" alt="">
+            <img src="https://image.tmdb.org/t/p/w342/9OkCLM73MIU2CrKZbqiT8Ln1wY2.jpg" alt="">
+          </div>
+          <div class="grid-card-scrim"></div>
           <div class="grid-card-content">
             <p class="grid-card-badge"><span class="grid-card-dot gold"></span>Free to join</p>
             <h2 class="grid-card-title">FILM LAB</h2>
@@ -337,8 +445,12 @@ body:after{
             <span class="grid-card-cta">Visit channel →</span>
           </div>
         </a>
-        <!-- Placeholder URL -- needs the real Instagram profile link. -->
-        <a class="grid-card no-photo" href="https://instagram.com" target="_blank" rel="noopener noreferrer">
+        <!-- Placeholder URL -- needs the real Instagram profile link.
+             Background is a real Spectrum image (the 2026 gala banner
+             art) standing in for an actual Instagram post/grid screenshot
+             -- swap for the real thing if one's available. -->
+        <a class="grid-card" href="https://instagram.com" target="_blank" rel="noopener noreferrer" style="background-image:url('images/instagram-bg.jpg')">
+          <div class="grid-card-scrim"></div>
           <div class="grid-card-content">
             <p class="grid-card-badge">Follow us</p>
             <h2 class="grid-card-title">INSTAGRAM</h2>
@@ -356,45 +468,51 @@ body:after{
   </a>
 </section>
 
-<section class="section" id="filmlab" aria-labelledby="filmlab-heading">
-  <p class="section-eyebrow">FROM INSIDE FILMLAB</p>
-  <h2 class="section-heading" id="filmlab-heading">There's a lot more once you join</h2>
-  <p class="section-sub">FilmLab is Spectrum's home for young filmmakers and animators. A free account gets you a portfolio, the full Watch List, and your own home base — no program enrollment needed.</p>
-  <div class="filmlab-grid">
-    <a class="filmlab-card" href="#signup">
-      <span class="filmlab-card-badge"><span class="filmlab-card-dot"></span>Portfolio</span>
-      <h3>BUILD YOUR PORTFOLIO</h3>
-      <p>Your bio, your film credits, your artist statement — one growing portfolio, private by default, that you can also claim as your own shareable website once it's ready to show off.</p>
-      <span class="filmlab-card-cta">Sign up — it's free →</span>
-    </a>
-    <!-- Was "Pitch a Review" -- Spectrum Review submission is actually
-         gated to full program-enrolled accounts, not something a free
-         sign-up here can do. Gallery browsing genuinely is available
-         at the free tier (FREE_TIER_ALLOWED_PATHS includes /gallery),
-         so this replaces it with something the same visitor could
-         actually go do today. -->
-    <a class="filmlab-card" href="#signup">
-      <span class="filmlab-card-badge"><span class="filmlab-card-dot"></span>Community</span>
-      <h3>EXPLORE THE GALLERY</h3>
-      <p>See portfolios from other young filmmakers and animators who've chosen to share their work with the community.</p>
-      <span class="filmlab-card-cta">Sign up — it's free →</span>
-    </a>
-    <a class="filmlab-card" href="#signup">
-      <span class="filmlab-card-badge"><span class="filmlab-card-dot"></span>Watch List</span>
-      <h3>LEARN ABOUT CINEMA</h3>
-      <p>178 curated films, free for every member — browse by decade, genre, movement, or whatever the community loves most right now.</p>
-      <span class="filmlab-card-cta">Sign up — it's free →</span>
+<section class="second-screen" id="filmlab" aria-labelledby="filmlab-heading">
+  <div class="second-screen-inner">
+    <p class="section-eyebrow">FROM INSIDE FILMLAB</p>
+    <h2 class="section-heading" id="filmlab-heading">There's a lot more once you join</h2>
+    <p class="section-sub">FilmLab is Spectrum's home for young filmmakers and animators. A free account gets you a portfolio, the full Watch List, and your own home base — no program enrollment needed.</p>
+    <div class="filmlab-grid">
+      <a class="filmlab-card" href="/filmlab/login">
+        <span class="filmlab-card-badge"><span class="filmlab-card-dot"></span>Portfolio</span>
+        <h3>BUILD YOUR PORTFOLIO</h3>
+        <p>Your bio, your film credits, your artist statement — one growing portfolio, private by default, that you can also claim as your own shareable website once it's ready to show off.</p>
+      </a>
+      <!-- Was "Pitch a Review" -- Spectrum Review submission is actually
+           gated to full program-enrolled accounts, not something a free
+           sign-up here can do. Gallery browsing genuinely is available
+           at the free tier (FREE_TIER_ALLOWED_PATHS includes /gallery),
+           so this replaces it with something the same visitor could
+           actually go do today. -->
+      <a class="filmlab-card" href="/filmlab/login">
+        <span class="filmlab-card-badge"><span class="filmlab-card-dot"></span>Community</span>
+        <h3>EXPLORE THE GALLERY</h3>
+        <p>See portfolios from other young filmmakers and animators who've chosen to share their work with the community.</p>
+      </a>
+      <a class="filmlab-card" href="/filmlab/login">
+        <span class="filmlab-card-badge"><span class="filmlab-card-dot"></span>Watch List</span>
+        <h3>LEARN ABOUT CINEMA</h3>
+        <p>178 curated films, free for every member — browse by decade, genre, movement, or whatever the community loves most right now.</p>
+      </a>
+      <a class="filmlab-card" href="/filmlab/login">
+        <span class="filmlab-card-badge"><span class="filmlab-card-dot"></span>Workshops</span>
+        <h3>FREE WORKSHOPS</h3>
+        <p>Live workshops on filmmaking and animation, free for every FilmLab member — no program enrollment required.</p>
+      </a>
+    </div>
+
+    <div class="join-row">
+      <a class="signup-cta" href="/filmlab/login">Sign up free →</a>
+      <p class="signup-note">No credit card, no catch. Already part of a program? Ask your mentor for an invite instead.</p>
+    </div>
+
+    <a class="back-to-top" href="#top">
+      <span class="back-to-top-arrow">↑</span>
+      <span>Back to top</span>
     </a>
   </div>
 </section>
-
-<div class="signup" id="signup">
-  <p class="signup-eyebrow">JOIN SPECTRUM FILMLAB</p>
-  <h2>It's completely free.</h2>
-  <p>Your own portfolio — shareable as your own website — the full Watch List, and a home base in FilmLab. Sign up with just your email. No credit card, no catch.</p>
-  <a class="signup-cta" href="/filmlab/login">Sign up free →</a>
-  <p class="signup-note">Already part of a program? Ask your mentor for an invite instead.</p>
-</div>
 
 <div class="stream-modal" id="streamModal" role="dialog" aria-modal="true" aria-label="Spectrum TV">
   <div class="stream-modal-backdrop"></div>
@@ -415,12 +533,11 @@ body:after{
 </div>
 
 <script>
-document.getElementById("spectrumTvCard").addEventListener("click", (e) => {
-  if (e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
-  e.preventDefault();
-  openStreamModal("https://www.youtube.com/embed/ow3RDIXTPXk?si=NgFK3XYpDQOLObrl&autoplay=1&mute=1&playsinline=1&enablejsapi=1&controls=0");
-});
-
+// Spectrum TV card above no longer triggers this -- it's "coming soon"
+// now, not a live link. Left dormant (not deleted) rather than torn
+// out, since this exact feature has flipped status more than once;
+// re-wire a trigger to openStreamModal(embedSrc) if a real "watch
+// live" entry point comes back.
 const streamModal = document.getElementById("streamModal");
 const streamModalIframe = document.getElementById("streamModalIframe");
 const streamModalClose = document.getElementById("streamModalClose");
