@@ -325,6 +325,24 @@ body:after{
 .back-to-top:hover{ opacity:1; color:var(--gold); }
 .back-to-top-arrow{ font-size:18px; }
 
+/* ---------- LANGUAGE TOGGLE ---------- */
+.lang-toggle{
+  position:fixed; top:16px; right:16px; z-index:50;
+  display:flex; gap:2px; padding:3px;
+  border-radius:999px; border:1px solid var(--border);
+  background:rgba(5,6,9,.75); backdrop-filter:blur(4px);
+}
+.lang-toggle-btn{
+  appearance:none; border:none; cursor:pointer;
+  padding:6px 13px; border-radius:999px;
+  font-family:'Space Grotesk',sans-serif; font-size:12px; font-weight:700; letter-spacing:.04em;
+  background:transparent; color:var(--text-soft);
+  transition:background .15s ease, color .15s ease;
+}
+.lang-toggle-btn:hover{ color:var(--cg-white); }
+.lang-toggle-btn[aria-pressed="true"]{ background:var(--gold); color:var(--navy); }
+.lang-toggle-btn[aria-pressed="true"]:hover{ color:var(--navy); }
+
 /* ---------- STREAM POP-UP ---------- */
 .stream-modal{ display:none; position:fixed; inset:0; z-index:100; align-items:center; justify-content:center; padding:24px; }
 .stream-modal.open{ display:flex; }
@@ -347,12 +365,17 @@ body:after{
 </head>
 <body>
 
+<div class="lang-toggle" role="group" aria-label="Language / Langue">
+  <button type="button" class="lang-toggle-btn" data-lang="en">EN</button>
+  <button type="button" class="lang-toggle-btn" data-lang="fr">FR</button>
+</div>
+
 <section class="first-screen" id="top">
   <div class="hero-split">
     <div class="hero-logo-col">
       <img class="logo" src="images/logo.png" alt="Spectrum Public Access">
       <div class="tagline">
-        <p>Free, interactive activities for the neurodivergent and autism community — <span class="tagline-free">no sign-up needed</span>.</p>
+        <p data-i18n-html="tagline">Free, interactive activities for the neurodivergent and autism community — <span class="tagline-free">no sign-up needed</span>.</p>
       </div>
     </div>
 
@@ -363,10 +386,10 @@ body:after{
            style="background-image:url('feeling-fishy/images/og-preview.jpg')">
           <div class="grid-card-scrim"></div>
           <div class="grid-card-content">
-            <p class="grid-card-badge"><span class="grid-card-dot gold"></span>Open now</p>
+            <p class="grid-card-badge"><span class="grid-card-dot gold"></span><span data-i18n="feelingFishyBadge">Open now</span></p>
             <h2 class="grid-card-title">FEELING FISHY</h2>
-            <p class="grid-card-desc">An interactive community aquarium — every fish hand-drawn by a real participant. Dive in, spin the tank, meet the artists.</p>
-            <span class="grid-card-cta">Dive in →</span>
+            <p class="grid-card-desc" data-i18n="feelingFishyDesc">An interactive community aquarium — every fish hand-drawn by a real participant. Dive in, spin the tank, meet the artists.</p>
+            <span class="grid-card-cta" data-i18n="feelingFishyCta">Dive in →</span>
           </div>
         </a>
         <!-- Matches the real app's own SpectrumTvPreviewCard: coming
@@ -376,10 +399,10 @@ body:after{
         <div class="grid-card inert muted" style="background-image:url('images/spectrum-tv-bg.jpg')" aria-label="Spectrum TV — coming soon">
           <div class="grid-card-scrim"></div>
           <div class="grid-card-content">
-            <p class="grid-card-badge"><span class="grid-card-dot coral"></span>Coming soon</p>
+            <p class="grid-card-badge"><span class="grid-card-dot coral"></span><span data-i18n="comingSoon">Coming soon</span></p>
             <h2 class="grid-card-title">SPECTRUM TV</h2>
-            <p class="grid-card-desc">Spectrum's own channel — films, animation, and skits made by neurodivergent and Autistic creators.</p>
-            <span class="grid-card-cta">Coming soon</span>
+            <p class="grid-card-desc" data-i18n="spectrumTvDesc">Spectrum's own channel — films, animation, and skits made by neurodivergent and Autistic creators.</p>
+            <span class="grid-card-cta" data-i18n="comingSoon">Coming soon</span>
           </div>
         </div>
 
@@ -392,10 +415,10 @@ body:after{
         <div class="grid-card inert muted" style="background-image:url('images/funny-foley-bg.png')" aria-label="Funny Foley — coming soon">
           <div class="grid-card-scrim"></div>
           <div class="grid-card-content">
-            <p class="grid-card-badge"><span class="grid-card-dot coral"></span>Coming soon</p>
+            <p class="grid-card-badge"><span class="grid-card-dot coral"></span><span data-i18n="comingSoon">Coming soon</span></p>
             <h2 class="grid-card-title">FUNNY FOLEY</h2>
-            <p class="grid-card-desc">Details coming soon.</p>
-            <span class="grid-card-cta">Coming soon</span>
+            <p class="grid-card-desc" data-i18n="funnyFoleyDesc">Details coming soon.</p>
+            <span class="grid-card-cta" data-i18n="comingSoon">Coming soon</span>
           </div>
         </div>
         <!-- Real Watch List poster art, one per decade -- same source
@@ -414,10 +437,10 @@ body:after{
           </div>
           <div class="grid-card-scrim"></div>
           <div class="grid-card-content">
-            <p class="grid-card-badge"><span class="grid-card-dot gold"></span>Free to join</p>
+            <p class="grid-card-badge"><span class="grid-card-dot gold"></span><span data-i18n="filmLabBadge">Free to join</span></p>
             <h2 class="grid-card-title">FILM LAB</h2>
-            <p class="grid-card-desc">Build your own portfolio — even claim it as your own shareable website — and explore the free Watch List. Completely free, just sign up with an email.</p>
-            <span class="grid-card-cta">Sign up free →</span>
+            <p class="grid-card-desc" data-i18n="filmLabDesc">Build your own portfolio — even claim it as your own shareable website — and explore the free Watch List. Completely free, just sign up with an email.</p>
+            <span class="grid-card-cta" data-i18n="signUpCta">Sign up free →</span>
           </div>
         </a>
 
@@ -426,10 +449,10 @@ body:after{
            style="background-image:url('https://i4.ytimg.com/vi/3a-ZOONMRlo/hqdefault.jpg')">
           <div class="grid-card-scrim"></div>
           <div class="grid-card-content">
-            <p class="grid-card-badge">Watch more</p>
+            <p class="grid-card-badge" data-i18n="youtubeBadge">Watch more</p>
             <h2 class="grid-card-title">YOUTUBE</h2>
-            <p class="grid-card-desc">More episodes, reviews, and behind-the-scenes clips from Spectrum Studios.</p>
-            <span class="grid-card-cta">Visit channel →</span>
+            <p class="grid-card-desc" data-i18n="youtubeDesc">More episodes, reviews, and behind-the-scenes clips from Spectrum Studios.</p>
+            <span class="grid-card-cta" data-i18n="youtubeCta">Visit channel →</span>
           </div>
         </a>
         <!-- Placeholder URL -- needs the real Instagram profile link.
@@ -439,10 +462,10 @@ body:after{
         <a class="grid-card" href="https://instagram.com" target="_blank" rel="noopener noreferrer" style="background-image:url('images/instagram-bg.jpg')">
           <div class="grid-card-scrim"></div>
           <div class="grid-card-content">
-            <p class="grid-card-badge">Follow us</p>
+            <p class="grid-card-badge" data-i18n="instagramBadge">Follow us</p>
             <h2 class="grid-card-title">INSTAGRAM</h2>
-            <p class="grid-card-desc">Behind-the-scenes photos and updates from the studio.</p>
-            <span class="grid-card-cta">Follow us →</span>
+            <p class="grid-card-desc" data-i18n="instagramDesc">Behind-the-scenes photos and updates from the studio.</p>
+            <span class="grid-card-cta" data-i18n="instagramCta">Follow us →</span>
           </div>
         </a>
       </div>
@@ -450,21 +473,21 @@ body:after{
   </div>
 
   <a class="scroll-cue" href="#filmlab">
-    <span>Want to learn more about FilmLab?</span>
+    <span data-i18n="scrollCue">Want to learn more about FilmLab?</span>
     <span class="scroll-cue-arrow">↓</span>
   </a>
 </section>
 
 <section class="second-screen" id="filmlab" aria-labelledby="filmlab-heading">
   <div class="second-screen-inner">
-    <p class="section-eyebrow">FROM INSIDE FILMLAB</p>
-    <h2 class="section-heading" id="filmlab-heading">There's a lot more once you join</h2>
-    <p class="section-sub">FilmLab is Spectrum's home for young filmmakers and animators. A free account gets you a portfolio, the full Watch List, and your own home base — no program enrollment needed.</p>
+    <p class="section-eyebrow" data-i18n="filmlabEyebrow">FROM INSIDE FILMLAB</p>
+    <h2 class="section-heading" id="filmlab-heading" data-i18n="filmlabHeading">There's a lot more once you join</h2>
+    <p class="section-sub" data-i18n="filmlabSub">FilmLab is Spectrum's home for young filmmakers and animators. A free account gets you a portfolio, the full Watch List, and your own home base — no program enrollment needed.</p>
     <div class="filmlab-grid">
       <a class="filmlab-card" href="/filmlab/login">
-        <span class="filmlab-card-badge"><span class="filmlab-card-dot"></span>Portfolio</span>
-        <h3>BUILD YOUR PORTFOLIO</h3>
-        <p>Your bio, your film credits, your artist statement — one growing portfolio, private by default, that you can also claim as your own shareable website once it's ready to show off.</p>
+        <span class="filmlab-card-badge"><span class="filmlab-card-dot"></span><span data-i18n="portfolioBadge">Portfolio</span></span>
+        <h3 data-i18n="portfolioHeading">BUILD YOUR PORTFOLIO</h3>
+        <p data-i18n="portfolioDesc">Your bio, your film credits, your artist statement — one growing portfolio, private by default, that you can also claim as your own shareable website once it's ready to show off.</p>
       </a>
       <!-- Was "Pitch a Review" -- Spectrum Review submission is actually
            gated to full program-enrolled accounts, not something a free
@@ -473,30 +496,30 @@ body:after{
            so this replaces it with something the same visitor could
            actually go do today. -->
       <a class="filmlab-card" href="/filmlab/login">
-        <span class="filmlab-card-badge"><span class="filmlab-card-dot"></span>Community</span>
-        <h3>EXPLORE THE GALLERY</h3>
-        <p>See portfolios from other young filmmakers and animators who've chosen to share their work with the community.</p>
+        <span class="filmlab-card-badge"><span class="filmlab-card-dot"></span><span data-i18n="communityBadge">Community</span></span>
+        <h3 data-i18n="galleryHeading">EXPLORE THE GALLERY</h3>
+        <p data-i18n="galleryDesc">See portfolios from other young filmmakers and animators who've chosen to share their work with the community.</p>
       </a>
       <a class="filmlab-card" href="/filmlab/login">
-        <span class="filmlab-card-badge"><span class="filmlab-card-dot"></span>Watch List</span>
-        <h3>LEARN ABOUT CINEMA</h3>
-        <p>178 curated films, free for every member — browse by decade, genre, movement, or whatever the community loves most right now.</p>
+        <span class="filmlab-card-badge"><span class="filmlab-card-dot"></span><span data-i18n="watchListBadge">Watch List</span></span>
+        <h3 data-i18n="cinemaHeading">LEARN ABOUT CINEMA</h3>
+        <p data-i18n="cinemaDesc">178 curated films, free for every member — browse by decade, genre, movement, or whatever the community loves most right now.</p>
       </a>
       <a class="filmlab-card" href="/filmlab/login">
-        <span class="filmlab-card-badge"><span class="filmlab-card-dot"></span>Workshops</span>
-        <h3>FREE WORKSHOPS</h3>
-        <p>Live workshops on filmmaking and animation, free for every FilmLab member — no program enrollment required.</p>
+        <span class="filmlab-card-badge"><span class="filmlab-card-dot"></span><span data-i18n="workshopsBadge">Workshops</span></span>
+        <h3 data-i18n="workshopsHeading">FREE WORKSHOPS</h3>
+        <p data-i18n="workshopsDesc">Live workshops on filmmaking and animation, free for every FilmLab member — no program enrollment required.</p>
       </a>
     </div>
 
     <div class="join-row">
-      <a class="signup-cta" href="/filmlab/login">Sign up free →</a>
-      <p class="signup-note">No credit card, no catch. Already part of a program? Ask your mentor for an invite instead.</p>
+      <a class="signup-cta" href="/filmlab/login" data-i18n="signUpCta">Sign up free →</a>
+      <p class="signup-note" data-i18n="signupNote">No credit card, no catch. Already part of a program? Ask your mentor for an invite instead.</p>
     </div>
 
     <a class="back-to-top" href="#top">
       <span class="back-to-top-arrow">↑</span>
-      <span>Back to top</span>
+      <span data-i18n="backToTop">Back to top</span>
     </a>
   </div>
 </section>
@@ -607,6 +630,133 @@ function closeStreamModal() {
 streamModalClose.addEventListener("click", closeStreamModal);
 document.querySelector(".stream-modal-backdrop").addEventListener("click", closeStreamModal);
 window.addEventListener("keydown", (e) => { if (e.key === "Escape" && streamModal.classList.contains("open")) closeStreamModal(); });
+</script>
+
+<script>
+// Plain client-side toggle -- no backend here (unlike the FilmLab app's
+// next-intl/cookie setup), so this just swaps text and remembers the
+// choice in localStorage. Brand/feature names (Feeling Fishy, Spectrum
+// TV, Film Lab, YouTube, Instagram) are left untranslated on purpose,
+// same as a product name wouldn't be in any language -- only the
+// surrounding copy translates.
+const TRANSLATIONS = {
+  tagline: {
+    en: 'Free, interactive activities for the neurodivergent and autism community — <span class="tagline-free">no sign-up needed</span>.',
+    fr: 'Des activités interactives gratuites pour la communauté neurodivergente et autiste — <span class="tagline-free">aucune inscription requise</span>.',
+  },
+  scrollCue: { en: "Want to learn more about FilmLab?", fr: "Vous voulez en savoir plus sur FilmLab?" },
+  comingSoon: { en: "Coming soon", fr: "Bientôt disponible" },
+
+  feelingFishyBadge: { en: "Open now", fr: "Ouvert maintenant" },
+  feelingFishyDesc: {
+    en: "An interactive community aquarium — every fish hand-drawn by a real participant. Dive in, spin the tank, meet the artists.",
+    fr: "Un aquarium communautaire interactif — chaque poisson dessiné à la main par un vrai participant. Plongez, faites tourner l'aquarium, rencontrez les artistes.",
+  },
+  feelingFishyCta: { en: "Dive in →", fr: "Plonger →" },
+
+  spectrumTvDesc: {
+    en: "Spectrum's own channel — films, animation, and skits made by neurodivergent and Autistic creators.",
+    fr: "La chaîne de Spectrum — films, animation et sketches créés par des créateurs neurodivergents et autistes.",
+  },
+
+  funnyFoleyDesc: { en: "Details coming soon.", fr: "Détails à venir." },
+
+  filmLabBadge: { en: "Free to join", fr: "Inscription gratuite" },
+  filmLabDesc: {
+    en: "Build your own portfolio — even claim it as your own shareable website — and explore the free Watch List. Completely free, just sign up with an email.",
+    fr: "Créez votre propre portfolio — que vous pouvez même réclamer comme votre propre site web à partager — et explorez la liste de films gratuite. Entièrement gratuit, il suffit de s'inscrire avec un courriel.",
+  },
+  signUpCta: { en: "Sign up free →", fr: "S'inscrire gratuitement →" },
+
+  youtubeBadge: { en: "Watch more", fr: "Voir plus" },
+  youtubeDesc: {
+    en: "More episodes, reviews, and behind-the-scenes clips from Spectrum Studios.",
+    fr: "Plus d'épisodes, de critiques et de coulisses de Spectrum Studios.",
+  },
+  youtubeCta: { en: "Visit channel →", fr: "Visiter la chaîne →" },
+
+  instagramBadge: { en: "Follow us", fr: "Suivez-nous" },
+  instagramDesc: {
+    en: "Behind-the-scenes photos and updates from the studio.",
+    fr: "Photos des coulisses et nouvelles du studio.",
+  },
+  instagramCta: { en: "Follow us →", fr: "Suivez-nous →" },
+
+  filmlabEyebrow: { en: "FROM INSIDE FILMLAB", fr: "À L'INTÉRIEUR DE FILMLAB" },
+  filmlabHeading: { en: "There's a lot more once you join", fr: "Il y a encore plus une fois inscrit" },
+  filmlabSub: {
+    en: "FilmLab is Spectrum's home for young filmmakers and animators. A free account gets you a portfolio, the full Watch List, and your own home base — no program enrollment needed.",
+    fr: "FilmLab est la maison de Spectrum pour les jeunes cinéastes et animateurs. Un compte gratuit vous donne un portfolio, la liste de films complète et votre propre espace personnel — aucune inscription à un programme requise.",
+  },
+
+  portfolioBadge: { en: "Portfolio", fr: "Portfolio" },
+  portfolioHeading: { en: "BUILD YOUR PORTFOLIO", fr: "CRÉEZ VOTRE PORTFOLIO" },
+  portfolioDesc: {
+    en: "Your bio, your film credits, your artist statement — one growing portfolio, private by default, that you can also claim as your own shareable website once it's ready to show off.",
+    fr: "Votre bio, vos crédits de film, votre déclaration d'artiste — un portfolio évolutif, privé par défaut, que vous pouvez aussi réclamer comme votre propre site web à partager une fois prêt à être montré.",
+  },
+
+  communityBadge: { en: "Community", fr: "Communauté" },
+  galleryHeading: { en: "EXPLORE THE GALLERY", fr: "EXPLOREZ LA GALERIE" },
+  galleryDesc: {
+    en: "See portfolios from other young filmmakers and animators who've chosen to share their work with the community.",
+    fr: "Découvrez les portfolios d'autres jeunes cinéastes et animateurs qui ont choisi de partager leur travail avec la communauté.",
+  },
+
+  watchListBadge: { en: "Watch List", fr: "Liste de films" },
+  cinemaHeading: { en: "LEARN ABOUT CINEMA", fr: "DÉCOUVREZ LE CINÉMA" },
+  cinemaDesc: {
+    en: "178 curated films, free for every member — browse by decade, genre, movement, or whatever the community loves most right now.",
+    fr: "178 films sélectionnés, gratuits pour chaque membre — parcourez par décennie, genre, mouvement, ou ce que la communauté préfère en ce moment.",
+  },
+
+  workshopsBadge: { en: "Workshops", fr: "Ateliers" },
+  workshopsHeading: { en: "FREE WORKSHOPS", fr: "ATELIERS GRATUITS" },
+  workshopsDesc: {
+    en: "Live workshops on filmmaking and animation, free for every FilmLab member — no program enrollment required.",
+    fr: "Des ateliers en direct sur le cinéma et l'animation, gratuits pour chaque membre de FilmLab — aucune inscription à un programme requise.",
+  },
+
+  signupNote: {
+    en: "No credit card, no catch. Already part of a program? Ask your mentor for an invite instead.",
+    fr: "Aucune carte de crédit, aucun piège. Déjà inscrit à un programme? Demandez une invitation à votre mentor.",
+  },
+  backToTop: { en: "Back to top", fr: "Retour en haut" },
+};
+
+const LANG_STORAGE_KEY = "spa-lang";
+
+function applyLang(lang) {
+  document.documentElement.lang = lang;
+
+  document.querySelectorAll("[data-i18n]").forEach((el) => {
+    const entry = TRANSLATIONS[el.getAttribute("data-i18n")];
+    if (entry) el.textContent = entry[lang];
+  });
+  document.querySelectorAll("[data-i18n-html]").forEach((el) => {
+    const entry = TRANSLATIONS[el.getAttribute("data-i18n-html")];
+    if (entry) el.innerHTML = entry[lang];
+  });
+  document.querySelectorAll(".lang-toggle-btn").forEach((btn) => {
+    btn.setAttribute("aria-pressed", String(btn.dataset.lang === lang));
+  });
+
+  try {
+    localStorage.setItem(LANG_STORAGE_KEY, lang);
+  } catch {}
+}
+
+document.querySelectorAll(".lang-toggle-btn").forEach((btn) => {
+  btn.addEventListener("click", () => applyLang(btn.dataset.lang));
+});
+
+let initialLang = "en";
+try {
+  initialLang =
+    localStorage.getItem(LANG_STORAGE_KEY) ||
+    (navigator.language && navigator.language.toLowerCase().startsWith("fr") ? "fr" : "en");
+} catch {}
+applyLang(initialLang);
 </script>
 
 </body>
