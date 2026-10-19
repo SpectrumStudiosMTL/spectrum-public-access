@@ -4,301 +4,504 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Spectrum Public Access</title>
-<meta name="description" content="Spectrum Public Access — watch the stream, or dive into Feeling Fishy, an interactive community aquarium where every fish is hand-drawn by a real participant.">
+<meta name="description" content="Free, interactive activities for the neurodivergent and autism community — no sign-up needed. Plus a free FilmLab membership and more from Spectrum Studios.">
 <link rel="icon" type="image/png" href="images/logo.png">
 
 <!-- Social share preview (Facebook, Discord, Slack, iMessage, etc.) -->
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Spectrum Public Access">
 <meta property="og:title" content="Spectrum Public Access">
-<meta property="og:description" content="Watch the stream, or dive into Feeling Fishy, an interactive community aquarium where every fish is hand-drawn by a real participant.">
+<meta property="og:description" content="Free, interactive activities for the neurodivergent and autism community — no sign-up needed. Plus a free FilmLab membership and more from Spectrum Studios.">
 <meta property="og:image" content="images/logo.png">
-<!-- ✏️ Add og:url once you have a real deployed domain, e.g.
-     <meta property="og:url" content="https://your-domain-here/"> —
-     most platforms will still resolve og:image fine without it, but
-     og:url itself should be set explicitly once you know it. -->
+<meta property="og:url" content="https://spectrumpublicaccess.com/">
 
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="Spectrum Public Access">
-<meta name="twitter:description" content="Watch the stream, or dive into Feeling Fishy, an interactive community aquarium where every fish is hand-drawn by a real participant.">
+<meta name="twitter:description" content="Free, interactive activities for the neurodivergent and autism community — no sign-up needed. Plus a free FilmLab membership and more from Spectrum Studios.">
 <meta name="twitter:image" content="images/logo.png">
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Sixtyfour&family=VT323&family=Space+Grotesk:wght@400;500;700&display=swap');
 
-/* The logo's real typeface. Shows if installed on the viewer's machine;
-   upload the .ttf and it can be embedded here so it works for everyone. */
+/* TODO: the Instagram card still links to the placeholder
+   https://instagram.com (no real handle) -- swap in the real profile
+   URL (both href attributes below, search "instagram.com"). */
+
+/* DSEG14 Classic Bold -- SIL Open Font License 1.1 (fonts/DSEG-LICENSE.txt),
+   free including commercial embedding. Same face FilmLab itself uses for
+   this broadcast-display look (portal app/globals.css) -- "Alarm Clock"
+   (the font this page used before) only ever rendered via local() on a
+   machine that happened to have it installed, so everyone else saw the
+   fallback. This is a real embedded file, so it renders the same for
+   every visitor. */
 @font-face{
-  font-family:'Alarm Clock';
-  src:local('Alarm Clock'), local('alarm clock'), local('AlarmClock');
+  font-family:'DSEG14';
+  src:url('fonts/dseg14-bold.ttf') format('truetype');
+  font-weight:700;
+  font-display:swap;
+}
+/* Accented-Latin fallback slice -- DSEG14 has no accented glyphs at all,
+   only plain A-Z. Not needed for this page's current (English-only) copy,
+   but carried over from the portal's own CSS in case French copy ever
+   lands here too -- cheap insurance, matches the source exactly. */
+@font-face{
+  font-family:'DSEG14';
+  src:local('Courier New'), local('Consolas'), local('Lucida Console');
+  unicode-range:U+00C0-00FF;
+  font-weight:700;
+  size-adjust:130%;
 }
 
 :root{
   --cg-white:#ede9df;
+  --navy:#121a35;
+  --gold:#fdd55d;
+  --coral:#f87060;
+  --surface:#1b2647;
+  --border:#384570;
+  --text-soft:#a8afc7;
 }
 
 *{box-sizing:border-box;}
-/* Background lives on body ONLY, and body must stay a full-width block —
-   putting display:flex on <html> makes <body> shrink-wrap its content,
-   which painted the gradient in a centered column (the "box"). */
-html{ margin:0; padding:0; }
+html{ margin:0; padding:0; scroll-behavior:smooth; }
 body{
   margin:0; min-height:100vh;
   background:
     radial-gradient(ellipse at 50% -10%, #2a3550 0%, #0c0f18 60%, #050609 100%);
   font-family:'Space Grotesk',sans-serif;
   color:var(--cg-white);
-  display:flex; align-items:center; justify-content:center;
-  padding:24px;
   overflow-x:hidden;
+  /* Establishes a local stacking context so the negative z-index
+     overlays below sink underneath body's own children instead of
+     under the page background itself -- same fix as the real app's
+     .scanlines class (globals.css): without this, z-index:-1 on a
+     fixed pseudo-element escapes all the way to the bottom of the
+     whole page stack, behind body's own background color/gradient. */
+  position:relative; z-index:0;
 }
-
-/* faint full-page scanlines + vignette so the whole page feels like a broadcast */
+/* Negative, not +5 -- the previous positive z-index put these two
+   full-page overlays ABOVE every card, image, and line of text on the
+   page (none of which set their own z-index, so they default to
+   auto/0 and lost to a positive 5 every time). That's what was
+   actually making everything harder to read, independent of the
+   per-card scrim work. Same real bug, same fix, as the portal app's
+   own .scanlines overlay already had to solve. */
 body:before{
-  content:""; position:fixed; inset:0; pointer-events:none; z-index:5;
+  content:""; position:fixed; inset:0; pointer-events:none; z-index:-1;
   background:repeating-linear-gradient(
     to bottom, rgba(0,0,0,.14) 0px, rgba(0,0,0,.14) 1px,
     transparent 2px, transparent 4px);
 }
 body:after{
-  content:""; position:fixed; inset:0; pointer-events:none; z-index:5;
+  content:""; position:fixed; inset:0; pointer-events:none; z-index:-1;
   background:radial-gradient(ellipse at center, transparent 60%, rgba(0,0,0,.55) 100%);
 }
 
-.stage{
-  display:flex; flex-direction:column; align-items:center; gap:56px;
+.first-screen{
+  min-height:100vh;
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  gap:32px;
   width:100%;
+  padding:32px 24px;
 }
 
-/* ---------- NEON LOGO ----------
-   The glow is baked into the PNG itself (soft yellow halo pre-rendered
-   around the letters, fading to fully transparent) — no CSS drop-shadow.
-   CSS glow filters were clipping at the image rectangle and drawing a
-   visible box behind the logo; a baked glow blends seamlessly. */
+/* ---------- SPLIT: LOGO LEFT, GRID RIGHT ---------- */
+.hero-split{
+  display:flex; flex-direction:column; align-items:center; gap:36px;
+  width:100%; max-width:1680px; /* same row cap the real dashboard uses */
+}
+@media (min-width: 900px){
+  /* 38/62 instead of the previous 34/66 -- both halves got bigger
+     this round (logo full-bleed, grid cards wide enough for real
+     descriptions), so the split shifts slightly toward the logo to
+     give it real presence rather than getting squeezed by the
+     now-wider grid column competing for the same space. */
+  .hero-split{ flex-direction:row; align-items:stretch; gap:40px; }
+  .hero-logo-col{ flex:0 0 38%; min-width:320px; }
+  .hero-grid-col{ flex:1; min-width:0; }
+}
+
+.hero-logo-col{
+  display:flex; flex-direction:column; align-items:center; justify-content:center; gap:22px;
+  text-align:center;
+  padding:0;
+}
+@media (min-width: 900px){
+  /* Stays centered to match the logo at every width -- no left-align
+     override here anymore. */
+}
+/* "Full bleed like the dashboard" -- no small fixed max-width capping
+   this small anymore; it scales with its column instead, same as the
+   signed-in dashboard's own wordmark filling its panel rather than
+   sitting as a modest fixed-size image floating in whitespace. */
 .logo{
-  width:min(880px, 94vw); /* canvas includes glow padding; letters read ~same size as before */
+  width:min(560px, 92%);
   height:auto;
   animation:
     neonOn 2s steps(1,end) both,
     neonBreathe 6s ease-in-out 2s infinite;
 }
-
-/* neon tube striking on: dead → sputter → hold */
 @keyframes neonOn{
-  0%,14%{ opacity:0; }
-  16%  { opacity:.55; }
-  21%  { opacity:.08; }
-  27%  { opacity:.75; }
-  32%  { opacity:.15; }
-  36%  { opacity:.9; }
-  41%  { opacity:.4; }
-  46%,100% { opacity:1; }
+  0%,14%{ opacity:0; } 16%{ opacity:.55; } 21%{ opacity:.08; } 27%{ opacity:.75; }
+  32%{ opacity:.15; } 36%{ opacity:.9; } 41%{ opacity:.4; } 46%,100%{ opacity:1; }
 }
+@keyframes neonBreathe{ 0%,100%{ opacity:1; } 50%{ opacity:.9; } }
 
-/* settled tube hum */
-@keyframes neonBreathe{
-  0%,100%{ opacity:1; }
-  50%{ opacity:.9; }
+.tagline{
+  max-width:440px;
+  opacity:0; animation:fadeUp .8s ease-out 1.6s forwards;
 }
+.tagline p{ margin:0; font-size:clamp(15px, 1.7vw, 18px); line-height:1.55; }
+.tagline-free{ color:var(--gold); font-weight:700; }
+@keyframes fadeUp{ from{ opacity:0; transform:translateY(8px); } to{ opacity:1; transform:translateY(0); } }
 
-/* ---------- THE OPTIONS ---------- */
-.options{
-  display:flex; gap:36px; flex-wrap:wrap; justify-content:center;
-}
-
-/* One shared rule for every link, instead of one hand-written rule
-   (plus a matching :hover rule) per link. Each button gets its own
-   glow color and its own stagger delay entirely from two inline
-   custom properties — --opt-rgb and --opt-delay — set once in JS
-   from the LINKS array below. Adding a new link never touches this
-   CSS at all. The ", 255,255,255" after each var(--opt-rgb) is just
-   a fallback in case that property is ever missing. */
-.opt{
-  font-family:'Alarm Clock','Sixtyfour',monospace;
-  font-size:clamp(14px, 2.4vw, 21px);
-  letter-spacing:.08em;
-  text-transform:uppercase;
-  text-decoration:none;
-  padding:20px 30px;
-  border:2px solid currentColor;
-  border-radius:14px;
-  opacity:0;
-  /* iOS Safari can leave its own gray tap-highlight overlay sitting
-     on a link after tapping it, especially when the tap doesn't lead
-     to a normal page navigation (the "Watch the Stream" button's own
-     click handler calls preventDefault() to open the pop-up instead)
-     — this stops the browser from drawing that overlay at all rather
-     than relying on it to clear itself afterward. */
-  -webkit-tap-highlight-color:transparent;
-  color:rgb(var(--opt-rgb, 255,255,255));
-  text-shadow:0 0 6px rgba(var(--opt-rgb, 255,255,255),.7), 0 0 20px rgba(var(--opt-rgb, 255,255,255),.3);
-  box-shadow:0 0 14px rgba(var(--opt-rgb, 255,255,255),.25), inset 0 0 14px rgba(var(--opt-rgb, 255,255,255),.15);
-  transition:transform .12s ease;
-  animation:optOn .7s steps(1,end) forwards;
-  animation-delay:var(--opt-delay, 0s);
-}
-.opt:active{ transform:scale(.97); }
-/* Not :focus-visible — Safari has matched that pseudo-class for a
-   plain programmatic .focus() call before now (see the JS), which
-   left a stuck outline ring around "Watch the Stream" after closing
-   the stream pop-up once, even on a tap/touch visit that never
-   touched a keyboard. body.keyboard-nav is our own explicit signal
-   instead, so this only shows for a real Tab user. */
-.opt:focus{ outline:none; }
-body.keyboard-nav .opt:focus{ outline:3px solid var(--cg-white); outline-offset:4px; }
-.opt:hover{
-  text-shadow:0 0 8px rgba(var(--opt-rgb, 255,255,255),.95), 0 0 30px rgba(var(--opt-rgb, 255,255,255),.5);
-  box-shadow:0 0 26px rgba(var(--opt-rgb, 255,255,255),.45), inset 0 0 20px rgba(var(--opt-rgb, 255,255,255),.25);
-}
-
-@keyframes optOn{
-  0%{opacity:0;} 20%{opacity:.6;} 35%{opacity:.1;} 55%{opacity:.8;} 70%{opacity:.3;} 100%{opacity:1;}
-}
-
-/* Plain, static styling for the noscript fallback below — no glow
-   colors to assign since there's no JS running to hand them out. */
-.opt-fallback{
-  display:inline-block; margin:8px;
-  font-family:'Alarm Clock','Sixtyfour',monospace;
-  font-size:clamp(14px, 2.4vw, 21px);
-  letter-spacing:.08em;
-  text-transform:uppercase;
-  text-decoration:none;
-  padding:20px 30px;
-  border:2px solid var(--cg-white);
-  border-radius:14px;
-  color:var(--cg-white);
-}
-
-/* reduced motion: no flicker, everything simply on */
-@media (prefers-reduced-motion: reduce){
-  .logo{ animation:none; opacity:1; }
-  .opt{ animation:none !important; opacity:1 !important; }
-}
-
-/* ---------- MOBILE ----------
-   Stacks the buttons into one even column instead of the desktop's
-   wrapped row — at a phone width they were wrapping onto three
-   ragged, differently-sized lines that together ran taller than the
-   viewport. A smaller logo plus a tighter stage gap brings the whole
-   page comfortably under any phone's visible height with no scroll,
-   and every button shares the same width instead of hugging its own
-   label's length. */
-@media (max-width: 640px){
-  body{ padding:20px; }
-  .stage{ gap:32px; }
-  .logo{ width:min(300px, 85vw); }
-  .options{
-    flex-direction:column;
-    width:100%;
-    max-width:300px;
-    gap:14px;
-  }
-  .opt, .opt-fallback{
-    width:100%;
-    box-sizing:border-box;
-    text-align:center;
-    padding:16px 20px;
-  }
-}
-
-/* ---------- STREAM POP-UP ----------
-   "Watch the Stream" plays here instead of leaving the page, once
-   there's a real live URL to embed (see LINKS' popup/popupEmbed). */
-.stream-modal{
-  display:none;
-  position:fixed; inset:0; z-index:100;
-  align-items:center; justify-content:center;
-  padding:24px;
-}
-.stream-modal.open{ display:flex; }
-.stream-modal-backdrop{
-  position:absolute; inset:0;
-  background:rgba(5,6,9,.88);
-}
-.stream-modal-box{
-  position:relative;
-  width:min(1000px, 100%);
-}
-.stream-modal-frame{
-  position:relative;
+/* ---------- THE 2×3 GRID ----------
+   2 wide (was 3) -- each card is now roughly as wide as the round-3
+   full-size activity cards, with room for the badge/title AND a real
+   description line again, not just a title + bare CTA. 3 rows deep
+   as a result (6 cards ÷ 2 per row); the page runs taller than one
+   screen now, which is the right trade for "more screen real
+   estate" + actually-readable descriptions rather than squeezing
+   both into a fixed one-screen box. */
+.activities-grid{
+  display:grid; grid-template-columns:repeat(2, 1fr); gap:18px;
   width:100%;
-  aspect-ratio:16/9;
+  opacity:0; animation:fadeUp .8s ease-out 2s forwards;
+}
+@media (max-width: 640px){
+  .activities-grid{ grid-template-columns:1fr; }
+}
+
+.grid-card{
+  position:relative;
+  min-height:220px;
   border-radius:14px;
   overflow:hidden;
-  background:#000;
-  box-shadow:0 0 24px rgba(255,238,60,.35), 0 0 70px rgba(0,0,0,.6);
-  border:2px solid rgba(255,238,60,.6);
-}
-.stream-modal-frame iframe{
-  position:absolute; inset:0; width:100%; height:100%; border:0; z-index:0;
-}
-/* Invisible layer over the whole video, permanently intercepting
-   every tap/click there so none reach the real YouTube iframe
-   underneath — that's what keeps YouTube's own hover/tap-triggered
-   title+channel overlay from ever appearing, now that the buttons
-   below replace its controls entirely.
-   Worth knowing: iOS Safari has been known to pause video it
-   considers occluded by overlapping content — never confirmed as an
-   actual cause of anything here, but if playback ever stalls
-   unexpectedly, this permanently-composited layer is the first thing
-   worth ruling out. Recoverable either way through the play/mute
-   buttons below regardless. */
-.stream-modal-wake{
-  position:absolute; inset:0; z-index:1;
-}
-/* One row below the frame instead of floating over the video — not
-   much screen to spare on a phone, so better spent on the video than
-   on buttons sitting over it. Replaces YouTube's own control bar
-   entirely (controls=0 on the src) — its native mute icon turned out
-   to be unreachable at this size on at least one real phone, and
-   this is the channel's own content on its own site, so there's no
-   need for YouTube's controls/branding here at all; these call the
-   wrapped player directly instead. */
-.stream-modal-controls{
-  display:flex; justify-content:center; gap:12px;
-  margin-top:14px;
-}
-.stream-modal-close, .stream-modal-mute, .stream-modal-playpause, .stream-modal-fullscreen{
-  width:40px; height:40px;
-  border-radius:50%;
-  border:2px solid var(--cg-white);
-  background:rgba(5,6,9,.7);
-  color:var(--cg-white);
-  font-size:20px; line-height:1;
+  border:1px solid var(--border);
+  background-size:cover; background-position:center;
+  text-decoration:none; color:inherit;
+  transition:transform .15s ease, border-color .15s ease;
   cursor:pointer;
+}
+.grid-card:hover{ transform:translateY(-2px); border-color:rgba(253,213,93,.5); }
+.grid-card.no-photo{ background:radial-gradient(ellipse at 50% -10%, #2a3550 0%, #0c0f18 65%, #050609 100%); }
+.grid-card.inert{ cursor:default; }
+.grid-card.inert:hover{ transform:none; border-color:var(--border); }
+.grid-card-scrim{
+  position:absolute; inset:0;
+  /* Darker and reaching further up than before -- the plain photos
+     were fine, but a bright poster (Gone with the Wind's pale sky) or
+     a busy background put real text right on top of high-contrast
+     detail, which is what was actually hurting legibility. */
+  background:linear-gradient(to top, rgba(5,6,9,.97) 0%, rgba(5,6,9,.8) 40%, rgba(5,6,9,.25) 100%);
+}
+/* Same technique as the real app's WatchListActivityCard -- a strip of
+   real poster art (one per decade) instead of a single photo, pulled
+   straight from the Watch List's own TMDb poster data rather than a
+   generic stock/desk-shot image. */
+.grid-card-poster-strip{ position:absolute; inset:0; display:flex; }
+.grid-card-poster-strip img{ height:100%; min-width:0; flex:1; object-fit:cover; }
+.grid-card-content{ position:absolute; left:0; right:0; bottom:0; padding:20px 22px; }
+.grid-card-badge{
+  display:flex; align-items:center; gap:7px;
+  font-size:10.5px; font-weight:700; letter-spacing:.14em; text-transform:uppercase;
+  margin:0 0 8px; color:var(--text-soft);
+  text-shadow:0 1px 3px rgba(0,0,0,.8);
+}
+.grid-card-dot{ width:7px; height:7px; border-radius:50%; flex-shrink:0; }
+.grid-card-dot.live{ background:#4ade80; box-shadow:0 0 5px #4ade80; animation:pulse 1.6s ease-in-out infinite; }
+.grid-card-dot.gold{ background:var(--gold); }
+.grid-card-dot.coral{ background:var(--coral); }
+@keyframes pulse{ 0%,100%{opacity:1;} 50%{opacity:.4;} }
+.grid-card-title{
+  font-family:'DSEG14','Sixtyfour',monospace;
+  font-size:clamp(17px, 2vw, 21px); letter-spacing:.02em; color:var(--gold);
+  margin:0 0 8px; text-shadow:0 0 6px rgba(253,213,93,.4);
+}
+.grid-card-desc{
+  font-size:13px; line-height:1.5; color:var(--cg-white); opacity:.95;
+  margin:0 0 12px; max-width:92%;
+  text-shadow:0 1px 4px rgba(0,0,0,.85);
+}
+.grid-card-cta{
+  font-size:11.5px; font-weight:700; color:var(--cg-white); opacity:.95;
+  text-shadow:0 1px 3px rgba(0,0,0,.8);
+}
+.grid-card.muted .grid-card-title{ color:var(--text-soft); text-shadow:none; }
+.grid-card.muted .grid-card-desc{ opacity:.6; }
+.grid-card.muted .grid-card-cta{ color:var(--text-soft); }
+
+/* DSEG14's space glyph is ~20% of a normal character's width, and its
+   segment-display glyphs are visually much bolder than a synthesized
+   bold on the accented-fallback slice above -- same two fixes as the
+   portal's own .font-dseg14, applied here to every element using the
+   font instead of via a shared class, since these selectors already
+   existed independently before the font swap. */
+.grid-card-title, .section-eyebrow, .filmlab-card h3{
+  word-spacing:0.45em;
+  font-synthesis:none;
+}
+
+.scroll-cue{
+  display:flex; flex-direction:column; align-items:center; gap:8px;
+  text-decoration:none; color:var(--gold);
+  font-weight:700;
+  font-size:clamp(14px, 1.6vw, 17px); letter-spacing:.06em; text-transform:uppercase;
+  text-shadow:0 0 8px rgba(253,213,93,.55), 0 0 20px rgba(253,213,93,.25);
+  opacity:0; animation:fadeUp .8s ease-out 2.6s forwards;
+}
+.scroll-cue:hover{ text-shadow:0 0 10px rgba(253,213,93,.8), 0 0 28px rgba(253,213,93,.4); }
+.scroll-cue-arrow{ font-size:22px; animation:bob 1.6s ease-in-out infinite; }
+@keyframes bob{ 0%,100%{ transform:translateY(0); } 50%{ transform:translateY(5px); } }
+
+@media (prefers-reduced-motion: reduce){
+  .logo{ animation:none; opacity:1; }
+  .tagline, .activities-grid, .scroll-cue{ animation:none; opacity:1; }
+  .scroll-cue-arrow{ animation:none; }
+}
+
+/* ---------- BELOW THE FOLD -- ONE SCREEN, NOT THREE STACKED BLOCKS ----------
+   FilmLab pitch, the 3 teaser cards, the join CTA, and a slim channels
+   mention used to be three separate blocks the user had to keep scrolling
+   through. Now it's one min-height:100vh section (same centering
+   technique as .first-screen), so landing here via the scroll-cue shows
+   the whole thing without a second scroll on a normal viewport.
+   min-height, not a hard height+overflow:hidden lock, on purpose -- a
+   genuinely short viewport still scrolls a little rather than clipping
+   content, same call as the signed-in app's own layout. */
+.second-screen{
+  min-height:100vh;
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  width:100%;
+  padding:40px 24px;
+}
+/* Same 1680px row cap as .hero-split -- "full bleed" like the hero,
+   not the narrower 1100px this used to be capped at. */
+.second-screen-inner{ width:100%; max-width:1680px; text-align:center; }
+.section-eyebrow{
+  font-family:'DSEG14','Sixtyfour',monospace;
+  font-size:12px; letter-spacing:.18em; color:var(--gold);
+  text-shadow:0 0 8px rgba(253,213,93,.5); margin:0 0 8px;
+}
+.section-heading{ font-size:clamp(20px, 3vw, 28px); font-weight:700; margin:0 0 10px; }
+.section-sub{ font-size:14px; color:var(--text-soft); max-width:640px; margin:0 auto 28px; line-height:1.5; }
+
+.filmlab-grid{ display:grid; grid-template-columns:repeat(auto-fit, minmax(230px, 1fr)); gap:16px; text-align:left; }
+.filmlab-card{
+  position:relative; border-radius:14px; border:1px solid var(--border);
+  background:radial-gradient(ellipse at 50% -10%, #2a3550 0%, #0c0f18 65%, #050609 100%);
+  padding:18px; display:flex; flex-direction:column; gap:7px;
+  text-decoration:none; color:inherit; overflow:hidden;
+  transition:border-color .15s ease, transform .15s ease;
+}
+.filmlab-card:hover{ border-color:rgba(253,213,93,.5); transform:translateY(-2px); }
+.filmlab-card-badge{ display:flex; align-items:center; gap:7px; font-size:10.5px; font-weight:700; letter-spacing:.14em; text-transform:uppercase; color:var(--gold); }
+.filmlab-card-dot{ width:7px; height:7px; border-radius:50%; background:var(--gold); }
+.filmlab-card h3{ font-family:'DSEG14','Sixtyfour',monospace; font-size:clamp(15px, 2.2vw, 19px); letter-spacing:.03em; color:var(--gold); margin:0; }
+.filmlab-card p{ font-size:12.5px; color:var(--text-soft); line-height:1.45; margin:0; }
+
+.join-row{
+  display:flex; flex-wrap:wrap; align-items:center; justify-content:center; gap:18px;
+  margin:28px 0 14px;
+}
+.signup-cta{
+  display:inline-flex; align-items:center; gap:10px;
+  /* DSEG14 is a segment-display face built for short all-caps
+     broadcast headings (SPECTRUM TV, FILM LAB) -- it's genuinely hard
+     to read as a sentence-case button label with an arrow in it,
+     which is the "reads weird" the button was getting. Plain body
+     font here instead, same as every other real button on the page. */
+  font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:16px; letter-spacing:.01em;
+  text-decoration:none; padding:14px 30px; border-radius:999px;
+  background:var(--gold); color:var(--navy); box-shadow:0 0 24px rgba(253,213,93,.4);
+}
+.signup-note{ font-size:12px; color:var(--text-soft); }
+
+.back-to-top{
+  display:inline-flex; flex-direction:column; align-items:center; gap:4px;
+  text-decoration:none; color:var(--text-soft);
+  font-size:11.5px; font-weight:700; letter-spacing:.1em; text-transform:uppercase;
+  opacity:.8; transition:opacity .15s ease, color .15s ease;
+}
+.back-to-top:hover{ opacity:1; color:var(--gold); }
+.back-to-top-arrow{ font-size:18px; }
+
+/* ---------- STREAM POP-UP ---------- */
+.stream-modal{ display:none; position:fixed; inset:0; z-index:100; align-items:center; justify-content:center; padding:24px; }
+.stream-modal.open{ display:flex; }
+.stream-modal-backdrop{ position:absolute; inset:0; background:rgba(5,6,9,.88); }
+.stream-modal-box{ position:relative; width:min(1000px, 100%); }
+.stream-modal-frame{
+  position:relative; width:100%; aspect-ratio:16/9; border-radius:14px; overflow:hidden; background:#000;
+  box-shadow:0 0 24px rgba(255,238,60,.35), 0 0 70px rgba(0,0,0,.6); border:2px solid rgba(255,238,60,.6);
+}
+.stream-modal-frame iframe{ position:absolute; inset:0; width:100%; height:100%; border:0; z-index:0; }
+.stream-modal-wake{ position:absolute; inset:0; z-index:1; }
+.stream-modal-controls{ display:flex; justify-content:center; gap:12px; margin-top:14px; }
+.stream-modal-close, .stream-modal-mute, .stream-modal-playpause, .stream-modal-fullscreen{
+  width:40px; height:40px; border-radius:50%; border:2px solid var(--cg-white);
+  background:rgba(5,6,9,.7); color:var(--cg-white); font-size:20px; line-height:1; cursor:pointer;
   display:flex; align-items:center; justify-content:center;
 }
-.stream-modal-close:hover, .stream-modal-mute:hover,
-.stream-modal-playpause:hover, .stream-modal-fullscreen:hover{ background:rgba(255,238,60,.2); }
-/* Same reasoning as .opt:focus above — these are also toggled
-   programmatically, so they use the same explicit signal rather than
-   :focus-visible. */
-.stream-modal-close:focus, .stream-modal-mute:focus,
-.stream-modal-playpause:focus, .stream-modal-fullscreen:focus{ outline:none; }
-body.keyboard-nav .stream-modal-close:focus,
-body.keyboard-nav .stream-modal-mute:focus,
-body.keyboard-nav .stream-modal-playpause:focus,
-body.keyboard-nav .stream-modal-fullscreen:focus{ outline:3px solid var(--cg-white); outline-offset:3px; }
+.stream-modal-close:hover, .stream-modal-mute:hover, .stream-modal-playpause:hover, .stream-modal-fullscreen:hover{ background:rgba(255,238,60,.2); }
 </style>
 </head>
 <body>
 
-<main class="stage">
-  <img class="logo" src="images/logo.png" alt="Spectrum Public Access">
+<section class="first-screen" id="top">
+  <div class="hero-split">
+    <div class="hero-logo-col">
+      <img class="logo" src="images/logo.png" alt="Spectrum Public Access">
+      <div class="tagline">
+        <p>Free, interactive activities for the neurodivergent and autism community — <span class="tagline-free">no sign-up needed</span>.</p>
+      </div>
+    </div>
 
-  <nav class="options" id="options" aria-label="Choose an experience">
-    <!-- Shown only if JS is disabled — replaced the instant the
-         script below runs. Kept in sync by hand since it's a rare,
-         static fallback, not the real navigation. -->
-    <noscript>
-      <a class="opt-fallback" href="https://www.youtube.com/live/ow3RDIXTPXk">WATCH THE STREAM</a>
-      <a class="opt-fallback" href="/feeling-fishy">FEELING FISHY</a>
-      <a class="opt-fallback" href="https://eatswithpete.com">EATS WITH PETE</a>
-    </noscript>
-  </nav>
-</main>
+    <div class="hero-grid-col">
+      <div class="activities-grid">
+        <!-- Row 1: the two ready-now activities, Feeling Fishy first -->
+        <a class="grid-card" href="/feeling-fishy" target="_blank" rel="noopener noreferrer"
+           style="background-image:url('feeling-fishy/images/og-preview.jpg')">
+          <div class="grid-card-scrim"></div>
+          <div class="grid-card-content">
+            <p class="grid-card-badge"><span class="grid-card-dot gold"></span>Open now</p>
+            <h2 class="grid-card-title">FEELING FISHY</h2>
+            <p class="grid-card-desc">An interactive community aquarium — every fish hand-drawn by a real participant. Dive in, spin the tank, meet the artists.</p>
+            <span class="grid-card-cta">Dive in →</span>
+          </div>
+        </a>
+        <!-- Matches the real app's own SpectrumTvPreviewCard: coming
+             soon, not a link -- the full channel-switcher product isn't
+             built yet, so this no longer pretends the live-stream embed
+             (still below, dormant) is that finished thing. -->
+        <div class="grid-card inert muted" style="background-image:url('images/spectrum-tv-bg.jpg')" aria-label="Spectrum TV — coming soon">
+          <div class="grid-card-scrim"></div>
+          <div class="grid-card-content">
+            <p class="grid-card-badge"><span class="grid-card-dot coral"></span>Coming soon</p>
+            <h2 class="grid-card-title">SPECTRUM TV</h2>
+            <p class="grid-card-desc">Spectrum's own channel — films, animation, and skits made by neurodivergent and Autistic creators.</p>
+            <span class="grid-card-cta">Coming soon</span>
+          </div>
+        </div>
 
-<div class="stream-modal" id="streamModal" role="dialog" aria-modal="true" aria-label="Watch the Stream">
+        <!-- Row 2: coming soon + join -->
+        <!-- Coming soon -- no href, matches the muted/inert treatment
+             used elsewhere on this page for not-yet-ready features.
+             No invented description this time -- there's nothing real
+             to go on beyond the name, and a guessed pitch would read
+             as a real feature promise. Replace with the real one. -->
+        <div class="grid-card inert muted" style="background-image:url('images/funny-foley-bg.png')" aria-label="Funny Foley — coming soon">
+          <div class="grid-card-scrim"></div>
+          <div class="grid-card-content">
+            <p class="grid-card-badge"><span class="grid-card-dot coral"></span>Coming soon</p>
+            <h2 class="grid-card-title">FUNNY FOLEY</h2>
+            <p class="grid-card-desc">Details coming soon.</p>
+            <span class="grid-card-cta">Coming soon</span>
+          </div>
+        </div>
+        <!-- Real Watch List poster art, one per decade -- same source
+             and technique as the dashboard's own Watch List card, not a
+             stock photo. -->
+        <a class="grid-card" href="/filmlab/login">
+          <div class="grid-card-poster-strip">
+            <img src="https://image.tmdb.org/t/p/w342/rN703hMFxmkZfyEzsXvFtuFhkXE.jpg" alt="">
+            <img src="https://image.tmdb.org/t/p/w342/lNz2Ow0wGCAvzckW7EOjE03KcYv.jpg" alt="">
+            <img src="https://image.tmdb.org/t/p/w342/g01IwlJcBW3DFOcHWJ6CzCYskX7.jpg" alt="">
+            <img src="https://image.tmdb.org/t/p/w342/gkoZ8fFib24zhB2DKpjQ09SK9FU.jpg" alt="">
+            <img src="https://image.tmdb.org/t/p/w342/bywQIfmWTZneoccJwUskBTJWDke.jpg" alt="">
+            <img src="https://image.tmdb.org/t/p/w342/kZRSP3FmOcq0xnBulqpUQngJUXY.jpg" alt="">
+            <img src="https://image.tmdb.org/t/p/w342/63ta6SW20iJNstuKoAd7EbJ1mdr.jpg" alt="">
+            <img src="https://image.tmdb.org/t/p/w342/9OkCLM73MIU2CrKZbqiT8Ln1wY2.jpg" alt="">
+          </div>
+          <div class="grid-card-scrim"></div>
+          <div class="grid-card-content">
+            <p class="grid-card-badge"><span class="grid-card-dot gold"></span>Free to join</p>
+            <h2 class="grid-card-title">FILM LAB</h2>
+            <p class="grid-card-desc">Build your own portfolio — even claim it as your own shareable website — and explore the free Watch List. Completely free, just sign up with an email.</p>
+            <span class="grid-card-cta">Sign up free →</span>
+          </div>
+        </a>
+
+        <!-- Row 3: channels, lowest priority -->
+        <a class="grid-card" href="https://www.youtube.com/channel/UCMa6OU_T7xLXQV_K2N0NnGw" target="_blank" rel="noopener noreferrer"
+           style="background-image:url('https://i4.ytimg.com/vi/3a-ZOONMRlo/hqdefault.jpg')">
+          <div class="grid-card-scrim"></div>
+          <div class="grid-card-content">
+            <p class="grid-card-badge">Watch more</p>
+            <h2 class="grid-card-title">YOUTUBE</h2>
+            <p class="grid-card-desc">More episodes, reviews, and behind-the-scenes clips from Spectrum Studios.</p>
+            <span class="grid-card-cta">Visit channel →</span>
+          </div>
+        </a>
+        <!-- Placeholder URL -- needs the real Instagram profile link.
+             Background is a real Spectrum image (the 2026 gala banner
+             art) standing in for an actual Instagram post/grid screenshot
+             -- swap for the real thing if one's available. -->
+        <a class="grid-card" href="https://instagram.com" target="_blank" rel="noopener noreferrer" style="background-image:url('images/instagram-bg.jpg')">
+          <div class="grid-card-scrim"></div>
+          <div class="grid-card-content">
+            <p class="grid-card-badge">Follow us</p>
+            <h2 class="grid-card-title">INSTAGRAM</h2>
+            <p class="grid-card-desc">Behind-the-scenes photos and updates from the studio.</p>
+            <span class="grid-card-cta">Follow us →</span>
+          </div>
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <a class="scroll-cue" href="#filmlab">
+    <span>Want to learn more about FilmLab?</span>
+    <span class="scroll-cue-arrow">↓</span>
+  </a>
+</section>
+
+<section class="second-screen" id="filmlab" aria-labelledby="filmlab-heading">
+  <div class="second-screen-inner">
+    <p class="section-eyebrow">FROM INSIDE FILMLAB</p>
+    <h2 class="section-heading" id="filmlab-heading">There's a lot more once you join</h2>
+    <p class="section-sub">FilmLab is Spectrum's home for young filmmakers and animators. A free account gets you a portfolio, the full Watch List, and your own home base — no program enrollment needed.</p>
+    <div class="filmlab-grid">
+      <a class="filmlab-card" href="/filmlab/login">
+        <span class="filmlab-card-badge"><span class="filmlab-card-dot"></span>Portfolio</span>
+        <h3>BUILD YOUR PORTFOLIO</h3>
+        <p>Your bio, your film credits, your artist statement — one growing portfolio, private by default, that you can also claim as your own shareable website once it's ready to show off.</p>
+      </a>
+      <!-- Was "Pitch a Review" -- Spectrum Review submission is actually
+           gated to full program-enrolled accounts, not something a free
+           sign-up here can do. Gallery browsing genuinely is available
+           at the free tier (FREE_TIER_ALLOWED_PATHS includes /gallery),
+           so this replaces it with something the same visitor could
+           actually go do today. -->
+      <a class="filmlab-card" href="/filmlab/login">
+        <span class="filmlab-card-badge"><span class="filmlab-card-dot"></span>Community</span>
+        <h3>EXPLORE THE GALLERY</h3>
+        <p>See portfolios from other young filmmakers and animators who've chosen to share their work with the community.</p>
+      </a>
+      <a class="filmlab-card" href="/filmlab/login">
+        <span class="filmlab-card-badge"><span class="filmlab-card-dot"></span>Watch List</span>
+        <h3>LEARN ABOUT CINEMA</h3>
+        <p>178 curated films, free for every member — browse by decade, genre, movement, or whatever the community loves most right now.</p>
+      </a>
+      <a class="filmlab-card" href="/filmlab/login">
+        <span class="filmlab-card-badge"><span class="filmlab-card-dot"></span>Workshops</span>
+        <h3>FREE WORKSHOPS</h3>
+        <p>Live workshops on filmmaking and animation, free for every FilmLab member — no program enrollment required.</p>
+      </a>
+    </div>
+
+    <div class="join-row">
+      <a class="signup-cta" href="/filmlab/login">Sign up free →</a>
+      <p class="signup-note">No credit card, no catch. Already part of a program? Ask your mentor for an invite instead.</p>
+    </div>
+
+    <a class="back-to-top" href="#top">
+      <span class="back-to-top-arrow">↑</span>
+      <span>Back to top</span>
+    </a>
+  </div>
+</section>
+
+<div class="stream-modal" id="streamModal" role="dialog" aria-modal="true" aria-label="Spectrum TV">
   <div class="stream-modal-backdrop"></div>
   <div class="stream-modal-box">
     <div class="stream-modal-frame">
@@ -317,134 +520,26 @@ body.keyboard-nav .stream-modal-fullscreen:focus{ outline:3px solid var(--cg-whi
 </div>
 
 <script>
-/* ██████████████████████████████████████████████████████████████
-   ██  YOUR LINKS — add a new destination any time              ██
-   ██  Everything below renders and staggers itself from this.  ██
-   ██████████████████████████████████████████████████████████████
-   label    — button text (rendered in caps regardless of case here)
-   href     — where it goes; leave null to keep it unlinked/inert
-              for now, e.g. for a destination whose page doesn't exist yet
-   rgb      — "R,G,B" for this button's neon color — the only place
-              that color is ever written; every glow/hover effect
-              is computed from it, so nothing can drift out of sync
-   external — true opens it in a new tab (for links off this domain)
-   popup    — true plays it in the on-page pop-up instead of
-              navigating (see popupEmbed below and .stream-modal in
-              the CSS); href/external stay set alongside it as the
-              fallback for a middle-click, Ctrl/Cmd-click, or no-JS
-   popupEmbed — the embeddable URL for a popup link (YouTube's
-              /embed/VIDEO_ID form, not the regular watch/live URL) */
-const LINKS = [
-  // Plays inline for now — swap this for the real live-channel-
-  // switcher page once that's built (drop `popup`/`popupEmbed` to
-  // just navigate to `href` instead). The si= value is YouTube's own
-  // share-embed token for this video (from Share -> Embed) — plain
-  // /embed/VIDEO_ID URLs without it hit YouTube's Error 153 for this
-  // stream even with embedding allowed, but the official share link
-  // works, so this matches that exactly rather than a param-stripped
-  // version of it — don't drop or reorder these params without
-  // re-testing on a real phone. mute=1 + playsinline=1 are both there
-  // for mobile autoplay (same reason the background video elsewhere
-  // on this site is muted+playsinline) — visitors can unmute from
-  // the mute button below instead of YouTube's own. enablejsapi=1
-  // lets the JS below wrap this iframe with YouTube's IFrame Player
-  // API, so we have playback visibility and can drive it directly.
-  // controls=0 hides YouTube's own control bar/branding entirely —
-  // the mute/play-pause/fullscreen buttons below replace it, since
-  // this is the channel's own content on its own site.
-  { label: "Watch the Stream", href: "https://www.youtube.com/live/ow3RDIXTPXk", rgb: "255,238,60", external: true,
-    popup: true, popupEmbed: "https://www.youtube.com/embed/ow3RDIXTPXk?si=NgFK3XYpDQOLObrl&autoplay=1&mute=1&playsinline=1&enablejsapi=1&controls=0" },  // SPA logo yellow
-  { label: "Feeling Fishy",    href: "/feeling-fishy",             rgb: "61,217,255", external: true },  // Feeling Fishy title glow — new tab too, so this hub page stays put as a home base
-  { label: "Eats with Pete",   href: "https://eatswithpete.com",   rgb: "255,107,71", external: true },
-];
-
-const BASE_DELAY = 2.15; // seconds before the first button starts flickering in
-const STEP_DELAY = 0.3;  // gap between each button after that
-
-// Tracks whether the visitor is currently navigating with a keyboard,
-// so the focus outlines above (body.keyboard-nav ...) only show when
-// they're actually useful — see the CSS for why this exists instead
-// of just using :focus-visible directly.
-window.addEventListener("keydown", (e) => {
-  if (e.key === "Tab") document.body.classList.add("keyboard-nav");
-});
-window.addEventListener("pointerdown", () => {
-  document.body.classList.remove("keyboard-nav");
-});
-
-const optionsNav = document.getElementById("options");
-optionsNav.innerHTML = ""; // clears the noscript fallback now that JS is running
-LINKS.forEach((link, i) => {
-  const a = document.createElement("a");
-  a.className = "opt";
-  a.textContent = link.label;
-  a.style.setProperty("--opt-rgb", link.rgb);
-  const delay = BASE_DELAY + i * STEP_DELAY;
-  a.style.setProperty("--opt-delay", delay.toFixed(2) + "s");
-  if (link.href) a.href = link.href;
-  if (link.external) {
-    a.target = "_blank";
-    a.rel = "noopener noreferrer";
-    a.setAttribute("aria-label", link.label + (link.popup ? " — plays in a pop-up" : " — opens in a new tab"));
-  }
-  if (link.popup) {
-    a.addEventListener("click", (e) => {
-      // Middle-click, Ctrl/Cmd-click, etc. — let the browser open the
-      // real href in a new tab as usual instead of hijacking it.
-      if (e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
-      e.preventDefault();
-      openStreamModal(link.popupEmbed, a);
-    });
-  }
-  optionsNav.appendChild(a);
-  // Safety net: the flicker-in animation (steps(1,end) across several
-  // keyframes) has been observed getting stuck at an intermediate
-  // keyframe on Chrome for iOS — animationPlayState still reports
-  // "running", but the value never advances to the final 100% stop,
-  // leaving the button looking permanently dim. Rather than chase
-  // whatever causes that stall, force the correct end state once the
-  // animation should be done, regardless of whether it actually
-  // finished on its own.
-  // Killing the animation first is required, not optional — a still-
-  // "running" CSS animation outranks a plain inline style in the
-  // cascade, so just setting opacity here (an earlier attempt at this
-  // fix) was being silently overridden right back to the animation's
-  // stuck value the instant it ran.
-  const ANIMATION_DURATION = 0.7;
-  setTimeout(() => {
-    a.style.animation = "none";
-    a.style.opacity = "1";
-  }, (delay + ANIMATION_DURATION) * 1000);
-});
-
-/* ---------- STREAM POP-UP ---------- */
+// Spectrum TV card above no longer triggers this -- it's "coming soon"
+// now, not a live link. Left dormant (not deleted) rather than torn
+// out, since this exact feature has flipped status more than once;
+// re-wire a trigger to openStreamModal(embedSrc) if a real "watch
+// live" entry point comes back.
 const streamModal = document.getElementById("streamModal");
 const streamModalIframe = document.getElementById("streamModalIframe");
 const streamModalClose = document.getElementById("streamModalClose");
 const streamModalMute = document.getElementById("streamModalMute");
 const streamModalPlayPause = document.getElementById("streamModalPlayPause");
 const streamModalFullscreen = document.getElementById("streamModalFullscreen");
-let streamModalTrigger = null; // where focus returns to on close
+let streamModalTrigger = null;
 
-/* YouTube IFrame Player API — wraps the EXISTING iframe (its src
-   already has enablejsapi=1 baked in above) to get playback state/
-   error visibility, and to drive the mute button below directly.
-   Doesn't create a different iframe or change what src is used — the
-   working si=... URL that fixed Error 153 stays exactly as it was
-   tested. Loaded proactively at page load (not on first open) so
-   YT.Player is already available by the time the modal opens, rather
-   than racing to load it after autoplay has already started. */
-const YT_STATE_LABELS = { "-1": "UNSTARTED", 0: "ENDED", 1: "PLAYING", 2: "PAUSED", 3: "BUFFERING", 5: "CUED" };
 let ytApiPromise = null;
 function loadYouTubeApi() {
   if (window.YT && window.YT.Player) return Promise.resolve();
   if (ytApiPromise) return ytApiPromise;
   ytApiPromise = new Promise((resolve) => {
     const prevReady = window.onYouTubeIframeAPIReady;
-    window.onYouTubeIframeAPIReady = () => {
-      if (prevReady) prevReady();
-      resolve();
-    };
+    window.onYouTubeIframeAPIReady = () => { if (prevReady) prevReady(); resolve(); };
     const script = document.createElement("script");
     script.src = "https://www.youtube.com/iframe_api";
     document.head.appendChild(script);
@@ -454,69 +549,30 @@ function loadYouTubeApi() {
 loadYouTubeApi();
 
 let ytPlayer = null;
-// Read by the debug panel further down — kept as a plain object
-// (rather than querying ytPlayer directly there) since isMuted()/
-// getVolume() throw if called at the wrong moment in the player's
-// lifecycle, and this is the one place already handling that.
-const streamPlayerDebug = { state: null, muted: null, volume: null, lastError: null };
+const streamPlayerDebug = { state: null };
 function wrapStreamIframe() {
   loadYouTubeApi().then(() => {
-    // The modal may have been closed (iframe src cleared) before the
-    // API finished loading — don't wrap a blank iframe.
     if (!streamModal.classList.contains("open")) return;
     ytPlayer = new YT.Player(streamModalIframe, {
-      events: {
-        onStateChange: (e) => {
-          streamPlayerDebug.state = e.data;
-          updatePlayPauseIcon();
-        },
-        onError: (e) => { streamPlayerDebug.lastError = e.data; },
-      },
+      events: { onStateChange: (e) => { streamPlayerDebug.state = e.data; updatePlayPauseIcon(); } },
     });
   });
 }
-
-/* Mute toggle — the src above already starts muted (required for
-   autoplay to work at all on mobile), so visitors need a way to turn
-   sound on. YouTube's own in-player mute icon turned out to be
-   unreachable at this pop-up's small size on at least one real phone
-   (only reachable through fullscreen), so this drives the wrapped
-   player directly instead of depending on it. Tracks mute state in
-   plain JS rather than asking the player with isMuted() — that
-   throws if called before the player's truly ready, and this button
-   already knows its own state without needing to ask. */
-let streamMuted = true; // matches mute=1 in the src above
+let streamMuted = true;
 function setStreamMuted(muted) {
   if (!ytPlayer) return;
   streamMuted = muted;
   if (muted) ytPlayer.mute(); else ytPlayer.unMute();
   streamModalMute.textContent = muted ? "🔇" : "🔊";
-  const label = muted ? "Unmute" : "Mute";
-  streamModalMute.title = label;
-  streamModalMute.setAttribute("aria-label", label);
+  streamModalMute.title = muted ? "Unmute" : "Mute";
+  streamModalMute.setAttribute("aria-label", muted ? "Unmute" : "Mute");
 }
-streamModalMute.addEventListener("click", (e) => {
-  e.stopPropagation();
-  setStreamMuted(!streamMuted);
-});
-setInterval(() => {
-  if (!ytPlayer || !ytPlayer.isMuted) return;
-  try {
-    streamPlayerDebug.muted = ytPlayer.isMuted();
-    streamPlayerDebug.volume = ytPlayer.getVolume();
-  } catch (e) { /* not ready yet */ }
-}, 500);
-
-/* Play/pause toggle — replaces YouTube's own (controls=0 above). Icon
-   reflects the player's actual state (updated from onStateChange, not
-   just on click), so it stays correct if playback changes for some
-   other reason, e.g. buffering. */
+streamModalMute.addEventListener("click", (e) => { e.stopPropagation(); setStreamMuted(!streamMuted); });
 function updatePlayPauseIcon() {
-  const playing = streamPlayerDebug.state === 1 || streamPlayerDebug.state === 3; // PLAYING or BUFFERING
+  const playing = streamPlayerDebug.state === 1 || streamPlayerDebug.state === 3;
   streamModalPlayPause.textContent = playing ? "⏸" : "▶";
-  const label = playing ? "Pause" : "Play";
-  streamModalPlayPause.title = label;
-  streamModalPlayPause.setAttribute("aria-label", label);
+  streamModalPlayPause.title = playing ? "Pause" : "Play";
+  streamModalPlayPause.setAttribute("aria-label", playing ? "Pause" : "Play");
 }
 streamModalPlayPause.addEventListener("click", (e) => {
   e.stopPropagation();
@@ -524,13 +580,6 @@ streamModalPlayPause.addEventListener("click", (e) => {
   if (streamPlayerDebug.state === 1 || streamPlayerDebug.state === 3) ytPlayer.pauseVideo();
   else ytPlayer.playVideo();
 });
-
-/* Fullscreen — also replaces YouTube's own (controls=0 above).
-   Targets the iframe itself (not a wrapping div) so fullscreen shows
-   just the video, edge to edge. Support for fullscreening an
-   arbitrary element (rather than a <video> specifically) is a fairly
-   recent addition in Safari on iOS — falls back to silently doing
-   nothing on a version that doesn't have it, rather than erroring. */
 streamModalFullscreen.addEventListener("click", (e) => {
   e.stopPropagation();
   const request = streamModalIframe.requestFullscreen || streamModalIframe.webkitRequestFullscreen;
@@ -538,13 +587,8 @@ streamModalFullscreen.addEventListener("click", (e) => {
   const result = request.call(streamModalIframe);
   if (result && result.catch) result.catch(() => {});
 });
-
 function openStreamModal(embedSrc, trigger) {
   streamModalTrigger = trigger;
-  // Show the modal BEFORE pointing the iframe at YouTube — assigning
-  // src while it's still display:none (zero-size, unrendered) is a
-  // known way for mobile browsers to deprioritize or skip autoplay
-  // eligibility for it entirely.
   streamModal.classList.add("open");
   streamModalIframe.src = embedSrc;
   streamModalClose.focus();
@@ -552,97 +596,17 @@ function openStreamModal(embedSrc, trigger) {
 }
 function closeStreamModal() {
   streamModal.classList.remove("open");
-  streamModalIframe.src = ""; // stops playback rather than just hiding it
-  // The wrapped player's underlying iframe is gone now — drop the
-  // reference and reset its debug state rather than leaving stale
-  // values on screen, so the next open starts from a clean wrap.
+  streamModalIframe.src = "";
   ytPlayer = null;
   streamPlayerDebug.state = null;
-  streamPlayerDebug.muted = null;
-  streamPlayerDebug.volume = null;
-  streamPlayerDebug.lastError = null;
-  // The src it'll get on next open starts muted and playing again —
-  // reset these to match rather than leaving stale icons from last
-  // time.
   streamMuted = true;
-  streamModalMute.textContent = "🔇";
-  streamModalMute.title = "Unmute";
-  streamModalMute.setAttribute("aria-label", "Unmute");
-  streamModalPlayPause.textContent = "⏸";
-  streamModalPlayPause.title = "Pause";
-  streamModalPlayPause.setAttribute("aria-label", "Pause");
+  streamModalMute.textContent = "🔇"; streamModalMute.title = "Unmute"; streamModalMute.setAttribute("aria-label", "Unmute");
+  streamModalPlayPause.textContent = "⏸"; streamModalPlayPause.title = "Pause"; streamModalPlayPause.setAttribute("aria-label", "Pause");
   if (streamModalTrigger && streamModalTrigger.focus) streamModalTrigger.focus();
 }
 streamModalClose.addEventListener("click", closeStreamModal);
 document.querySelector(".stream-modal-backdrop").addEventListener("click", closeStreamModal);
-window.addEventListener("keydown", (e) => {
-  if (e.key === "Escape" && streamModal.classList.contains("open")) closeStreamModal();
-});
-
-/* ---------- DEBUG PANEL ----------
-   Only appears with ?debug=1 in the URL — a plain on-screen readout
-   of what "Watch the Stream" is actually computing on a device we
-   can't attach real devtools to, so a phone can just be photographed
-   instead of needing to describe what something looks like. Doesn't
-   cover the video's own mute/play state — that's cross-origin, not
-   readable from here without switching to YouTube's IFrame Player
-   API. Remove this whole block once the issues are tracked down. */
-if (new URLSearchParams(location.search).has("debug")) {
-  // Direct mute/unmute control via the wrapped player — YouTube's
-  // own in-player mute icon can end up hidden at the pop-up's small
-  // size (only reachable through fullscreen, which covers this whole
-  // panel and defeats the point), so this bypasses it entirely.
-  const controls = document.createElement("div");
-  controls.style.cssText =
-    "position:fixed; right:0; bottom:45vh; z-index:9999; " +
-    "display:flex; gap:8px; padding:8px; background:rgba(0,0,0,.92);";
-  ["Mute", "Unmute", "Play", "Pause"].forEach((label) => {
-    const btn = document.createElement("button");
-    btn.textContent = label;
-    btn.style.cssText = "font:12px monospace; padding:6px 10px;";
-    btn.addEventListener("click", () => {
-      if (!ytPlayer) return;
-      if (label === "Mute") ytPlayer.mute();
-      else if (label === "Unmute") ytPlayer.unMute();
-      else if (label === "Play") ytPlayer.playVideo();
-      else if (label === "Pause") ytPlayer.pauseVideo();
-    });
-    controls.appendChild(btn);
-  });
-  document.body.appendChild(controls);
-
-  const panel = document.createElement("pre");
-  panel.style.cssText =
-    "position:fixed; inset:auto 0 0 0; z-index:9999; margin:0; " +
-    "max-height:45vh; overflow:auto; padding:10px; " +
-    "background:rgba(0,0,0,.92); color:#7fff7f; " +
-    "font:11px/1.5 monospace; white-space:pre-wrap; pointer-events:none;";
-  document.body.appendChild(panel);
-  const watchBtn = optionsNav.children[0];
-  function updateDebugPanel() {
-    const cs = getComputedStyle(watchBtn);
-    const stateCode = streamPlayerDebug.state;
-    const lines = [
-      "-- Watch the Stream button --",
-      "opacity: " + cs.opacity,
-      "animationName: " + cs.animationName,
-      "bodyClass: " + JSON.stringify(document.body.className),
-      "",
-      "-- stream pop-up --",
-      "streamModal.open: " + streamModal.classList.contains("open"),
-      "iframe.src: " + (streamModalIframe.src || "(empty)"),
-      "ytPlayer wrapped: " + !!ytPlayer,
-      "player state: " + stateCode + (stateCode != null ? " (" + (YT_STATE_LABELS[stateCode] || "?") + ")" : ""),
-      "player muted: " + streamPlayerDebug.muted,
-      "player volume: " + streamPlayerDebug.volume,
-      "player lastError: " + streamPlayerDebug.lastError,
-      "document.hidden: " + document.hidden,
-    ];
-    panel.textContent = lines.join("\n");
-  }
-  updateDebugPanel();
-  setInterval(updateDebugPanel, 500);
-}
+window.addEventListener("keydown", (e) => { if (e.key === "Escape" && streamModal.classList.contains("open")) closeStreamModal(); });
 </script>
 
 </body>
