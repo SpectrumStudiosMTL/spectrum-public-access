@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Spectrum Public Access</title>
+<meta name="description" content="Spectrum Public Access — free activities for neurodivergent and autistic filmmakers and animators. Spectrum TV, Feeling Fishy, and a free FilmLab membership.">
+<link rel="icon" type="image/png" href="images/logo.png">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Sixtyfour&family=VT323&family=Space+Grotesk:wght@400;500;700&display=swap');
+
+/* ████████████████████████████████████████████████████████████████
+   ██  MOCKUP NOTE — round 4                                      ██
+   ██  Split-screen hero: the original logo treatment, framed      ██
+   ██  left instead of centered; a 3-wide, 2-row button grid on    ██
+   ██  the right using the round-3 activity-card look (photo +     ██
+   ██  scrim + badge/title/CTA), sized down to fit six of them.    ██
+   ██  Two real assumptions baked in here that need a real answer, ██
+   ██  not a guess -- called out again after this file, not just   ██
+   ██  in this comment:                                            ██
+   ██  1. FUNNY FOLEY's description is invented (sound-effects     ██
+   ██     guess from the name) -- there's no real brief for it in  ██
+   ██     this repo anywhere I could check against.                ██
+   ██  2. The Instagram CTA points at a placeholder URL             ██
+   ██     (instagram.com, no real handle) -- the real profile      ██
+   ██     link needs to replace it before this goes anywhere real. ██
+   ████████████████████████████████████████████████████████████████ */
+
+@font-face{
+  font-family:'Alarm Clock';
+  src:local('Alarm Clock'), local('alarm clock'), local('AlarmClock');
+}
+
+:root{
+  --cg-white:#ede9df;
+  --navy:#121a35;
+  --gold:#fdd55d;
+  --coral:#f87060;
+  --surface:#1b2647;
+  --border:#384570;
+  --text-soft:#a8afc7;
+}
+
+*{box-sizing:border-box;}
+html{ margin:0; padding:0; scroll-behavior:smooth; }
+body{
+  margin:0; min-height:100vh;
+  background:
+    radial-gradient(ellipse at 50% -10%, #2a3550 0%, #0c0f18 60%, #050609 100%);
+  font-family:'Space Grotesk',sans-serif;
+  color:var(--cg-white);
+  overflow-x:hidden;
+}
+body:before{
+  content:""; position:fixed; inset:0; pointer-events:none; z-index:5;
+  background:repeating-linear-gradient(
+    to bottom, rgba(0,0,0,.14) 0px, rgba(0,0,0,.14) 1px,
+    transparent 2px, transparent 4px);
+}
+body:after{
+  content:""; position:fixed; inset:0; pointer-events:none; z-index:5;
+  background:radial-gradient(ellipse at center, transparent 60%, rgba(0,0,0,.55) 100%);
+}
+
+.first-screen{
+  min-height:100vh;
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  gap:32px;
+  width:100%;
+  padding:32px 24px;
+}
+
+/* ---------- SPLIT: LOGO LEFT, GRID RIGHT ---------- */
+.hero-split{
+  display:flex; flex-direction:column; align-items:center; gap:36px;
+  width:100%; max-width:1680px; /* same row cap the real dashboard uses */
+}
+@media (min-width: 900px){
+  /* 38/62 instead of the previous 34/66 -- both halves got bigger
+     this round (logo full-bleed, grid cards wide enough for real
+     descriptions), so the split shifts slightly toward the logo to
+     give it real presence rather than getting squeezed by the
+     now-wider grid column competing for the same space. */
+  .hero-split{ flex-direction:row; align-items:stretch; gap:40px; }
+  .hero-logo-col{ flex:0 0 38%; min-width:320px; }
+  .hero-grid-col{ flex:1; min-width:0; }
+}
+
+.hero-logo-col{
+  display:flex; flex-direction:column; align-items:center; justify-content:center; gap:22px;
+  text-align:center;
+  padding:0;
+}
+@media (min-width: 900px){
+  /* Stays centered to match the logo at every width -- no left-align
+     override here anymore. */
+}
+/* "Full bleed like the dashboard" -- no small fixed max-width capping
+   this small anymore; it scales with its column instead, same as the
+   signed-in dashboard's own wordmark filling its panel rather than
+   sitting as a modest fixed-size image floating in whitespace. */
+.logo{
+  width:min(560px, 92%);
+  height:auto;
+  animation:
+    neonOn 2s steps(1,end) both,
+    neonBreathe 6s ease-in-out 2s infinite;
+}
+@keyframes neonOn{
+  0%,14%{ opacity:0; } 16%{ opacity:.55; } 21%{ opacity:.08; } 27%{ opacity:.75; }
+  32%{ opacity:.15; } 36%{ opacity:.9; } 41%{ opacity:.4; } 46%,100%{ opacity:1; }
+}
+@keyframes neonBreathe{ 0%,100%{ opacity:1; } 50%{ opacity:.9; } }
+
+.tagline{
+  max-width:440px;
+  opacity:0; animation:fadeUp .8s ease-out 1.6s forwards;
+}
+.tagline p{ margin:0; font-size:clamp(15px, 1.7vw, 18px); line-height:1.55; }
+.tagline-free{ color:var(--gold); font-weight:700; }
+@keyframes fadeUp{ from{ opacity:0; transform:translateY(8px); } to{ opacity:1; transform:translateY(0); } }
+
+/* ---------- THE 2×3 GRID ----------
+   2 wide (was 3) -- each card is now roughly as wide as the round-3
+   full-size activity cards, with room for the badge/title AND a real
+   description line again, not just a title + bare CTA. 3 rows deep
+   as a result (6 cards ÷ 2 per row); the page runs taller than one
+   screen now, which is the right trade for "more screen real
+   estate" + actually-readable descriptions rather than squeezing
+   both into a fixed one-screen box. */
+.activities-grid{
+  display:grid; grid-template-columns:repeat(2, 1fr); gap:18px;
+  width:100%;
+  opacity:0; animation:fadeUp .8s ease-out 2s forwards;
+}
+@media (max-width: 640px){
+  .activities-grid{ grid-template-columns:1fr; }
+}
+
+.grid-card{
+  position:relative;
+  min-height:220px;
+  border-radius:14px;
+  overflow:hidden;
+  border:1px solid var(--border);
+  background-size:cover; background-position:center;
+  text-decoration:none; color:inherit;
+  transition:transform .15s ease, border-color .15s ease;
+  cursor:pointer;
+}
+.grid-card:hover{ transform:translateY(-2px); border-color:rgba(253,213,93,.5); }
+.grid-card.no-photo{ background:radial-gradient(ellipse at 50% -10%, #2a3550 0%, #0c0f18 65%, #050609 100%); }
+.grid-card.inert{ cursor:default; }
+.grid-card.inert:hover{ transform:none; border-color:var(--border); }
+.grid-card-scrim{
+  position:absolute; inset:0;
+  background:linear-gradient(to top, rgba(5,6,9,.94) 0%, rgba(5,6,9,.55) 50%, rgba(5,6,9,.12) 100%);
+}
+.grid-card-content{ position:absolute; left:0; right:0; bottom:0; padding:20px 22px; }
+.grid-card-badge{
+  display:flex; align-items:center; gap:7px;
+  font-size:10.5px; font-weight:700; letter-spacing:.14em; text-transform:uppercase;
+  margin:0 0 8px; color:var(--text-soft);
+}
+.grid-card-dot{ width:7px; height:7px; border-radius:50%; flex-shrink:0; }
+.grid-card-dot.live{ background:#4ade80; box-shadow:0 0 5px #4ade80; animation:pulse 1.6s ease-in-out infinite; }
+.grid-card-dot.gold{ background:var(--gold); }
+.grid-card-dot.coral{ background:var(--coral); }
+@keyframes pulse{ 0%,100%{opacity:1;} 50%{opacity:.4;} }
+.grid-card-title{
+  font-family:'Alarm Clock','Sixtyfour',monospace;
+  font-size:clamp(17px, 2vw, 21px); letter-spacing:.02em; color:var(--gold);
+  margin:0 0 8px; text-shadow:0 0 6px rgba(253,213,93,.4);
+}
+.grid-card-desc{
+  font-size:12.5px; line-height:1.5; color:var(--cg-white); opacity:.85;
+  margin:0 0 12px; max-width:92%;
+}
+.grid-card-cta{
+  font-size:11.5px; font-weight:700; color:var(--cg-white); opacity:.9;
+}
+.grid-card.muted .grid-card-title{ color:var(--text-soft); text-shadow:none; }
+.grid-card.muted .grid-card-desc{ opacity:.6; }
+.grid-card.muted .grid-card-cta{ color:var(--text-soft); }
+
+.scroll-cue{
+  display:flex; flex-direction:column; align-items:center; gap:8px;
+  text-decoration:none; color:var(--gold);
+  font-weight:700;
+  font-size:clamp(14px, 1.6vw, 17px); letter-spacing:.06em; text-transform:uppercase;
+  text-shadow:0 0 8px rgba(253,213,93,.55), 0 0 20px rgba(253,213,93,.25);
+  opacity:0; animation:fadeUp .8s ease-out 2.6s forwards;
+}
+.scroll-cue:hover{ text-shadow:0 0 10px rgba(253,213,93,.8), 0 0 28px rgba(253,213,93,.4); }
+.scroll-cue-arrow{ font-size:22px; animation:bob 1.6s ease-in-out infinite; }
+@keyframes bob{ 0%,100%{ transform:translateY(0); } 50%{ transform:translateY(5px); } }
+
+@media (prefers-reduced-motion: reduce){
+  .logo{ animation:none; opacity:1; }
+  .tagline, .activities-grid, .scroll-cue{ animation:none; opacity:1; }
+  .scroll-cue-arrow{ animation:none; }
+}
+
+/* ---------- BELOW THE FOLD ---------- */
+.section{
+  position:relative; z-index:1;
+  max-width:1100px; margin:0 auto;
+  padding:0 24px 72px;
+  scroll-margin-top:24px;
+}
+.section-eyebrow{
+  font-family:'Alarm Clock','Sixtyfour',monospace;
+  font-size:12px; letter-spacing:.18em; color:var(--gold);
+  text-shadow:0 0 8px rgba(253,213,93,.5); margin:0 0 10px;
+}
+.section-heading{ font-size:clamp(22px, 3.4vw, 32px); font-weight:700; margin:0 0 14px; }
+.section-sub{ font-size:15px; color:var(--text-soft); max-width:640px; margin:0 0 36px; line-height:1.6; }
+
+.filmlab-grid{ display:grid; grid-template-columns:repeat(auto-fit, minmax(260px, 1fr)); gap:20px; }
+.filmlab-card{
+  position:relative; border-radius:14px; border:1px solid var(--border);
+  background:radial-gradient(ellipse at 50% -10%, #2a3550 0%, #0c0f18 65%, #050609 100%);
+  padding:24px; display:flex; flex-direction:column; gap:10px;
+  text-decoration:none; color:inherit; overflow:hidden;
+  transition:border-color .15s ease, transform .15s ease;
+}
+.filmlab-card:hover{ border-color:rgba(253,213,93,.5); transform:translateY(-2px); }
+.filmlab-card-badge{ display:flex; align-items:center; gap:7px; font-size:11px; font-weight:700; letter-spacing:.14em; text-transform:uppercase; color:var(--gold); }
+.filmlab-card-dot{ width:7px; height:7px; border-radius:50%; background:var(--gold); }
+.filmlab-card h3{ font-family:'Alarm Clock','Sixtyfour',monospace; font-size:clamp(17px, 2.6vw, 22px); letter-spacing:.03em; color:var(--gold); margin:0; }
+.filmlab-card p{ font-size:13.5px; color:var(--text-soft); line-height:1.55; margin:0; }
+.filmlab-card-cta{ margin-top:10px; align-self:flex-start; font-size:13px; font-weight:700; padding:9px 18px; border-radius:999px; background:var(--gold); color:var(--navy); }
+
+.signup{
+  position:relative; z-index:1; max-width:720px; margin:0 auto 90px; padding:48px 32px;
+  text-align:center; border-radius:18px; border:2px solid rgba(253,213,93,.4);
+  background:radial-gradient(ellipse at 50% -20%, rgba(253,213,93,.1) 0%, rgba(12,15,24,.9) 70%);
+  box-shadow:0 0 40px rgba(253,213,93,.12);
+}
+.signup-eyebrow{ font-family:'Alarm Clock','Sixtyfour',monospace; font-size:13px; letter-spacing:.16em; color:var(--coral); margin:0 0 14px; }
+.signup h2{ font-size:clamp(24px, 4vw, 36px); margin:0 0 16px; }
+.signup p{ font-size:15px; color:var(--text-soft); max-width:520px; margin:0 auto 28px; line-height:1.6; }
+.signup-cta{
+  display:inline-flex; align-items:center; gap:10px;
+  font-family:'Alarm Clock','Sixtyfour',monospace; font-size:16px; letter-spacing:.06em; text-transform:uppercase;
+  text-decoration:none; padding:18px 36px; border-radius:999px;
+  background:var(--gold); color:var(--navy); box-shadow:0 0 24px rgba(253,213,93,.4);
+}
+.signup-note{ margin-top:16px; font-size:12.5px; color:var(--text-soft); }
+
+/* ---------- STREAM POP-UP ---------- */
+.stream-modal{ display:none; position:fixed; inset:0; z-index:100; align-items:center; justify-content:center; padding:24px; }
+.stream-modal.open{ display:flex; }
+.stream-modal-backdrop{ position:absolute; inset:0; background:rgba(5,6,9,.88); }
+.stream-modal-box{ position:relative; width:min(1000px, 100%); }
+.stream-modal-frame{
+  position:relative; width:100%; aspect-ratio:16/9; border-radius:14px; overflow:hidden; background:#000;
+  box-shadow:0 0 24px rgba(255,238,60,.35), 0 0 70px rgba(0,0,0,.6); border:2px solid rgba(255,238,60,.6);
+}
+.stream-modal-frame iframe{ position:absolute; inset:0; width:100%; height:100%; border:0; z-index:0; }
+.stream-modal-wake{ position:absolute; inset:0; z-index:1; }
+.stream-modal-controls{ display:flex; justify-content:center; gap:12px; margin-top:14px; }
+.stream-modal-close, .stream-modal-mute, .stream-modal-playpause, .stream-modal-fullscreen{
+  width:40px; height:40px; border-radius:50%; border:2px solid var(--cg-white);
+  background:rgba(5,6,9,.7); color:var(--cg-white); font-size:20px; line-height:1; cursor:pointer;
+  display:flex; align-items:center; justify-content:center;
+}
+.stream-modal-close:hover, .stream-modal-mute:hover, .stream-modal-playpause:hover, .stream-modal-fullscreen:hover{ background:rgba(255,238,60,.2); }
+</style>
+</head>
+<body>
+
+<section class="first-screen">
+  <div class="hero-split">
+    <div class="hero-logo-col">
+      <img class="logo" src="images/logo.png" alt="Spectrum Public Access">
+      <div class="tagline">
+        <p>Free, interactive activities for the neurodivergent and autism community — <span class="tagline-free">no sign-up needed</span>.</p>
+      </div>
+    </div>
+
+    <div class="hero-grid-col">
+      <div class="activities-grid">
+        <!-- Row 1: the two ready-now activities, Feeling Fishy first -->
+        <a class="grid-card" href="/feeling-fishy" target="_blank" rel="noopener noreferrer"
+           style="background-image:url('feeling-fishy/images/og-preview.jpg')">
+          <div class="grid-card-scrim"></div>
+          <div class="grid-card-content">
+            <p class="grid-card-badge"><span class="grid-card-dot gold"></span>Open now</p>
+            <h2 class="grid-card-title">FEELING FISHY</h2>
+            <p class="grid-card-desc">An interactive community aquarium — every fish hand-drawn by a real participant. Dive in, spin the tank, meet the artists.</p>
+            <span class="grid-card-cta">Dive in →</span>
+          </div>
+        </a>
+        <a class="grid-card" id="spectrumTvCard" href="https://www.youtube.com/live/ow3RDIXTPXk" target="_blank" rel="noopener noreferrer"
+           style="background-image:url('https://i.ytimg.com/vi/ow3RDIXTPXk/hqdefault.jpg')" aria-label="Spectrum TV — plays in a pop-up">
+          <div class="grid-card-scrim"></div>
+          <div class="grid-card-content">
+            <p class="grid-card-badge"><span class="grid-card-dot live"></span>Live now</p>
+            <h2 class="grid-card-title">SPECTRUM TV</h2>
+            <p class="grid-card-desc">Spectrum's channel, streaming live right now — real films, animation, and skits made by neurodivergent and Autistic creators.</p>
+            <span class="grid-card-cta">Watch now →</span>
+          </div>
+        </a>
+
+        <!-- Row 2: coming soon + join -->
+        <!-- Coming soon -- no href, matches the muted/inert treatment
+             used elsewhere on this page for not-yet-ready features.
+             No invented description this time -- there's nothing real
+             to go on beyond the name, and a guessed pitch would read
+             as a real feature promise. Replace with the real one. -->
+        <div class="grid-card no-photo inert muted" aria-label="Funny Foley — coming soon">
+          <div class="grid-card-content">
+            <p class="grid-card-badge"><span class="grid-card-dot coral"></span>Coming soon</p>
+            <h2 class="grid-card-title">FUNNY FOLEY</h2>
+            <p class="grid-card-desc">Details coming soon.</p>
+            <span class="grid-card-cta">Coming soon</span>
+          </div>
+        </div>
+        <a class="grid-card no-photo" href="/filmlab/login">
+          <div class="grid-card-content">
+            <p class="grid-card-badge"><span class="grid-card-dot gold"></span>Free to join</p>
+            <h2 class="grid-card-title">FILM LAB</h2>
+            <p class="grid-card-desc">Build your own portfolio — even claim it as your own shareable website — and explore the free Watch List. Completely free, just sign up with an email.</p>
+            <span class="grid-card-cta">Sign up free →</span>
+          </div>
+        </a>
+
+        <!-- Row 3: channels, lowest priority -->
+        <a class="grid-card" href="https://www.youtube.com/channel/UCMa6OU_T7xLXQV_K2N0NnGw" target="_blank" rel="noopener noreferrer"
+           style="background-image:url('https://i4.ytimg.com/vi/3a-ZOONMRlo/hqdefault.jpg')">
+          <div class="grid-card-scrim"></div>
+          <div class="grid-card-content">
+            <p class="grid-card-badge">Watch more</p>
+            <h2 class="grid-card-title">YOUTUBE</h2>
+            <p class="grid-card-desc">More episodes, reviews, and behind-the-scenes clips from Spectrum Studios.</p>
+            <span class="grid-card-cta">Visit channel →</span>
+          </div>
+        </a>
+        <!-- Placeholder URL -- needs the real Instagram profile link. -->
+        <a class="grid-card no-photo" href="https://instagram.com" target="_blank" rel="noopener noreferrer">
+          <div class="grid-card-content">
+            <p class="grid-card-badge">Follow us</p>
+            <h2 class="grid-card-title">INSTAGRAM</h2>
+            <p class="grid-card-desc">Behind-the-scenes photos and updates from the studio.</p>
+            <span class="grid-card-cta">Follow us →</span>
+          </div>
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <a class="scroll-cue" href="#filmlab">
+    <span>Want to learn more about FilmLab?</span>
+    <span class="scroll-cue-arrow">↓</span>
+  </a>
+</section>
+
+<section class="section" id="filmlab" aria-labelledby="filmlab-heading">
+  <p class="section-eyebrow">FROM INSIDE FILMLAB</p>
+  <h2 class="section-heading" id="filmlab-heading">There's a lot more once you join</h2>
+  <p class="section-sub">FilmLab is Spectrum's home for young filmmakers and animators. A free account gets you a portfolio, the full Watch List, and your own home base — no program enrollment needed.</p>
+  <div class="filmlab-grid">
+    <a class="filmlab-card" href="#signup">
+      <span class="filmlab-card-badge"><span class="filmlab-card-dot"></span>Portfolio</span>
+      <h3>BUILD YOUR PORTFOLIO</h3>
+      <p>Your bio, your film credits, your artist statement — one growing portfolio, private by default, that you can also claim as your own shareable website once it's ready to show off.</p>
+      <span class="filmlab-card-cta">Sign up — it's free →</span>
+    </a>
+    <!-- Was "Pitch a Review" -- Spectrum Review submission is actually
+         gated to full program-enrolled accounts, not something a free
+         sign-up here can do. Gallery browsing genuinely is available
+         at the free tier (FREE_TIER_ALLOWED_PATHS includes /gallery),
+         so this replaces it with something the same visitor could
+         actually go do today. -->
+    <a class="filmlab-card" href="#signup">
+      <span class="filmlab-card-badge"><span class="filmlab-card-dot"></span>Community</span>
+      <h3>EXPLORE THE GALLERY</h3>
+      <p>See portfolios from other young filmmakers and animators who've chosen to share their work with the community.</p>
+      <span class="filmlab-card-cta">Sign up — it's free →</span>
+    </a>
+    <a class="filmlab-card" href="#signup">
+      <span class="filmlab-card-badge"><span class="filmlab-card-dot"></span>Watch List</span>
+      <h3>LEARN ABOUT CINEMA</h3>
+      <p>178 curated films, free for every member — browse by decade, genre, movement, or whatever the community loves most right now.</p>
+      <span class="filmlab-card-cta">Sign up — it's free →</span>
+    </a>
+  </div>
+</section>
+
+<div class="signup" id="signup">
+  <p class="signup-eyebrow">JOIN SPECTRUM FILMLAB</p>
+  <h2>It's completely free.</h2>
+  <p>Your own portfolio — shareable as your own website — the full Watch List, and a home base in FilmLab. Sign up with just your email. No credit card, no catch.</p>
+  <a class="signup-cta" href="/filmlab/login">Sign up free →</a>
+  <p class="signup-note">Already part of a program? Ask your mentor for an invite instead.</p>
+</div>
+
+<div class="stream-modal" id="streamModal" role="dialog" aria-modal="true" aria-label="Spectrum TV">
+  <div class="stream-modal-backdrop"></div>
+  <div class="stream-modal-box">
+    <div class="stream-modal-frame">
+      <iframe id="streamModalIframe" title="Live stream"
+        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+        referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+      <div class="stream-modal-wake" id="streamModalWake"></div>
+    </div>
+    <div class="stream-modal-controls">
+      <button class="stream-modal-mute" id="streamModalMute" type="button" aria-label="Unmute">🔇</button>
+      <button class="stream-modal-playpause" id="streamModalPlayPause" type="button" aria-label="Pause">⏸</button>
+      <button class="stream-modal-fullscreen" id="streamModalFullscreen" type="button" aria-label="Fullscreen">⛶</button>
+      <button class="stream-modal-close" id="streamModalClose" type="button" aria-label="Close">&times;</button>
+    </div>
+  </div>
+</div>
+
+<script>
+document.getElementById("spectrumTvCard").addEventListener("click", (e) => {
+  if (e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+  e.preventDefault();
+  openStreamModal("https://www.youtube.com/embed/ow3RDIXTPXk?si=NgFK3XYpDQOLObrl&autoplay=1&mute=1&playsinline=1&enablejsapi=1&controls=0");
+});
+
+const streamModal = document.getElementById("streamModal");
+const streamModalIframe = document.getElementById("streamModalIframe");
+const streamModalClose = document.getElementById("streamModalClose");
+const streamModalMute = document.getElementById("streamModalMute");
+const streamModalPlayPause = document.getElementById("streamModalPlayPause");
+const streamModalFullscreen = document.getElementById("streamModalFullscreen");
+let streamModalTrigger = null;
+
+let ytApiPromise = null;
+function loadYouTubeApi() {
+  if (window.YT && window.YT.Player) return Promise.resolve();
+  if (ytApiPromise) return ytApiPromise;
+  ytApiPromise = new Promise((resolve) => {
+    const prevReady = window.onYouTubeIframeAPIReady;
+    window.onYouTubeIframeAPIReady = () => { if (prevReady) prevReady(); resolve(); };
+    const script = document.createElement("script");
+    script.src = "https://www.youtube.com/iframe_api";
+    document.head.appendChild(script);
+  });
+  return ytApiPromise;
+}
+loadYouTubeApi();
+
+let ytPlayer = null;
+const streamPlayerDebug = { state: null };
+function wrapStreamIframe() {
+  loadYouTubeApi().then(() => {
+    if (!streamModal.classList.contains("open")) return;
+    ytPlayer = new YT.Player(streamModalIframe, {
+      events: { onStateChange: (e) => { streamPlayerDebug.state = e.data; updatePlayPauseIcon(); } },
+    });
+  });
+}
+let streamMuted = true;
+function setStreamMuted(muted) {
+  if (!ytPlayer) return;
+  streamMuted = muted;
+  if (muted) ytPlayer.mute(); else ytPlayer.unMute();
+  streamModalMute.textContent = muted ? "🔇" : "🔊";
+  streamModalMute.title = muted ? "Unmute" : "Mute";
+  streamModalMute.setAttribute("aria-label", muted ? "Unmute" : "Mute");
+}
+streamModalMute.addEventListener("click", (e) => { e.stopPropagation(); setStreamMuted(!streamMuted); });
+function updatePlayPauseIcon() {
+  const playing = streamPlayerDebug.state === 1 || streamPlayerDebug.state === 3;
+  streamModalPlayPause.textContent = playing ? "⏸" : "▶";
+  streamModalPlayPause.title = playing ? "Pause" : "Play";
+  streamModalPlayPause.setAttribute("aria-label", playing ? "Pause" : "Play");
+}
+streamModalPlayPause.addEventListener("click", (e) => {
+  e.stopPropagation();
+  if (!ytPlayer) return;
+  if (streamPlayerDebug.state === 1 || streamPlayerDebug.state === 3) ytPlayer.pauseVideo();
+  else ytPlayer.playVideo();
+});
+streamModalFullscreen.addEventListener("click", (e) => {
+  e.stopPropagation();
+  const request = streamModalIframe.requestFullscreen || streamModalIframe.webkitRequestFullscreen;
+  if (!request) return;
+  const result = request.call(streamModalIframe);
+  if (result && result.catch) result.catch(() => {});
+});
+function openStreamModal(embedSrc, trigger) {
+  streamModalTrigger = trigger;
+  streamModal.classList.add("open");
+  streamModalIframe.src = embedSrc;
+  streamModalClose.focus();
+  wrapStreamIframe();
+}
+function closeStreamModal() {
+  streamModal.classList.remove("open");
+  streamModalIframe.src = "";
+  ytPlayer = null;
+  streamPlayerDebug.state = null;
+  streamMuted = true;
+  streamModalMute.textContent = "🔇"; streamModalMute.title = "Unmute"; streamModalMute.setAttribute("aria-label", "Unmute");
+  streamModalPlayPause.textContent = "⏸"; streamModalPlayPause.title = "Pause"; streamModalPlayPause.setAttribute("aria-label", "Pause");
+  if (streamModalTrigger && streamModalTrigger.focus) streamModalTrigger.focus();
+}
+streamModalClose.addEventListener("click", closeStreamModal);
+document.querySelector(".stream-modal-backdrop").addEventListener("click", closeStreamModal);
+window.addEventListener("keydown", (e) => { if (e.key === "Escape" && streamModal.classList.contains("open")) closeStreamModal(); });
+</script>
+
+</body>
+</html>
