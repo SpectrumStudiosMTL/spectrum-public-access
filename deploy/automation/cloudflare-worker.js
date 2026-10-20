@@ -144,8 +144,14 @@ export default {
 
       const downloadUrl = await fetchAssetDownloadUrl(asset.id, env.MONDAY_API_TOKEN);
 
+      // item_id travels to GitHub (and from there, into the PR body --
+      // see add-fish.yml) so the merge-triggered notification workflow
+      // can look the email back up from monday.com right when it's
+      // needed, instead of needing the raw address to sit in any
+      // public git artifact (PR body/title, commit, branch name) in
+      // the meantime -- this repo is public.
       await triggerGithubAction(
-        { file_url: downloadUrl, creator, email, name: fishName, bio },
+        { file_url: downloadUrl, creator, email, name: fishName, bio, item_id: itemId },
         env.GITHUB_TOKEN
       );
 

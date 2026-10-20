@@ -24,6 +24,9 @@ on:
       email:
         description: "Creator email (used to group their fish, never published)"
         required: true
+      item_id:
+        description: "monday.com item ID (optional -- only needed to test the merge notification email)"
+        required: false
 
 # Serializes runs instead of letting simultaneous submissions race:
 # next_fish_number() in fish_pipeline.py picks the next number from
@@ -72,6 +75,12 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           CREATOR: ${{ github.event.client_payload.creator || inputs.creator }}
+          # The monday.com item ID only -- never the email itself. This
+          # repo is public, and notify-fish-added.yml (fires on merge)
+          # re-fetches the email straight from monday.com by this ID
+          # right when it's actually needed, rather than this ever
+          # sitting in a public PR body in the meantime.
+          ITEM_ID: ${{ github.event.client_payload.item_id || inputs.item_id }}
         run: |
           git config user.name "feeling-fishy-bot"
           git config user.email "actions@users.noreply.github.com"
@@ -82,6 +91,8 @@ jobs:
           git push origin "$BRANCH"
           gh pr create \
             --title "New fish submission: ${CREATOR}" \
-            --body "Automated submission awaiting review — check the extracted artwork looks right before merging. Merging publishes it live; closing rejects it." \
+            --body "Automated submission awaiting review — check the extracted artwork looks right before merging. Merging publishes it live; closing rejects it.
+
+<!-- monday-item-id: ${ITEM_ID} -->" \
             --base main \
             --head "$BRANCH"

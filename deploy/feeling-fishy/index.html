@@ -4418,6 +4418,16 @@ function closeCard() {
   if (lastFocused && lastFocused.focus) lastFocused.focus();
 }
 overlay.addEventListener("click", (e) => { if (e.target === overlay) closeCard(); });
+
+// Deep link for the "your fish is in the pond" email -- ?fish=<creatorId>
+// opens straight to that creator's card instead of making them use the
+// search tool to find themselves. Harmless no-op for every other visit
+// (no param, or an id that doesn't match anything).
+const deepLinkFishId = new URLSearchParams(window.location.search).get("fish");
+if (deepLinkFishId) {
+  const deepLinkIndex = FISH.findIndex((f) => f.creatorId === deepLinkFishId);
+  if (deepLinkIndex !== -1) locateFish(deepLinkIndex);
+}
 </script>
 </body>
 </html>

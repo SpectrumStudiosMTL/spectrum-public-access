@@ -1,0 +1,35 @@
+# Fires when a fish-submission PR (opened by add-fish.yml) actually
+# gets merged -- "merged", not "opened", is the real "added to the
+# pond" moment, since a human reviews every submission first and
+# merging is what publishes it live.
+name: Notify fish creator on merge
+
+on:
+  pull_request:
+    types: [closed]
+
+jobs:
+  notify:
+    # pull_request "closed" fires on a reject-by-closing too -- merged
+    # is what actually means "this went live". Scoped to fish-submission
+    # branches specifically so this never fires for an unrelated PR.
+    if: github.event.pull_request.merged == true && startsWith(github.event.pull_request.head.ref, 'fish-submission/')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: pip install requests
+
+      - name: Send "your fish is in the pond" email
+        env:
+          MONDAY_API_TOKEN: ${{ secrets.MONDAY_API_TOKEN }}
+          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+          PR_BODY: ${{ github.event.pull_request.body }}
+        run: python deploy/automation/notify_fish_added.py
