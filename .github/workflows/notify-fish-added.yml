@@ -25,7 +25,12 @@ jobs:
           python-version: "3.12"
 
       - name: Install dependencies
-        run: pip install requests
+        # Pillow is needed even though this script never processes an
+        # image itself -- fish_pipeline.py (imported for its
+        # creator_id_from_email/first_name_only helpers) does `from
+        # PIL import Image` at module level, so importing it at all
+        # requires Pillow to be installed, same as add-fish.yml's job.
+        run: pip install requests Pillow
 
       - name: Send "your fish is in the pond" email
         env:
