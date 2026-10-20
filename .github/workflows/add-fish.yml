@@ -91,8 +91,6 @@ jobs:
           git push origin "$BRANCH"
           gh pr create \
             --title "New fish submission: ${CREATOR}" \
-            --body "Automated submission awaiting review — check the extracted artwork looks right before merging. Merging publishes it live; closing rejects it.
-
-<!-- monday-item-id: ${ITEM_ID} -->" \
+            --body "Automated submission awaiting review — check the extracted artwork looks right before merging. Merging publishes it live; closing rejects it. <!-- monday-item-id: ${ITEM_ID} -->" \
             --base main \
             --head "$BRANCH"
