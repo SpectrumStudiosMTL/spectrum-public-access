@@ -109,6 +109,11 @@ body:after{
   display:flex; flex-direction:column; align-items:center; gap:36px;
   width:100%; max-width:1680px; /* same row cap the real dashboard uses */
 }
+/* Stacked (below 900px), align-items:center shrinks each column to its
+   content's width -- and the card grid has none of its own (its cards
+   are mostly background art), so it collapsed to a 2px sliver on
+   phones. Full width here; at 900px+ flex:1 takes over. */
+.hero-grid-col{ width:100%; }
 @media (min-width: 900px){
   /* 38/62 instead of the previous 34/66 -- both halves got bigger
      this round (logo full-bleed, grid cards wide enough for real
