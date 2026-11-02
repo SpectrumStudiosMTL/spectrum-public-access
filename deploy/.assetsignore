@@ -1,0 +1,19 @@
+# Files in deploy/ that are kept in the repo but never served on the
+# site (Cloudflare reads this when uploading the assets).
+
+# Fish pipeline scripts and the Cloudflare Worker source behind them
+automation/
+
+# Working file, not linked anywhere (the fish templates people
+# download live in feeling-fishy/files/ and stay served)
+FeelingFishy_Kat.psd
+
+# Build notes
+feeling-fishy/README-build-notes.md
+spectrum-tv/README-build-notes.md
+spectrum-tv/.gitignore
+
+# The retired TV prototype's sounds and test bumper (spectrum-tv/ now
+# only forwards to the Film Lab's Spectrum TV)
+spectrum-tv/audio/
+spectrum-tv/bumpers/
