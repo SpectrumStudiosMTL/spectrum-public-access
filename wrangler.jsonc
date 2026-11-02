@@ -1,0 +1,18 @@
+// Cloudflare settings for the public site (Workers Builds deploys this
+// repo: a push to `main` goes live, other branches build a Preview).
+// Written to match how the site was already deployed without a config
+// file: the `deploy/` folder served as static files, compatibility date
+// as before, workers.dev address kept. The site's own domain is set in
+// the Cloudflare dashboard, not here.
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "spectrum-public-access",
+  "compatibility_date": "2026-10-23",
+  "assets": {
+    "directory": "./deploy"
+  },
+  "workers_dev": true,
+  // Required by `wrangler preview` (the Previews build command); empty
+  // means previews use the same settings as above.
+  "previews": {}
+}
