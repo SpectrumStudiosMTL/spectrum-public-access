@@ -397,19 +397,18 @@ body:after{
             <span class="grid-card-cta" data-i18n="feelingFishyCta">Dive in →</span>
           </div>
         </a>
-        <!-- Matches the real app's own SpectrumTvPreviewCard: coming
-             soon, not a link -- the full channel-switcher product isn't
-             built yet, so this no longer pretends the live-stream embed
-             (still below, dormant) is that finished thing. -->
-        <div class="grid-card inert muted" style="background-image:url('images/spectrum-tv-bg.jpg')" aria-label="Spectrum TV — coming soon">
+        <!-- The Film Lab's Spectrum TV, open to everyone (no sign-in
+             needed to watch). New tab, like Feeling Fishy. -->
+        <a class="grid-card" href="/filmlab/spectrum-tv" target="_blank" rel="noopener noreferrer"
+           style="background-image:url('images/spectrum-tv-bg.jpg')">
           <div class="grid-card-scrim"></div>
           <div class="grid-card-content">
-            <p class="grid-card-badge"><span class="grid-card-dot coral"></span><span data-i18n="comingSoon">Coming soon</span></p>
+            <p class="grid-card-badge"><span class="grid-card-dot gold"></span><span data-i18n="spectrumTvBadge">On air now</span></p>
             <h2 class="grid-card-title">SPECTRUM TV</h2>
             <p class="grid-card-desc" data-i18n="spectrumTvDesc">Spectrum's own channel — films, animation, and skits made by neurodivergent and Autistic creators.</p>
-            <span class="grid-card-cta" data-i18n="comingSoon">Coming soon</span>
+            <span class="grid-card-cta" data-i18n="spectrumTvCta">Tune in →</span>
           </div>
-        </div>
+        </a>
 
         <!-- Row 2: coming soon + join -->
         <!-- Coming soon -- no href, matches the muted/inert treatment
@@ -548,8 +547,8 @@ body:after{
 </div>
 
 <script>
-// Spectrum TV card above no longer triggers this -- it's "coming soon"
-// now, not a live link. Left dormant (not deleted) rather than torn
+// Spectrum TV card above no longer triggers this -- it links to the
+// Film Lab's Spectrum TV now. Left dormant (not deleted) rather than torn
 // out, since this exact feature has flipped status more than once;
 // re-wire a trigger to openStreamModal(embedSrc) if a real "watch
 // live" entry point comes back.
@@ -659,10 +658,12 @@ const TRANSLATIONS = {
   },
   feelingFishyCta: { en: "Dive in →", fr: "Plonger →" },
 
+  spectrumTvBadge: { en: "On air now", fr: "En ondes" },
   spectrumTvDesc: {
     en: "Spectrum's own channel — films, animation, and skits made by neurodivergent and Autistic creators.",
     fr: "La chaîne de Spectrum — films, animation et sketches créés par des créateurs neurodivergents et autistes.",
   },
+  spectrumTvCta: { en: "Tune in →", fr: "Syntoniser →" },
 
   funnyFoleyDesc: { en: "Details coming soon.", fr: "Détails à venir." },
 
