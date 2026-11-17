@@ -14,6 +14,7 @@ module doesn't know or care where that image came from.
 import hashlib
 import json
 import re
+import subprocess
 import sys
 from pathlib import Path
 
@@ -115,7 +116,37 @@ def next_fish_number():
         ]
         numbers += existing_files
 
+    # And numbers already taken by submissions still waiting as open
+    # PRs. Runs are queued one at a time, but each one starts from
+    # `main`, and fish PRs sit unmerged until someone merges them -- so
+    # three fish sent before a merge all got fish78 and two PRs
+    # conflicted (2026-11-17).
+    numbers += pending_fish_numbers()
+
     return max(numbers) + 1
+
+
+def pending_fish_numbers():
+    """Fish numbers used on any fish-submission/* branch on GitHub.
+    Best effort: if git can't reach them, numbering falls back to main
+    alone (the old behaviour) rather than failing the submission."""
+    def git(*args):
+        # Run from the git repo's root (REPO_ROOT is deploy/), so the
+        # paths below mean the same thing wherever this is started from.
+        return subprocess.run(["git", *args], capture_output=True, text=True, check=True, cwd=REPO_ROOT.parent).stdout
+
+    try:
+        git("fetch", "--quiet", "--depth=1", "origin",
+            "+refs/heads/fish-submission/*:refs/remotes/origin/fish-submission/*")
+        branches = git("for-each-ref", "--format=%(refname)", "refs/remotes/origin/fish-submission/").split()
+        numbers = []
+        for ref in branches:
+            names = git("ls-tree", "--name-only", f"{ref}:deploy/feeling-fishy/images/fish").split()
+            numbers += [int(m.group(1)) for n in names if (m := re.search(r"fish(\d+)\.webp$", n))]
+        return numbers
+    except (subprocess.CalledProcessError, OSError) as e:
+        print(f"Warning: couldn't check open fish PRs for taken numbers ({e}); numbering from main only.")
+        return []
 
 
 def add_embedded_image_entry(content, n):
